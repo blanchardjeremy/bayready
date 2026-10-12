@@ -12,3 +12,9 @@ export function sitePath(path: string): string {
 export function siteUrl(path: string): string {
   return `${window.location.origin}${sitePath(path)}`;
 }
+
+/** The public site. Credits in exports always link here, wherever the app is running. */
+export const BAY_READY_URL = "https://blanchardjeremy.github.io/bayready/";
+
+/** One-line credit for things people take out of the app (copied text, calendar files). */
+export const CREDIT = `Made with Bay Ready, a free emergency kit planner for the Bay Area: ${BAY_READY_URL}`;

@@ -6,6 +6,7 @@ import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { expiringSections } from "@/data/expiring";
+import { BAY_READY_URL, CREDIT } from "./urls";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -100,7 +101,23 @@ export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
   buildExpiring(expiring, input.ctx);
   buildOverview(overview, input, layout);
 
+  wb.title = "Our emergency kit";
+  wb.description = CREDIT;
+  for (const ws of [overview, todos, supplies, expiring]) addCredit(ws);
+
   return wb;
+}
+
+/** A "Made with Bay Ready" link under the last row, and in the printed footer. */
+function addCredit(ws: Worksheet) {
+  // The Overview has a narrow spacer column A; the other tabs start in A.
+  const col = ws.name === "Overview" ? "B" : "A";
+  const row = (ws.lastRow?.number ?? 0) + 2;
+  const cell = ws.getCell(`${col}${row}`);
+  cell.value = { text: "Made with Bay Ready, a free emergency kit planner for the Bay Area", hyperlink: BAY_READY_URL };
+  cell.font = font({ size: 10, color: { argb: C.soft }, underline: true });
+  cell.alignment = { vertical: "middle", indent: col === "A" ? 1 : 0 };
+  ws.headerFooter.oddFooter = `&L&8Made with Bay Ready: ${BAY_READY_URL}&R&8Page &P of &N`;
 }
 
 function sheetOpts(): Partial<ExcelJSNamespace.AddWorksheetOptions> {

@@ -24,7 +24,7 @@ import { ITEMS } from "@/data/items";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
 import { Button, buttonClass } from "@/components/controls";
 import { ItemRow } from "./ItemRow";
-import { sitePath, siteUrl } from "@/lib/urls";
+import { BAY_READY_URL, CREDIT, sitePath, siteUrl } from "@/lib/urls";
 import { NamesEditor } from "@/components/NamesEditor";
 
 type States = Record<string, ItemState>;
@@ -221,6 +221,11 @@ export function ListView() {
 
       <KeepFresh />
 
+      {/* The site footer doesn't print, so printed lists get their own credit. */}
+      <p className="hidden pt-8 text-sm print:block">
+        Made with Bay Ready, a free emergency kit planner for the Bay Area: {BAY_READY_URL}
+      </p>
+
       {editingNames && (
         <NamesDialog
           answers={answers}
@@ -361,7 +366,7 @@ function StartHere({
             downloadIcs(
               "emergency-prep-first-step.ics",
               "Emergency prep: first steps",
-              firsts.map((e) => `- ${e.item.name}`).join("\n") + "\n\nYour list: " + siteUrl("/list"),
+              firsts.map((e) => `- ${e.item.name}`).join("\n") + `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
               firstStepDate(answers.start),
             )
           }
@@ -554,7 +559,8 @@ function ShoppingList({
     .map(([shop, lists]) =>
       [SHOP_META[shop], ...lists.map((l) => `[ ] ${l[0].item.name}${l.map((e) => (e.qty ? ` (${CONTAINER_META[e.container].name}: ${e.qty.text})` : "")).join("")}`)].join("\n"),
     )
-    .join("\n\n");
+    .join("\n\n")
+    .concat(`\n\n${CREDIT}`);
 
   return (
     <div>
@@ -667,8 +673,8 @@ function KeepFresh() {
             downloadIcs(
               "emergency-kit-check.ics",
               "Emergency kit 6-month check",
-              "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents.\n\nYour list: " +
-                siteUrl("/list"),
+              "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
+                `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
               d,
               45,
             );
@@ -752,7 +758,8 @@ function asText(kits: Container[], main: ListEntry[], st: (e: ListEntry) => Item
     }
     lines.push("");
   }
-  if (county?.alert) lines.push(`Emergency alerts: ${county.alert.name} ${county.alert.url}`);
+  if (county?.alert) lines.push(`Emergency alerts: ${county.alert.name} ${county.alert.url}`, "");
+  lines.push(CREDIT);
   return lines.join("\n");
 }
 

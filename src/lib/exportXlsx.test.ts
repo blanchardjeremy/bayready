@@ -301,6 +301,22 @@ describe("spreadsheet export", () => {
     expect(["D5", "E5", "F5"].map((c) => (ws.getCell(c).value as { result: string }).result)).toEqual(["Alex", "Sam", "Riley"]);
   });
 
+  it("credits and links back to Bay Ready on every tab", async () => {
+    const wb = await roundTrip();
+    for (const ws of wb.worksheets) {
+      let link: { text: string; hyperlink: string } | null = null;
+      ws.eachRow((r) =>
+        r.eachCell((c) => {
+          const v = c.value as { text?: string; hyperlink?: string } | null;
+          if (v && typeof v === "object" && v.text?.startsWith("Made with Bay Ready")) link = v as { text: string; hyperlink: string };
+        }),
+      );
+      expect(link, ws.name).not.toBeNull();
+      expect(link!.hyperlink, ws.name).toBe("https://blanchardjeremy.github.io/bayready/");
+      expect(ws.headerFooter.oddFooter, ws.name).toContain("blanchardjeremy.github.io/bayready");
+    }
+  });
+
   it("leaves out person columns for a one-person household", async () => {
     const answers = normalizeAnswers({ build: "both", hazards: ["earthquake"] });
     const ctx = deriveContext(answers);

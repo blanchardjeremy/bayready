@@ -212,7 +212,7 @@ describe("spreadsheet export", () => {
     expect(wb.getWorksheet("Overview")!.getCell("B19").value).toBe("Kid 1");
 
     // Per-person rows get boxes and a Status that follows them
-    const water = findRow(ws, "Water, plus tablets or a filter to treat more");
+    const water = findRow(ws, "Water bottle");
     expect(["D", "E", "F"].map((c) => ws.getCell(`${c}${water}`).value)).toEqual(["Not done", "Not done", "Not done"]);
     expect(ws.getCell(`D${water}`).dataValidation?.formulae).toEqual(['"Not done,Done"']);
     expect((ws.getCell(`A${water}`).value as { formula: string }).formula).toBe(
@@ -232,8 +232,8 @@ describe("spreadsheet export", () => {
     const group = findRowA(ws, "One for the group");
     expect(every).toBeGreaterThan(0);
     expect(group).toBeGreaterThan(every);
-    expect(findRow(ws, "Water, plus tablets or a filter to treat more")).toBeGreaterThan(every);
-    expect(findRow(ws, "Water, plus tablets or a filter to treat more")).toBeLessThan(group);
+    expect(findRow(ws, "Water bottle")).toBeGreaterThan(every);
+    expect(findRow(ws, "Water bottle")).toBeLessThan(group);
     expect(findRow(ws, "First aid kit")).toBeGreaterThan(group);
   });
 

@@ -25,7 +25,8 @@ import { firstHourCard } from "@/data/firstHour";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
 import { Button, buttonClass } from "@/components/controls";
 import { ItemRow } from "./ItemRow";
-import { sitePath, siteUrl } from "@/lib/urls";
+import { BAY_READY_URL, CREDIT, sitePath, siteUrl } from "@/lib/urls";
+import { clearReturnToList, markReturnToList } from "@/lib/returnToList";
 import { NamesEditor } from "@/components/NamesEditor";
 
 type States = Record<string, ItemState>;
@@ -44,6 +45,8 @@ export function ListView() {
   const [copied, setCopied] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [editingNames, setEditingNames] = useState(false);
+  // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
+  useEffect(() => clearReturnToList(), []);
 
   const answers = shared ? shared.answers : storedAnswers;
   const states = shared ? shared.states : storedStates;
@@ -226,6 +229,11 @@ export function ListView() {
 
       <KeepFresh />
 
+      {/* The site footer doesn't print, so printed lists get their own credit. */}
+      <p className="hidden pt-8 text-sm print:block">
+        Made with Bay Ready, a free emergency kit planner for the Bay Area: {BAY_READY_URL}
+      </p>
+
       {editingNames && (
         <NamesDialog
           answers={answers}
@@ -258,22 +266,48 @@ function Header({
     h.cats && `${h.cats} ${h.cats === 1 ? "cat" : "cats"}`,
     h.otherPets && `${h.otherPets} other ${h.otherPets === 1 ? "pet" : "pets"}`,
   ].filter(Boolean);
-  const kitsText = { stay: "a stay-at-home bin", go: "a go bag", both: "a stay-at-home bin and a go bag" }[build];
-  const hazards = [...ctx.hazards].map((id) => HAZARD_BY_ID[id].name.toLowerCase());
+  const county = answers.county ? COUNTY_BY_ID[answers.county] : undefined;
+  const kitNames = { stay: ["Stay-at-home bin"], go: ["Go bag"], both: ["Stay-at-home bin", "go bag"] }[build];
+  if (ctx.kits.includes("car")) kitNames.push("car kit");
+  const hazards = [...ctx.hazards].map((id, i) => {
+    const short = HAZARD_BY_ID[id].short;
+    return i === 0 ? short : short.toLowerCase();
+  });
+
+  // One badge per answer, each jumping to the wizard step that sets it.
+  const groups: { label: string; step: string; value: string }[] = [
+    { label: "Building", step: "", value: kitNames.join(" + ") },
+    { label: "For", step: "household", value: people.join(", ") },
+    { label: "Ready for", step: "hazards", value: hazards.join(", ") },
+    ...(build !== "go"
+      ? [{ label: "At home", step: answers.level === "advanced" ? "days" : "level", value: `${ctx.stayDays} days` }]
+      : []),
+    ...(county ? [{ label: "In", step: "county", value: `${county.name} County` }] : []),
+  ];
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
       <div>
         <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">Your emergency list</h1>
-        <p className="mt-3 max-w-[64ch] text-lg text-ink-soft">
-          {capitalize(kitsText)} for {people.join(", ")}. Ready for {joinList(hazards)}.{" "}
-          {build !== "go" && <>Sized for {ctx.stayDays} days at home. </>}
-          {!readOnly && (
-            <Link href="/build" className="no-print font-semibold text-ink underline underline-offset-2">
-              Change answers
-            </Link>
-          )}
-        </p>
+        <dl className="mt-4 flex max-w-[60rem] flex-wrap items-center gap-x-4 gap-y-2">
+          {groups.map((g) => (
+            <div key={g.label} className="flex items-center gap-1.5">
+              <dt className="text-[0.85rem] text-ink-soft">{g.label}</dt>
+              <dd>
+                <AnswerBadge value={g.value} href={readOnly ? undefined : `/build${g.step ? `/${g.step}` : ""}`} label={g.label} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+        {!readOnly && (
+          <Link
+            href="/build"
+            onClick={markReturnToList}
+            className="no-print mt-3 inline-block text-[0.95rem] font-semibold text-ink underline underline-offset-2"
+          >
+            Change answers
+          </Link>
+        )}
       </div>
       <fieldset className="no-print">
         <legend className="mb-1.5 text-[0.95rem] font-semibold text-ink-soft">Level</legend>
@@ -292,6 +326,35 @@ function Header({
         </div>
       </fieldset>
     </div>
+  );
+}
+
+/** One answer shown as a badge. Links to the wizard step that sets it; the faint pencil says it's editable. */
+function AnswerBadge({ value, href, label }: { value: string; href?: string; label: string }) {
+  const cls =
+    "inline-flex min-h-7 items-center gap-1.5 rounded-full border border-line bg-paper px-2.5 text-[0.85rem] font-semibold text-ink";
+  if (!href) return <span className={cls}>{value}</span>;
+  return (
+    <Link
+      href={href}
+      onClick={markReturnToList}
+      aria-label={`${label}: ${value}. Change`}
+      className={`group/badge ${cls} transition-colors hover:border-ink`}
+    >
+      {value}
+      <svg
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        className="no-print size-3 text-ink-soft opacity-50 transition-opacity group-hover/badge:opacity-100 group-focus-visible/badge:opacity-100"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M11.5 2.5 13.5 4.5 5.5 12.5 2.5 13.5 3.5 10.5Z" />
+      </svg>
+    </Link>
   );
 }
 
@@ -366,7 +429,7 @@ function StartHere({
             downloadIcs(
               "emergency-prep-first-step.ics",
               "Emergency prep: first steps",
-              firsts.map((e) => `- ${e.item.name}`).join("\n") + "\n\nYour list: " + siteUrl("/list"),
+              firsts.map((e) => `- ${e.item.name}`).join("\n") + `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
               firstStepDate(answers.start),
             )
           }
@@ -559,7 +622,8 @@ function ShoppingList({
     .map(([shop, lists]) =>
       [SHOP_META[shop], ...lists.map((l) => `[ ] ${l[0].item.name}${l.map((e) => (e.qty ? ` (${CONTAINER_META[e.container].name}: ${e.qty.text})` : "")).join("")}`)].join("\n"),
     )
-    .join("\n\n");
+    .join("\n\n")
+    .concat(`\n\n${CREDIT}`);
 
   return (
     <div>
@@ -746,8 +810,8 @@ function KeepFresh() {
             downloadIcs(
               "emergency-kit-check.ics",
               "Emergency kit 6-month check",
-              "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents.\n\nYour list: " +
-                siteUrl("/list"),
+              "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
+                `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
               d,
               45,
               6,
@@ -832,13 +896,11 @@ function asText(kits: Container[], main: ListEntry[], st: (e: ListEntry) => Item
     }
     lines.push("");
   }
-  if (county?.alert) lines.push(`Emergency alerts: ${county.alert.name} ${county.alert.url}`);
+  if (county?.alert) lines.push(`Emergency alerts: ${county.alert.name} ${county.alert.url}`, "");
+  lines.push(CREDIT);
   return lines.join("\n");
 }
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function joinList(xs: string[]) {
   if (xs.length <= 1) return xs.join("");

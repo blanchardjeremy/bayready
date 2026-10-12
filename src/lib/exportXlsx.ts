@@ -7,6 +7,7 @@ import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { expiringSections } from "@/data/expiring";
 import { firstHourCard } from "@/data/firstHour";
+import { BAY_READY_URL, CREDIT } from "./urls";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -106,7 +107,23 @@ export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
   if (whenItHappens) buildCard(whenItHappens, card);
   buildOverview(overview, input, layout);
 
+  wb.title = "Our emergency kit";
+  wb.description = CREDIT;
+  for (const ws of [overview, todos, supplies, expiring, neighbors, whenItHappens]) if (ws) addCredit(ws);
+
   return wb;
+}
+
+/** A "Made with Bay Ready" link under the last row, and in the printed footer. */
+function addCredit(ws: Worksheet) {
+  // The Overview has a narrow spacer column A; the other tabs start in A.
+  const col = ws.name === "Overview" ? "B" : "A";
+  const row = (ws.lastRow?.number ?? 0) + 2;
+  const cell = ws.getCell(`${col}${row}`);
+  cell.value = { text: "Made with Bay Ready, a free emergency kit planner for the Bay Area", hyperlink: BAY_READY_URL };
+  cell.font = font({ size: 10, color: { argb: C.soft }, underline: true });
+  cell.alignment = { vertical: "middle", indent: col === "A" ? 1 : 0 };
+  ws.headerFooter.oddFooter = `&L&8Made with Bay Ready: ${BAY_READY_URL}&R&8Page &P of &N`;
 }
 
 function sheetOpts(): Partial<ExcelJSNamespace.AddWorksheetOptions> {
@@ -222,7 +239,7 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
 // Per-person Done columns (go bags on Supplies, per-adult tasks on To-dos)
 // ---------------------------------------------------------------------------
 
-/** Header cells named after the people on the Overview tab, so renaming someone there renames their column. */
+/** Name cells for the person columns, from the Overview tab, so renaming someone there renames their column. */
 function personHeaders(ws: Worksheet, headerRow: number, startCol: number, count: number, ctx: Context) {
   const names = peopleNames(ctx);
   for (let i = 0; i < count; i++) {
@@ -431,9 +448,9 @@ interface Col {
   auto?: boolean;
 }
 
-const GROUP_LABEL: Record<Group, string> = {
+// The "bags" columns have no group label on purpose (see buildSupplies).
+const GROUP_LABEL: Record<Exclude<Group, "bags">, string> = {
   what: "What to get",
-  bags: "Each person",
   buy: "Buying",
 };
 
@@ -490,7 +507,8 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   const HEADER = 5;
   ws.getRow(3).height = 8;
   ws.getRow(GROUP).height = 20;
-  for (const group of ["what", "bags", "buy"] as Group[]) {
+  // The person columns get no group label: they only apply to the go bag.
+  for (const group of ["what", "buy"] as const) {
     const members = cols.map((c, i) => (c.group === group ? i + 1 : 0)).filter(Boolean);
     if (members.length === 0) continue;
     const a = colLetter(members[0]);
@@ -499,7 +517,7 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
     const g = ws.getCell(`${a}${GROUP}`);
     g.value = GROUP_LABEL[group];
     g.font = { name: DISPLAY, size: 10, bold: true, color: { argb: C.soft } };
-    g.alignment = { vertical: "bottom", horizontal: group === "bags" ? "center" : "left", indent: group === "bags" ? 0 : 1 };
+    g.alignment = { vertical: "bottom", indent: 1 };
   }
 
   headerRow(
@@ -511,7 +529,10 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   const header = ws.getRow(HEADER);
   // Auto columns get a lighter header so they read as "not for typing".
   for (const c of cols.filter((c) => c.auto)) header.getCell(idx[c.key]).fill = fill(C.soft);
-  if (bags) personHeaders(ws, HEADER, idx.bag0, bags, input.ctx);
+  // Person columns stay unnamed in the sticky header, so the rows they don't apply to
+  // (the stay-at-home bin, "One for the group") don't look like they need filling in.
+  // The names sit on the go bag's "In every bag" row instead.
+  for (let i = 0; i < bags; i++) header.getCell(idx.bag0 + i).value = "";
 
   let row = HEADER + 1;
   const first = row;
@@ -528,7 +549,15 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
       ];
       for (const [name, desc, group] of groups) {
         if (group.length === 0) continue;
-        subSectionRow(ws, row++, name, desc, cols.length);
+        subSectionRow(ws, row, name, desc, cols.length);
+        if (group[0]?.slots.length) {
+          personHeaders(ws, row, idx.bag0, bags, input.ctx);
+          for (let i = 0; i < bags; i++) {
+            ws.getRow(row).getCell(idx.bag0 + i).font = { name: DISPLAY, size: 10, bold: true, color: { argb: C.ink } };
+            ws.getRow(row).getCell(idx.bag0 + i).alignment = { vertical: "bottom", horizontal: "center" };
+          }
+        }
+        row++;
         for (const e of group) writeSupplyRow(ws, row++, e, input, idx, bags);
       }
     } else {

@@ -28,6 +28,6 @@ describe("expiringSections", () => {
   });
 
   it("starts shared supplies with food", () => {
-    expect(sections({ build: "both" })[0].rows[0].item).toBe("Canned beans");
+    expect(sections({ build: "both" })[0].rows[0].item).toBe("[Example] Canned beans");
   });
 });

@@ -413,7 +413,7 @@ describe("spreadsheet export", () => {
     const input = makeInput();
     const buf = await toXlsx(ExcelJS, {
       ...input,
-      home: { facts: { gas: "Side of the house, wrench on a hook", contact: "Aunt Pat 555-0100" }, notes: "Radio is in Sam's go bag\nCheck the car kit in June" },
+      home: { facts: { gas: "Side of the house, wrench on a hook", contact: "Aunt Pat 555-0100" }, bags: [], notes: "Radio is in Sam's go bag\nCheck the car kit in June" },
     });
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(buf as unknown as ArrayBuffer);

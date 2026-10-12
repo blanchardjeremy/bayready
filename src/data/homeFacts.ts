@@ -1,4 +1,5 @@
 import type { Context, HazardId } from "@/lib/types";
+import { MAX_PEOPLE, peopleNames } from "@/lib/answers";
 
 /**
  * "Know your home": the things the to-dos ask people to find out, written
@@ -55,15 +56,57 @@ export function homeFacts(ctx: Context): HomeFact[] {
 /** What people have written down. Saved on the device only. */
 export interface HomeInfo {
   facts: Partial<Record<HomeFactId, string>>;
+  /** Where each person's go bag is, in the same order as their names. */
+  bags: string[];
   notes: string;
 }
 
 export const HOME_KEY = "bayready:home:v1";
-export const EMPTY_HOME: HomeInfo = { facts: {}, notes: "" };
+export const EMPTY_HOME: HomeInfo = { facts: {}, bags: [], notes: "" };
+
+/** One box to fill in. Most facts are one box; "Go bags are" is one per person. */
+export interface FactField {
+  key: string;
+  fact: HomeFact;
+  label: string;
+  value: string;
+  /** Whose go bag, for the per-person go bag boxes. */
+  bag?: number;
+}
+
+export function factFields(facts: HomeFact[], ctx: Context, home: HomeInfo): FactField[] {
+  return facts.flatMap((fact): FactField[] => {
+    if (fact.id === "goBags") {
+      const names = peopleNames(ctx).slice(0, ctx.carriers);
+      if (names.length === 1) return [{ key: "bag-0", fact, label: "Go bag is", value: home.bags[0] ?? "", bag: 0 }];
+      return names.map((name, i) => ({
+        key: `bag-${i}`,
+        fact,
+        label: name === "Me" ? "My go bag is" : `${name}'s go bag is`,
+        value: home.bags[i] ?? "",
+        bag: i,
+      }));
+    }
+    return [{ key: fact.id, fact, label: fact.label, value: home.facts[fact.id] ?? "" }];
+  });
+}
+
+/** Saves one box's new value. */
+export function setField(home: HomeInfo, field: FactField, value: string): HomeInfo {
+  if (field.bag === undefined) return { ...home, facts: { ...home.facts, [field.fact.id]: value } };
+  const bags = [...home.bags];
+  while (bags.length < field.bag) bags.push("");
+  bags[field.bag] = value;
+  return { ...home, bags };
+}
+
+export function hasHomeInfo(home: HomeInfo) {
+  return [home.notes, ...home.bags, ...Object.values(home.facts)].some((v) => v?.trim());
+}
 
 /** Clean up whatever is in storage, so an old or odd value can't break the page. */
 export function normalizeHome(input: unknown): HomeInfo {
-  const out: HomeInfo = { facts: {}, notes: "" };
+  const out: HomeInfo = { facts: {}, bags: [], notes: "" };
   if (!input || typeof input !== "object") return out;
   const i = input as Record<string, unknown>;
   if (i.facts && typeof i.facts === "object") {
@@ -72,6 +115,10 @@ export function normalizeHome(input: unknown): HomeInfo {
       if (typeof v === "string") out.facts[f.id] = v.slice(0, 200);
     }
   }
+  if (Array.isArray(i.bags)) out.bags = i.bags.slice(0, MAX_PEOPLE).map((b) => (typeof b === "string" ? b.slice(0, 200) : ""));
+  // Before go bags had a box per person, there was one shared box.
+  if (out.facts.goBags && !out.bags.some(Boolean)) out.bags = [out.facts.goBags];
+  delete out.facts.goBags;
   if (typeof i.notes === "string") out.notes = i.notes.slice(0, 4000);
   return out;
 }

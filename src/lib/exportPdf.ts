@@ -8,7 +8,8 @@ import { BAY_READY_URL } from "./urls";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { firstHourCard } from "@/data/firstHour";
-import { homeFacts } from "@/data/homeFacts";
+import { expiringSections } from "@/data/expiring";
+import { factFields, homeFacts } from "@/data/homeFacts";
 
 /*
  * The list as a PDF: every kit with checkboxes, the When it happens card, and
@@ -27,7 +28,6 @@ const PAGE_W = 612; // US Letter, in points
 const PAGE_H = 792;
 const M = 48;
 const CONTENT_W = PAGE_W - M * 2;
-const BOTTOM = PAGE_H - M - 16; // room for the footer
 
 /**
  * The built-in Helvetica covers Western European letters plus curly quotes,
@@ -36,19 +36,25 @@ const BOTTOM = PAGE_H - M - 16; // room for the footer
 function clean(s: string) {
   return s
     .replace(/\u2192/g, "->")
-    .replace(/[^\n\u0020-\u007e\u00a0-\u00ff\u2013\u2014\u2018-\u201e\u2022\u2026\u20ac\u2122]/g, "");
+    .replace(/ ?[^\n\u0020-\u007e\u00a0-\u00ff\u2013\u2014\u2018-\u201e\u2022\u2026\u20ac\u2122]/g, "");
 }
 
 class Pages {
   y = M;
+  landscape = false;
   constructor(readonly doc: JsPDF) {}
 
+  /** Lowest point content can reach on this page, above the footer. */
+  get bottom() {
+    return (this.landscape ? PAGE_W : PAGE_H) - M - 16;
+  }
   /** Start a new page unless there's this much room left. */
   room(h: number) {
-    if (this.y + h > BOTTOM) this.newPage();
+    if (this.y + h > this.bottom) this.newPage();
   }
-  newPage() {
-    this.doc.addPage();
+  newPage(landscape = this.landscape) {
+    this.landscape = landscape;
+    this.doc.addPage("letter", landscape ? "landscape" : "portrait");
     this.y = M;
   }
   font(size: number, bold = false, color: RGB = INK) {
@@ -219,11 +225,11 @@ function knowYourHome(p: Pages, input: ExportInput) {
 
   const gap = 8;
   const boxW = (CONTENT_W - gap) / 2;
-  const facts = homeFacts(input.ctx);
-  for (let i = 0; i < facts.length; i += 2) {
-    const pair = facts.slice(i, i + 2);
+  const fields = factFields(homeFacts(input.ctx), input.ctx, home);
+  for (let i = 0; i < fields.length; i += 2) {
+    const pair = fields.slice(i, i + 2);
     p.font(10);
-    const valueLines = pair.map((f) => p.lines(home.facts[f.id]?.trim() ?? "", boxW - 16));
+    const valueLines = pair.map((f) => p.lines(f.value.trim(), boxW - 16));
     const boxH = Math.max(44, 26 + Math.max(...valueLines.map((l) => l.length)) * 13);
     p.room(boxH + gap);
     pair.forEach((f, k) => {
@@ -243,7 +249,7 @@ function knowYourHome(p: Pages, input: ExportInput) {
   p.font(10);
   const noteLines = p.lines(home.notes.trim(), CONTENT_W - 16);
   const boxH = Math.max(110, 30 + noteLines.length * 13);
-  if (boxH <= BOTTOM - M) {
+  if (boxH <= p.bottom - M) {
     p.room(boxH);
     doc.setDrawColor(...INK);
     doc.setLineWidth(0.8);
@@ -296,21 +302,135 @@ export function buildPdf(JsPDFClass: typeof JsPDF, input: ExportInput): JsPDF {
   }
   whenItHappens(p, input);
 
-  const pages = doc.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
-    p.font(8, false, SOFT);
-    doc.textWithLink("Made with Bay Ready, a free emergency kit planner for the Bay Area", M, PAGE_H - M + 10, {
-      url: BAY_READY_URL,
-    });
-    doc.text(`Page ${i} of ${pages}`, M + CONTENT_W, PAGE_H - M + 10, { align: "right" });
-  }
+  refreshLog(p, ctx);
+  footers(p);
   return doc;
 }
 
-export async function downloadPdf(input: ExportInput, filename = "emergency-list.pdf") {
+/** Just the refresh log, for its own print button. */
+export function buildRefreshPdf(JsPDFClass: typeof JsPDF, input: ExportInput): JsPDF {
+  const doc = new JsPDFClass({ unit: "pt", format: "letter", orientation: "landscape" });
+  doc.setProperties({ title: "Keep it fresh", creator: "Bay Ready" });
+  const p = new Pages(doc);
+  p.landscape = true;
+  refreshLog(p, input.ctx, false);
+  footers(p);
+  return doc;
+}
+
+function footers(p: Pages) {
+  const { doc } = p;
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    const w = doc.internal.pageSize.getWidth();
+    const h = doc.internal.pageSize.getHeight();
+    p.font(8, false, SOFT);
+    doc.textWithLink("Made with Bay Ready, a free emergency kit planner for the Bay Area", M, h - M + 10, {
+      url: BAY_READY_URL,
+    });
+    doc.text(`Page ${i} of ${pages}`, w - M, h - M + 10, { align: "right" });
+  }
+}
+
+/** How many checks fit across a row of the refresh log. */
+const CHECKS = 5;
+
+/**
+ * The spreadsheet's Expiration dates tab, for paper. Instead of one date to
+ * cross out and rewrite, each row has a run of boxes: at every check, fill in
+ * the next one with today's date and when it's next due.
+ */
+function refreshLog(p: Pages, ctx: ExportInput["ctx"], newPage = true) {
+  const { doc } = p;
+  if (newPage) p.newPage(true);
+  const width = PAGE_H - M * 2;
+  const itemW = 232;
+  const everyW = 74;
+  const checkW = (width - itemW - everyW) / CHECKS;
+
+  p.para("Keep it fresh", 20, { bold: true, after: 2 });
+  p.para(
+    "Check these when the clocks change in spring and fall. Each time, use the next empty box: write today's date and when it's next due. Blank rows are for your own food and anything else that expires.",
+    10,
+    { color: SOFT, width, after: 10 },
+  );
+
+  const header = () => {
+    p.font(7.5, true, SOFT);
+    doc.text("ITEM", M, p.y + 8, { charSpace: 0.5 });
+    doc.text("REPLACE", M + itemW, p.y + 8, { charSpace: 0.5 });
+    doc.text("EACH CHECK", M + itemW + everyW + 4, p.y + 8, { charSpace: 0.5 });
+    p.y += 13;
+    doc.setDrawColor(...INK);
+    doc.setLineWidth(0.8);
+    doc.line(M, p.y, M + width, p.y);
+  };
+  const row = (item: string, note: string, every: string) => {
+    p.font(7.5);
+    const noteLines = note ? p.lines(note, itemW - 10) : [];
+    const rowH = Math.max(30, 18 + noteLines.length * 9);
+    if (p.y + rowH > p.bottom) {
+      p.newPage();
+      header();
+    }
+    const top = p.y;
+    if (item) {
+      p.font(9.5, true);
+      doc.text(p.lines(item, itemW - 10)[0] ?? "", M, top + 12);
+      p.font(7.5, false, SOFT);
+      noteLines.forEach((line, i) => doc.text(line, M, top + 22 + i * 9));
+    }
+    p.font(8.5, false, SOFT);
+    doc.text(p.lines(every, everyW - 6), M + itemW, top + 12);
+    // A box per check: "On" (the date you checked) over "Next" (when it's due).
+    for (let k = 0; k < CHECKS; k++) {
+      const x = M + itemW + everyW + k * checkW;
+      doc.setDrawColor(...LINE);
+      doc.setLineWidth(0.5);
+      doc.line(x, top, x, top + rowH);
+      p.font(6.5, false, SOFT);
+      doc.text("On", x + 4, top + 11);
+      doc.text("Next", x + 4, top + rowH / 2 + 10);
+    }
+    p.y += rowH;
+    doc.setDrawColor(...LINE);
+    doc.setLineWidth(0.5);
+    doc.line(M, p.y, M + width, p.y);
+  };
+
+  for (const section of expiringSections(ctx)) {
+    if (p.y + 70 > p.bottom) p.newPage();
+    p.y += 6;
+    p.para(section.name, 12.5, { bold: true });
+    p.para(section.desc + ".", 9, { color: SOFT, width, after: 4 });
+    header();
+    let blanks = section.blanks;
+    for (const r of section.rows) {
+      // The spreadsheet's example rows: real foods print as starters, the
+      // "add your food here" placeholders print as blank lines.
+      const name = r.item.replace(/^\[Example\] /, "");
+      if (name === "Add your food here") {
+        blanks++;
+        continue;
+      }
+      row(name, r.note, r.every ? `Every ${r.every} months` : "By the date on it");
+    }
+    for (let k = 0; k < blanks; k++) row("", "", "");
+    p.y += 10;
+  }
+}
+
+/** The whole list, or just the refresh log for its own print button. */
+export type PdfPart = "list" | "refresh";
+
+async function makePdf(input: ExportInput, part: PdfPart) {
   const { jsPDF } = await import("jspdf");
-  buildPdf(jsPDF, input).save(filename);
+  return part === "refresh" ? buildRefreshPdf(jsPDF, input) : buildPdf(jsPDF, input);
+}
+
+export async function downloadPdf(input: ExportInput, part: PdfPart = "list") {
+  (await makePdf(input, part)).save(part === "refresh" ? "keep-it-fresh.pdf" : "emergency-list.pdf");
 }
 
 /**
@@ -319,14 +439,13 @@ export async function downloadPdf(input: ExportInput, filename = "emergency-list
  * can't, so they get the PDF in a new tab to print or share from there. That tab
  * has to open right away, in the click, or a popup blocker stops it.
  */
-export function printPdf(input: ExportInput): Promise<void> {
+export function printPdf(input: ExportInput, part: PdfPart = "list"): Promise<void> {
   const ua = navigator.userAgent;
   const inTab = /iPad|iPhone|iPod|Android/.test(ua) || (/Safari\//.test(ua) && !/Chrome|Chromium|Edg\//.test(ua));
   const tab = inTab ? window.open("", "_blank") : null;
   return (async () => {
     try {
-      const { jsPDF } = await import("jspdf");
-      const url = URL.createObjectURL(buildPdf(jsPDF, input).output("blob"));
+      const url = URL.createObjectURL((await makePdf(input, part)).output("blob"));
       setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
       if (tab) {
         tab.location.href = url;

@@ -3,11 +3,12 @@ import { jsPDF } from "jspdf";
 import { writeFileSync } from "node:fs";
 import { deriveContext, normalizeAnswers } from "./answers";
 import { buildList, slotDone, stateOf } from "./buildList";
-import { buildPdf } from "./exportPdf";
+import { buildPdf, buildRefreshPdf } from "./exportPdf";
 import { ITEMS } from "@/data/items";
 import type { ItemState } from "./types";
+import type { HomeInfo } from "@/data/homeFacts";
 
-function makeInput(home?: { facts: Record<string, string>; notes: string }) {
+function makeInput(home?: HomeInfo) {
   const answers = normalizeAnswers({
     build: "both",
     county: "alameda",
@@ -40,13 +41,29 @@ function render(input: ReturnType<typeof makeInput>) {
 describe("PDF export", () => {
   it("lays out the list, the card, and Know your home", () => {
     const doc = render(
-      makeInput({ facts: { gas: "Left side of the house, wrench on a hook — by the meter", contact: "Aunt Ro, 555-0100" }, notes: "Radio is in Sam’s go bag." }),
+      makeInput({
+        facts: { gas: "Left side of the house, wrench on a hook — by the meter", contact: "Aunt Ro, 555-0100" },
+        bags: ["Hall closet", "", "Under Bea's bed"],
+        notes: "Radio is in Sam’s go bag.",
+      }),
     );
     expect(doc.getNumberOfPages()).toBeGreaterThan(3);
     const text = doc.output();
     expect(text).toContain("When it happens");
     expect(text).toContain("Know your home");
     expect(text).toContain("Aunt Ro, 555-0100");
+    expect(text).toContain("JOS\u00c9'S GO BAG IS");
+    expect(text).toContain("Under Bea's bed");
+  });
+
+  it("prints the refresh log on its own, with food starters and no [Example] tags", () => {
+    const doc = buildRefreshPdf(jsPDF, makeInput());
+    const text = doc.output();
+    expect(text).toContain("Keep it fresh");
+    expect(text).toContain("Canned beans");
+    expect(text).not.toContain("[Example]");
+    expect(text).not.toContain("Add your food here");
+    expect(doc.internal.pageSize.getWidth()).toBeGreaterThan(doc.internal.pageSize.getHeight());
   });
 
   it("leaves out Know your home on a shared list", () => {

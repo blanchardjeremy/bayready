@@ -5,7 +5,7 @@ import { MAX_PEOPLE, peopleNames } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { expiringSections } from "@/data/expiring";
-import { homeFacts, type HomeInfo } from "@/data/homeFacts";
+import { EMPTY_HOME, factFields, homeFacts, type HomeInfo } from "@/data/homeFacts";
 import { firstHourCard } from "@/data/firstHour";
 import { BAY_READY_URL, CREDIT } from "./urls";
 import { listSummary } from "./summary";
@@ -1094,7 +1094,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
 
   // Know your home: blanks for the things the to-dos ask people to find out.
   overviewSection(ws, row++, "Know your home");
-  for (const { id, label, hint } of homeFacts(ctx)) {
+  for (const { label, value, fact, bag } of factFields(homeFacts(ctx), ctx, input.home ?? EMPTY_HOME)) {
     ws.getRow(row).height = 24;
     const l = ws.getCell(`B${row}`);
     l.value = label;
@@ -1103,13 +1103,12 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     l.border = { bottom: hairline };
     ws.mergeCells(`C${row}:D${row}`);
     const v = ws.getCell(`C${row}`);
-    const answer = input.home?.facts[id]?.trim();
-    if (answer) v.value = answer;
+    if (value.trim()) v.value = value.trim();
     v.font = font();
     v.fill = fill(C.input);
     v.border = { bottom: hairline };
     v.alignment = { vertical: "middle", indent: 1, wrapText: true };
-    v.note = hint;
+    if (!bag) v.note = fact.hint;
     row++;
   }
   row++;

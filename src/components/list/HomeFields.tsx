@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import type { HomeFact, HomeFactId, HomeInfo } from "@/data/homeFacts";
+import type { FactField, HomeInfo } from "@/data/homeFacts";
 import { BAY_READY_URL } from "@/lib/urls";
 import { Button } from "@/components/controls";
 
@@ -9,57 +9,51 @@ import { Button } from "@/components/controls";
 export const HOME_CARD_ID = "know-your-home";
 
 /** One "Know your home" answer: a label, a text field, and a short hint under it. */
-export function FactInput({
-  fact,
-  value,
-  onChange,
-}: {
-  fact: HomeFact;
-  value: string;
-  onChange: (value: string) => void;
-}) {
+export function FactInput({ field, onChange }: { field: FactField; onChange: (value: string) => void }) {
   const id = useId();
+  // Per-person go bag boxes share one hint, so only the first shows it.
+  const hint = field.bag ? null : field.fact.hint;
   return (
     <div className="min-w-0">
       <label htmlFor={id} className="block text-[0.85rem] font-semibold text-ink-soft">
-        {fact.label}
+        {field.label}
       </label>
       <input
         id={id}
         type="text"
         autoComplete="off"
         maxLength={200}
-        value={value}
-        aria-describedby={`${id}-hint`}
+        value={field.value}
+        aria-describedby={hint ? `${id}-hint` : undefined}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 min-h-10 w-full rounded-md border border-line bg-paper px-3 text-[0.95rem] text-ink focus:border-ink focus:outline-none"
       />
-      <p id={`${id}-hint`} className="mt-1 text-[0.8rem] leading-snug text-ink-soft">
-        {fact.hint}
-      </p>
+      {hint && (
+        <p id={`${id}-hint`} className="mt-1 text-[0.8rem] leading-snug text-ink-soft">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
 
 /** The fields that belong to one task, shown right on its row. */
 export function TaskFacts({
-  facts,
-  home,
+  fields,
   onChange,
   onShowPrint,
 }: {
-  facts: HomeFact[];
-  home: HomeInfo;
-  onChange: (id: HomeFactId, value: string) => void;
+  fields: FactField[];
+  onChange: (field: FactField, value: string) => void;
   /** Takes people to the card's print button. */
   onShowPrint: () => void;
 }) {
-  if (facts.length === 0) return null;
+  if (fields.length === 0) return null;
   return (
     <div className="no-print mt-3 max-w-md">
       <div className="grid gap-3">
-        {facts.map((f) => (
-          <FactInput key={f.id} fact={f} value={home.facts[f.id] ?? ""} onChange={(v) => onChange(f.id, v)} />
+        {fields.map((f) => (
+          <FactInput key={f.key} field={f} onChange={(v) => onChange(f, v)} />
         ))}
       </div>
       <button
@@ -91,15 +85,15 @@ function printHomeInfo() {
 
 /** Every answer in one place, plus free-form notes: the cheat sheet for the day it happens. */
 export function KnowYourHome({
-  facts,
+  fields,
   home,
-  onFact,
+  onField,
   onNotes,
   pulse,
 }: {
-  facts: HomeFact[];
+  fields: FactField[];
   home: HomeInfo;
-  onFact: (id: HomeFactId, value: string) => void;
+  onField: (field: FactField, value: string) => void;
   onNotes: (notes: string) => void;
   /** Goes up each time a task sends someone here; the print button flashes to show where it is. */
   pulse: number;
@@ -145,8 +139,8 @@ export function KnowYourHome({
           spreadsheet, but never into share links.
         </p>
         <div className="mt-5 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          {facts.map((f) => (
-            <FactInput key={f.id} fact={f} value={home.facts[f.id] ?? ""} onChange={(v) => onFact(f.id, v)} />
+          {fields.map((f) => (
+            <FactInput key={f.key} field={f} onChange={(v) => onField(f, v)} />
           ))}
         </div>
         <div className="mt-6 max-w-3xl">
@@ -164,7 +158,7 @@ export function KnowYourHome({
           />
         </div>
       </div>
-      <PrintedSheet facts={facts} home={home} />
+      <PrintedSheet fields={fields} notes={home.notes} />
     </section>
   );
 }
@@ -173,22 +167,22 @@ export function KnowYourHome({
  * What goes on paper: a box for every answer, tall enough to fill in by hand,
  * so a half-finished card still prints as a usable form.
  */
-function PrintedSheet({ facts, home }: { facts: HomeFact[]; home: HomeInfo }) {
+function PrintedSheet({ fields, notes }: { fields: FactField[]; notes: string }) {
   return (
     <div className="hidden print:block">
       <h2 className="text-2xl font-extrabold">Know your home</h2>
       <p className="mt-1 text-sm">Fill in anything that&apos;s blank. Keep a copy in your stay-at-home bin and in each go bag.</p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
-        {facts.map((f) => (
-          <div key={f.id} className="print-break-avoid min-h-[2.2cm] rounded border border-black px-2.5 py-1.5">
+        {fields.map((f) => (
+          <div key={f.key} className="print-break-avoid min-h-[2.2cm] rounded border border-black px-2.5 py-1.5">
             <p className="text-[9pt] font-semibold uppercase tracking-wide">{f.label}</p>
-            <p className="mt-0.5 whitespace-pre-wrap">{home.facts[f.id]?.trim()}</p>
+            <p className="mt-0.5 whitespace-pre-wrap">{f.value.trim()}</p>
           </div>
         ))}
       </div>
       <div className="print-break-avoid mt-2.5 min-h-[6.5cm] rounded border border-black px-2.5 py-1.5">
         <p className="text-[9pt] font-semibold uppercase tracking-wide">Notes and reminders</p>
-        <p className="mt-0.5 whitespace-pre-wrap">{home.notes.trim()}</p>
+        <p className="mt-0.5 whitespace-pre-wrap">{notes.trim()}</p>
       </div>
       <p className="mt-4 text-[9pt]">Made with Bay Ready: {BAY_READY_URL}</p>
     </div>

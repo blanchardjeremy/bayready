@@ -9,6 +9,8 @@ Answer a few quick questions about your household: how many people and pets, wha
 - A list of what to buy and pack, with the amounts worked out for your household
 - A handful of free things you can knock out this weekend, including a couple you can do with neighbors
 - A short "when it happens" card to print and tape inside your bin, and an OK / HELP sign for your window
+- A PDF of the whole thing to print or save, starting with the stuff you'll want to know on the day: where the shutoffs are, who to call, where everyone's go bag is
+- A refresh log to keep in your bin, so you can check dates on food, water, and batteries twice a year
 - A spreadsheet you can download and share with the people you live with. It has a column for who's buying what, a spot for each person's go bag, and a place to keep track of when your food and water expire.
 
 ## Basics or Advanced

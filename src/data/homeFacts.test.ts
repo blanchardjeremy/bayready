@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, STARTER_ANSWERS, deriveContext } from "@/lib/answers";
 import { ITEMS } from "./items";
-import { HOME_FACTS, homeFacts, normalizeHome } from "./homeFacts";
+import { EMPTY_HOME, HOME_FACTS, factFields, homeFacts, normalizeHome, setField } from "./homeFacts";
 
 describe("homeFacts", () => {
   it("attaches every fact to a real item", () => {
@@ -22,10 +22,34 @@ describe("homeFacts", () => {
   });
 
   it("cleans up whatever is in storage", () => {
-    expect(normalizeHome(null)).toEqual({ facts: {}, notes: "" });
+    expect(normalizeHome(null)).toEqual(EMPTY_HOME);
     expect(normalizeHome({ facts: { gas: "Garage, left wall", bogus: "x", water: 5 }, notes: 7 })).toEqual({
       facts: { gas: "Garage, left wall" },
+      bags: [],
       notes: "",
     });
+  });
+
+  it("moves the old shared go bag answer into the first person's box", () => {
+    expect(normalizeHome({ facts: { goBags: "By the front door" } })).toEqual({
+      facts: {},
+      bags: ["By the front door"],
+      notes: "",
+    });
+  });
+
+  it("gives each person who carries a bag their own go bag box", () => {
+    const ctx = deriveContext({
+      ...STARTER_ANSWERS,
+      build: "go",
+      household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 1 },
+      names: { adults: ["", "Riley"], kids: [] },
+    });
+    const bags = factFields(homeFacts(ctx), ctx, EMPTY_HOME).filter((f) => f.fact.id === "goBags");
+    expect(bags.map((f) => f.label)).toEqual(["My go bag is", "Riley's go bag is", "Kid 1's go bag is"]);
+    expect(setField(EMPTY_HOME, bags[2], "Hall closet").bags).toEqual(["", "", "Hall closet"]);
+
+    const solo = deriveContext({ ...STARTER_ANSWERS, build: "go" });
+    expect(factFields(homeFacts(solo), solo, EMPTY_HOME).find((f) => f.fact.id === "goBags")?.label).toBe("Go bag is");
   });
 });

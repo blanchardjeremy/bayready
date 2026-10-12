@@ -27,13 +27,23 @@ import { ItemRow } from "./ItemRow";
 import { BAY_READY_URL, CREDIT, sitePath, siteUrl } from "@/lib/urls";
 import { clearReturnToList, markReturnToList } from "@/lib/returnToList";
 import { NamesEditor } from "@/components/NamesEditor";
-import { EMPTY_HOME, HOME_KEY, homeFacts, normalizeHome, type HomeFactId, type HomeInfo } from "@/data/homeFacts";
+import {
+  EMPTY_HOME,
+  HOME_KEY,
+  factFields,
+  hasHomeInfo as anyHomeInfo,
+  homeFacts,
+  normalizeHome,
+  setField,
+  type FactField,
+  type HomeInfo,
+} from "@/data/homeFacts";
 import { KnowYourHome, TaskFacts } from "./HomeFields";
 
 type States = Record<string, ItemState>;
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
 const EMPTY_STATES: States = {};
-type Export = "print" | "pdf" | "xlsx";
+type Export = "print" | "pdf" | "xlsx" | "refresh";
 type View = "kits" | "shop" | "plan";
 
 export function ListView() {
@@ -79,7 +89,7 @@ export function ListView() {
   // Know your home: device-only answers, shown on their task and in one card. Not for shared lists.
   const facts = homeFacts(ctx);
   const homeInfo = home ?? EMPTY_HOME;
-  const setFact = (id: HomeFactId, value: string) => setHome((prev) => ({ ...prev, facts: { ...prev.facts, [id]: value } }));
+  const onField = (field: FactField, value: string) => setHome((prev) => setField(prev, field, value));
 
   /** Props for one item row. Per-person rows tick everyone at once from the main checkbox. */
   const row: RowProps = (e) => ({
@@ -90,9 +100,8 @@ export function ListView() {
     onEditNames: shared ? undefined : () => setEditingNames(true),
     extra: shared ? undefined : (
       <TaskFacts
-        facts={facts.filter((f) => f.task === e.item.id)}
-        home={homeInfo}
-        onChange={setFact}
+        fields={factFields(facts.filter((f) => f.task === e.item.id), ctx, homeInfo)}
+        onChange={onField}
         onShowPrint={() => setPrintPulse((n) => n + 1)}
       />
     ),
@@ -123,8 +132,7 @@ export function ListView() {
     }
   };
   const shareUrl = () => `${siteUrl("/list")}#${encodeShare(answers, states)}`;
-  const hasHomeInfo =
-    !shared && (homeInfo.notes.trim() !== "" || Object.values(homeInfo.facts).some((v) => v?.trim()));
+  const hasHomeInfo = !shared && anyHomeInfo(homeInfo);
   /** What the PDF, printout, and spreadsheet are made from. */
   const exportInput = () => ({
     answers,
@@ -293,15 +301,18 @@ export function ListView() {
 
       {!shared && (
         <KnowYourHome
-          facts={facts}
+          fields={factFields(facts, ctx, homeInfo)}
           home={homeInfo}
-          onFact={setFact}
+          onField={onField}
           onNotes={(notes) => setHome((prev) => ({ ...prev, notes }))}
           pulse={printPulse}
         />
       )}
 
-      <KeepFresh />
+      <KeepFresh
+        busy={busy === "refresh"}
+        onPrint={() => run("refresh", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput(), "refresh")), "")}
+      />
 
       {/* The site footer doesn't print, so printed lists get their own credit. */}
       <p className="hidden pt-8 text-sm print:block">
@@ -861,43 +872,118 @@ function FirstHour({ ctx }: { ctx: Context }) {
   );
 }
 
-function KeepFresh() {
+/**
+ * Keeping food and batteries fresh happens over years, long after anyone has this
+ * page open, so this section doesn't track anything. It shows what the printed
+ * refresh log looks like once it's in use, and prints a blank one.
+ */
+function KeepFresh({ busy, onPrint }: { busy: boolean; onPrint: () => void }) {
   return (
-    <section className="mt-6 border-t border-line pt-10" aria-labelledby="keep-fresh">
-      <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
+    <section className="no-print mt-6 border-t border-line pt-10" aria-labelledby="keep-fresh">
+      <h2 id="keep-fresh" className="text-2xl font-extrabold tracking-tight">
+        Keep it fresh
+      </h2>
+      <div className="mt-2 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
         <div>
-          <h2 id="keep-fresh" className="text-2xl font-extrabold tracking-tight">
-            Keep it fresh
-          </h2>
-          <p className="mt-2 max-w-[64ch] text-ink-soft">
-            Check your kits when the clocks change in spring and fall. Look at expiration dates, swap stored water,
-            test flashlights and radios, refill prescriptions, and update clothes for kids who&apos;ve grown. An easy
-            habit: eat the oldest food from your bin and replace it on your next shop.
+          <p className="max-w-[60ch] text-ink-soft">
+            Food, water, medicine, and batteries all go bad eventually. Check your kits twice a year, when the clocks
+            change: look at dates, swap stored water, test flashlights and radios, refill prescriptions, and update
+            clothes for kids who&apos;ve grown. An easy habit is to eat the oldest food from your bin and replace it on
+            your next shop.
           </p>
+          <p className="mt-3 max-w-[60ch] text-ink-soft">
+            Keep track on paper, in your bin. The refresh log lists what to check for your household. Each time, write
+            the date and when it&apos;s next due in the next empty box, so there&apos;s nothing to cross out.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" disabled={busy} onClick={onPrint}>
+              {busy ? "Getting it ready…" : "Print the refresh log"}
+            </Button>
+            <Button
+              type="button"
+              variant="quiet"
+              onClick={() => {
+                const d = new Date();
+                d.setMonth(d.getMonth() + 6);
+                d.setHours(10, 0, 0, 0);
+                downloadIcs(
+                  "emergency-kit-check.ics",
+                  "Emergency kit 6-month check",
+                  "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
+                    `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
+                  d,
+                  45,
+                  6,
+                );
+              }}
+            >
+              Set a 6-month reminder
+            </Button>
+          </div>
         </div>
-        <Button
-          type="button"
-          variant="secondary"
-          className="no-print"
-          onClick={() => {
-            const d = new Date();
-            d.setMonth(d.getMonth() + 6);
-            d.setHours(10, 0, 0, 0);
-            downloadIcs(
-              "emergency-kit-check.ics",
-              "Emergency kit 6-month check",
-              "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
-                `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
-              d,
-              45,
-              6,
-            );
-          }}
-        >
-          Set a 6-month reminder
-        </Button>
+        <RefreshLogExample />
       </div>
     </section>
+  );
+}
+
+/** A made-up, filled-in refresh log, so people can see how the paper one works. */
+function RefreshLogExample() {
+  const pen = "font-[Bradley_Hand,Segoe_Print,Comic_Sans_MS,cursive] text-[0.95rem] text-focus";
+  const rows: { item: string; every: string; checks: [string, string][] }[] = [
+    { item: "Canned beans", every: "Every 24 months", checks: [["Mar 8 '26", "Mar '28"]] },
+    { item: "Water from the tap", every: "Every 6 months", checks: [["Mar 8 '26", "Nov '26"], ["Nov 1 '26", "May '27"]] },
+    { item: "Flashlights and radio", every: "Every 6 months", checks: [["Mar 8 '26", "Nov '26"], ["Nov 1 '26", "May '27"]] },
+    { item: "Everyday medicines", every: "By the date on it", checks: [["Mar 8 '26", "Jan '27"]] },
+    { item: "Granola bars", every: "", checks: [["Nov 1 '26", "Aug '27"]] },
+  ];
+  return (
+    <figure className="relative">
+      <div
+        role="img"
+        aria-label="Example: a printed refresh log with dates written in by hand"
+        className="rotate-[0.6deg] overflow-hidden rounded-lg border border-line bg-paper p-4 shadow-[0_18px_40px_-24px_rgba(19,41,61,0.45)]"
+      >
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-ink px-2.5 py-0.5 text-[0.7rem] font-bold uppercase tracking-widest text-paper">
+          Example
+        </span>
+        <p className="font-extrabold">Keep it fresh</p>
+        <div aria-hidden="true" className="mt-2 overflow-x-auto">
+          <table className="w-full min-w-max border-collapse text-left text-[0.78rem]">
+            <thead>
+              <tr className="border-b-2 border-ink text-[0.65rem] uppercase tracking-wider text-ink-soft">
+                <th className="py-1 pr-2 font-bold">Item</th>
+                <th className="py-1 pr-2 font-bold">Replace</th>
+                <th className="py-1 font-bold" colSpan={3}>
+                  Each check
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.item} className="border-b border-line align-top">
+                  <td className={`py-1.5 pr-2 font-semibold ${r.every ? "" : pen}`}>{r.item}</td>
+                  <td className="whitespace-nowrap py-1.5 pr-2 text-ink-soft">{r.every}</td>
+                  {[0, 1, 2].map((k) => (
+                    <td key={k} className="w-[19%] whitespace-nowrap border-l border-line px-1.5 py-1 text-[0.65rem] text-ink-soft">
+                      <div>
+                        On <span className={pen}>{r.checks[k]?.[0]}</span>
+                      </div>
+                      <div>
+                        Next <span className={pen}>{r.checks[k]?.[1]}</span>
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption className="mt-3 text-[0.88rem] text-ink-soft">
+        A made-up example. Yours lists what&apos;s in your kits, with blank rows for your own food.
+      </figcaption>
+    </figure>
   );
 }
 

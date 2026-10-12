@@ -102,7 +102,7 @@ export interface Context {
   otherPets: number;
   pets: number;
   needs: Set<NeedId>;
-  /** days of supplies for the stay bin */
+  /** days of supplies for the stay-at-home bin */
   stayDays: number;
   /** days of supplies for the go bag */
   goDays: number;
@@ -142,12 +142,12 @@ export interface Item {
   /** Example products or places to get it. Shown as examples, not endorsements. */
   examples?: { label: string; url: string }[];
   /**
-   * When someone builds both kits, the go bag lives at home too, so the stay bin
+   * When someone builds both kits, the go bag lives at home too, so the stay-at-home bin
    * doesn't need its own copy of this item.
    */
   coveredByGo?: boolean;
   /**
-   * Stay bin items whose amount scales with days at home, so the spreadsheet
+   * Stay-at-home bin items whose amount scales with days at home, so the spreadsheet
    * can recalculate them when someone changes the number of days.
    */
   scalesWithDays?: {

@@ -482,7 +482,7 @@ export const ITEMS: Item[] = [
     shop: "free",
   },
 
-  // ----- Stay bin ------------------------------------------------------------
+  // ----- Stay-at-home bin ------------------------------------------------------------
   {
     id: "bin",
     name: "Large plastic bin with a lid",
@@ -1454,7 +1454,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     when: (ctx) => ctx.pets > 0,
-    why: "Shelters and stores may run out. Water for pets is already counted in your stay bin water total.",
+    why: "Shelters and stores may run out. Water for pets is already counted in your stay-at-home bin water total.",
     tip: "Rotate pet food like your own. Kibble goes stale after opening.",
     qty: (ctx, c) => ({ text: `${days(ctx, c)} days for ${plural(ctx.pets, "pet")}` }),
     cost: (ctx, c) => range(1, 2.5, days(ctx, c) * ctx.pets),

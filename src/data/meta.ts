@@ -2,7 +2,7 @@ import type { Category, Container, Shop, Stage } from "@/lib/types";
 
 export const CONTAINER_META: Record<Container, { name: string; purpose: string; where: string }> = {
   stay: {
-    name: "Stay bin",
+    name: "Stay-at-home bin",
     purpose: "Think of it as camping at home: no power, no running water, stores closed, and help may be slow to reach you.",
     where: "Keep it somewhere you can reach after a quake: a closet near the door, not the back of the garage.",
   },

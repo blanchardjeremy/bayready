@@ -5,6 +5,7 @@ import { MAX_PEOPLE, peopleNames, resolveBuild } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
+import { expiringSections } from "@/data/expiring";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -72,7 +73,7 @@ const SHOP_SHORT: Record<Shop, string> = {
 const NAMES_FIRST_ROW = 17;
 const NAMES_COUNT = MAX_PEOPLE;
 const WHO_RANGE = `Overview!$B$${NAMES_FIRST_ROW}:$B$${NAMES_FIRST_ROW + NAMES_COUNT - 1}`;
-// "Days at home" on the Overview tab. Stay bin amounts that scale with days read it.
+// "Days at home" on the Overview tab. Stay-at-home bin amounts that scale with days read it.
 const DAYS_ROW = 14;
 const DAYS = `Overview!$C$${DAYS_ROW}`;
 
@@ -89,14 +90,14 @@ export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
   const overview = wb.addWorksheet("Overview", sheetOpts());
   const todos = wb.addWorksheet("To-dos", sheetOpts());
   const supplies = wb.addWorksheet("Supplies", sheetOpts());
-  const food = wb.addWorksheet(FOOD_SHEET, sheetOpts());
+  const expiring = wb.addWorksheet(EXPIRING_SHEET, sheetOpts());
 
   const active = input.entries.filter((e) => input.stateOf(e) !== "skip");
   const firstKeys = new Set(firstSteps(input.entries, input.stateOf, input.answers).map((e) => e.key));
 
   buildTodos(todos, active.filter((e) => e.container === "home"), input, firstKeys);
   const layout = buildSupplies(supplies, active.filter((e) => e.container !== "home"), input);
-  buildFood(food, input.ctx);
+  buildExpiring(expiring, input.ctx);
   buildOverview(overview, input, layout);
 
   return wb;
@@ -227,19 +228,19 @@ function personHeaders(ws: Worksheet, headerRow: number, startCol: number, count
   }
 }
 
+// Wide enough for a first name, and for "Not done" with its dropdown arrow.
+const PERSON_COL_WIDTH = 15;
+
 // Plain text values with a dropdown work the same in Google Sheets, Excel, and Numbers.
 const DONE = "Done";
 const NOT_DONE = "Not done";
 
-/** A Done / Not done dropdown per person, or quiet grey cells when the row is done once for everyone. */
+/** A Done / Not done dropdown per person, or plain empty cells when the row is done once for everyone. */
 function personCells(r: ExcelJSNamespace.Row, startCol: number, count: number, done: ((i: number) => boolean) | null) {
   for (let i = 0; i < count; i++) {
     const cell = r.getCell(startCol + i);
     cell.border = { bottom: hairline };
-    if (!done) {
-      cell.fill = fill(C.auto);
-      continue;
-    }
+    if (!done) continue;
     cell.value = done(i) ? DONE : NOT_DONE;
     cell.font = font({ size: 10 });
     cell.alignment = { vertical: "middle", horizontal: "center" };
@@ -330,7 +331,7 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
   ws.columns = [
     { width: 11 }, // Status
     { width: 50 }, // Task
-    ...Array.from({ length: people }, () => ({ width: 10 })),
+    ...Array.from({ length: people }, () => ({ width: PERSON_COL_WIDTH })),
     { width: 16 }, // Who
     { width: 28 }, // Link
     { width: 90 }, // Why
@@ -354,25 +355,38 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
   personHeaders(ws, HEADER, P, people, input.ctx);
   ws.getRow(3).height = 8;
 
+  // Tasks each adult does go together at the top, so the household tasks below
+  // don't carry empty person columns.
+  const perPerson = (e: ListEntry) => people > 0 && e.slots.length > 0;
+  const stages = ["weekend", "month", "later"] as Stage[];
+  const byStage = (e: ListEntry) => stages.indexOf(planStage(e, firstKeys, input.answers));
+  const sections: [string, string, ListEntry[]][] = [
+    ["Each adult", "Everyone does these on their own phone or accounts", list.filter(perPerson).sort((a, b) => byStage(a) - byStage(b))],
+    ...stages.map((stage): [string, string, ListEntry[]] => [
+      STAGE_META[stage].name,
+      TODO_STAGE_BLURB[stage],
+      sortByCategory(list.filter((e) => !perPerson(e) && planStage(e, firstKeys, input.answers) === stage)),
+    ]),
+  ];
+
   let row = HEADER + 1;
   const first = row;
-  for (const stage of ["weekend", "month", "later"] as Stage[]) {
-    const items = sortByCategory(list.filter((e) => planStage(e, firstKeys, input.answers) === stage));
+  for (const [name, desc, items] of sections) {
     if (items.length === 0) continue;
-    sectionRow(ws, row++, STAGE_META[stage].name, TODO_STAGE_BLURB[stage], WHY);
+    sectionRow(ws, row++, name, desc, WHY);
     for (const e of items) {
       const r = ws.getRow(row);
       r.height = 24;
-      const perPerson = people > 0 && e.slots.length > 0;
-      if (perPerson) {
+      const each = perPerson(e);
+      if (each) {
         personStatus(r.getCell(1), row, P, people, ["Done", "Partly", "To do"], input.stateOf(e) === "have");
       } else {
         statusCell(r.getCell(1), input.stateOf(e) === "have" ? "Done" : "To do", STATUS.todos);
       }
       r.getCell(2).value = e.item.name;
       bodyCell(r.getCell(2));
-      personCells(r, P, people, perPerson ? (i) => input.slotDone(e, i) : null);
-      if (perPerson) {
+      personCells(r, P, people, each ? (i) => input.slotDone(e, i) : null);
+      if (each) {
         r.getCell(WHO).value = "Each adult";
         bodyCell(r.getCell(WHO), { size: 10, color: { argb: C.soft } });
       } else {
@@ -413,7 +427,7 @@ interface Col {
 
 const GROUP_LABEL: Record<Group, string> = {
   what: "What to get",
-  bags: "Each go bag",
+  bags: "Each person",
   buy: "Buying",
 };
 
@@ -435,7 +449,7 @@ function supplyColumns(bags: number): Col[] {
     { key: "status", label: "Status", width: 10, group: "what" },
     { key: "item", label: "Item", width: 42, group: "what" },
     { key: "amount", label: "Amount", width: 20, group: "what" },
-    ...Array.from({ length: bags }, (_, i): Col => ({ key: `bag${i}`, label: defaultLabel(i), width: 10, group: "bags" })),
+    ...Array.from({ length: bags }, (_, i): Col => ({ key: `bag${i}`, label: defaultLabel(i), width: PERSON_COL_WIDTH, group: "bags" })),
     { key: "who", label: "Who's buying", width: 14, group: "buy", note: "Who's getting it. Pick a name from the Overview tab, or type one." },
     { key: "cost", label: "Est. cost", width: 11, group: "buy", note: "A rough estimate for the whole amount." },
     { key: "where", label: "Where", width: 15, group: "buy" },
@@ -461,7 +475,7 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
     "Supplies",
     bags
       ? "Mark each person Done as you pack their go bag. For everything else, set Status to Have when you get it."
-      : "Set Status to Have when you get something. Track food and water dates on the Food & water tab.",
+      : "Set Status to Have when you get something. Track what expires on the Expiration dates tab.",
     lastCol,
   );
 
@@ -618,95 +632,135 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
 }
 
 // ---------------------------------------------------------------------------
-// Food & water: a blank log for the things that need rotating
+// Expiration dates: things that expire or need a regular check, food first
 // ---------------------------------------------------------------------------
 
-const FOOD_SHEET = "Food & water";
-const FOOD_HEADS_COL = "E";
-const FOOD_ROWS = 60;
+const EXPIRING_SHEET = "Expiration dates";
+const EXPIRING_HEADS_COL = "G";
+const DUE_NOW = "Due now";
+const DUE_SOON = "Due soon";
 
-function buildFood(ws: Worksheet, ctx: Context) {
+function buildExpiring(ws: Worksheet, ctx: Context) {
   ws.columns = [
-    { width: 36 }, // Food or water
-    { width: 18 }, // How much
-    { width: 13 }, // Kit
-    { width: 15 }, // Expires
-    { width: 16 }, // Heads-up
-    { width: 44 }, // Notes
+    { width: 38 }, // A Item
+    { width: 18 }, // B Kit
+    { width: 15 }, // C Replace every
+    { width: 15 }, // D Packed on
+    { width: 16 }, // E Date on package
+    { width: 15 }, // F Due by
+    { width: 13 }, // G Heads-up
+    { width: 58 }, // H Notes
   ].map((c) => ({ ...c, style: { font: font() } }));
 
   title(
     ws,
-    FOOD_SHEET,
-    "Write down the food and water you store and when each expires. Heads-up tells you what to eat or swap soon.",
-    "F",
+    EXPIRING_SHEET,
+    "Add the date you packed each thing, or the date printed on it. Due by and Heads-up fill in on their own.",
+    "H",
   );
   ws.getRow(3).height = 8;
   const HEADER = 4;
-  headerRow(ws, HEADER, ["Food or water", "How much", "Kit", "Expires", "Heads-up", "Notes"], {
-    3: "Where it's stored.",
-    4: "The date on the package. For water you bottled yourself, use the day you filled it plus 6 months.",
-    5: "Fills in on its own.\nReplace now: past its date.\nReplace soon: within the next 6 months.\nGood: nothing to do.",
+  headerRow(ws, HEADER, ["Item", "Kit", "Replace every", "Packed on", "Date on package", "Due by", "Heads-up", "Notes"], {
+    2: "Where it's kept.",
+    3: "A default you can change. Used with Packed on when there's no date on the package.",
+    4: "The day you bought or packed it.",
+    5: "The expiration date printed on it, if there is one. This wins over Replace every.",
+    6: "Fills in on its own: the date on the package, or Packed on plus Replace every.",
+    7: `Fills in on its own.\n${DUE_NOW}: past due.\n${DUE_SOON}: due before your next check-up (6 months).\nGood: nothing to do.`,
   });
-  // The first cell is centered by headerRow; this column holds text.
+  // headerRow centers the first column; this one holds text.
   ws.getRow(HEADER).getCell(1).alignment = { vertical: "middle", horizontal: "left", indent: 1 };
-  ws.getRow(HEADER).getCell(5).fill = fill(C.soft);
+  for (const col of [6, 7]) ws.getRow(HEADER).getCell(col).fill = fill(C.soft);
 
-  const kits = (["stay", "go", "car"] as Container[]).filter((k) => ctx.kits.includes(k)).map((k) => CONTAINER_META[k].name);
-  const first = HEADER + 1;
-  const last = HEADER + FOOD_ROWS;
-  for (let row = first; row <= last; row++) {
+  const kits = ["Stay-at-home bin", "Go bag", "Car kit", "Around the house"];
+  const writeRow = (row: number, item?: { item: string; kit: string; every?: number; note: string }) => {
     const r = ws.getRow(row);
     r.height = 24;
+    r.getCell(1).value = item?.item ?? null;
     bodyCell(r.getCell(1));
-    bodyCell(r.getCell(2), { size: 10, color: { argb: C.soft } });
-    const kit = r.getCell(3);
+    const kit = r.getCell(2);
+    kit.value = item?.kit ?? null;
     bodyCell(kit, { size: 10, color: { argb: C.soft } });
     kit.dataValidation = { type: "list", allowBlank: true, formulae: [`"${kits.join(",")}"`], showErrorMessage: false };
-    const expires = r.getCell(4);
-    bodyCell(expires);
-    expires.numFmt = DATE_FMT;
-    expires.dataValidation = {
-      type: "date",
-      operator: "greaterThan",
+    const every = r.getCell(3);
+    if (item?.every) every.value = item.every;
+    every.numFmt = '0" months"';
+    bodyCell(every, { color: { argb: C.soft } });
+    every.dataValidation = {
+      type: "whole",
+      operator: "between",
       allowBlank: true,
       showErrorMessage: true,
-      errorTitle: "That doesn't look like a date",
-      error: "Try something like 3/1/2027.",
-      formulae: [new Date(Date.UTC(2000, 0, 1))],
+      errorTitle: "Replace every",
+      error: "Type a number of months, like 6.",
+      formulae: [1, 120],
     };
-    const heads = r.getCell(5);
-    heads.value = { formula: `IF(D${row}="","",IF(D${row}<=TODAY(),"Replace now",IF(D${row}<=EDATE(TODAY(),6),"Replace soon","Good")))` };
+    for (const col of [4, 5]) {
+      const c = r.getCell(col);
+      bodyCell(c);
+      c.numFmt = DATE_FMT;
+      c.fill = fill(C.input);
+      c.dataValidation = {
+        type: "date",
+        operator: "greaterThan",
+        allowBlank: true,
+        showErrorMessage: true,
+        errorTitle: "That doesn't look like a date",
+        error: "Try something like 3/1/2027.",
+        formulae: [new Date(Date.UTC(2000, 0, 1))],
+      };
+    }
+    const due = r.getCell(6);
+    // Works in Google Sheets and Excel. Apple Numbers mistranslates date functions on cells
+    // that were empty when the file was opened, so there only "Date on package" calculates.
+    due.value = { formula: `IF(E${row}<>"",E${row},IF(AND(D${row}<>"",C${row}<>""),EDATE(D${row},C${row}),""))` };
+    due.numFmt = DATE_FMT;
+    bodyCell(due, { color: { argb: C.soft } });
+    due.fill = fill(C.auto);
+    const heads = r.getCell(7);
+    heads.value = {
+      formula: `IF(F${row}="","",IF(F${row}<=TODAY(),"${DUE_NOW}",IF(F${row}<=EDATE(TODAY(),6),"${DUE_SOON}","Good")))`,
+    };
     bodyCell(heads, { size: 10, color: { argb: C.soft } });
     heads.fill = fill(C.auto);
-    bodyCell(r.getCell(6), { size: 10, color: { argb: C.soft } });
+    r.getCell(8).value = item?.note || null;
+    bodyCell(r.getCell(8), { size: 10, color: { argb: C.soft } });
+  };
+
+  let row = HEADER + 1;
+  const first = row;
+  for (const section of expiringSections(ctx)) {
+    sectionRow(ws, row++, section.name, section.desc, 8);
+    for (const item of section.rows) writeRow(row++, item);
+    for (let i = 0; i < section.blanks; i++) writeRow(row++);
   }
+  const last = row - 1;
 
   ws.addConditionalFormatting({
-    ref: `E${first}:E${last}`,
+    ref: `G${first}:G${last}`,
     rules: [
       {
         type: "expression",
         priority: 1,
-        formulae: [`$E${first}="Replace now"`],
+        formulae: [`$G${first}="${DUE_NOW}"`],
         style: { font: { color: { argb: C.orange }, bold: true }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.orangeWash } } },
       },
       {
         type: "expression",
         priority: 2,
-        formulae: [`$E${first}="Replace soon"`],
+        formulae: [`$G${first}="${DUE_SOON}"`],
         style: { font: { color: { argb: C.amber }, bold: true }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.amberWash } } },
       },
-      { type: "expression", priority: 3, formulae: [`$E${first}="Good"`], style: { font: { color: { argb: C.green } } } },
+      { type: "expression", priority: 3, formulae: [`$G${first}="Good"`], style: { font: { color: { argb: C.green } } } },
     ],
   });
 
   const tip = ws.getCell(`A${last + 2}`);
-  tip.value = "Eat the oldest first and replace it on your next shop. Need more rows? Copy the last row down so Heads-up comes with it.";
+  tip.value = "Eat the oldest food first and replace it on your next shop. Need more rows? Copy a row down so the formulas come with it.";
   tip.font = font({ size: 10, color: { argb: C.soft } });
   tip.alignment = { indent: 1 };
 
-  ws.autoFilter = { from: { row: HEADER, column: 1 }, to: { row: last, column: 6 } };
+  ws.autoFilter = { from: { row: HEADER, column: 1 }, to: { row: last, column: 8 } };
   ws.views = [{ state: "frozen", ySplit: HEADER, showGridLines: false }];
 }
 
@@ -742,7 +796,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
 
   // Where things stand
   const { cost } = layout;
-  const heads = `'${FOOD_SHEET}'!$${FOOD_HEADS_COL}:$${FOOD_HEADS_COL}`;
+  const heads = `'${EXPIRING_SHEET}'!$${EXPIRING_HEADS_COL}:$${EXPIRING_HEADS_COL}`;
   let row = 6;
   overviewSection(ws, row++, "Where things stand");
   const stats: [string, ExcelJSNamespace.CellValue, string, string?][] = [
@@ -766,15 +820,15 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
       "A rough estimate. Most people spread it over a few months.",
       MONEY_FMT,
     ],
-    ["Replace now", { formula: `COUNTIF(${heads},"Replace now")` }, `Food or water past its date. See the ${FOOD_SHEET} tab.`, "0"],
-    ["Replace in the next 6 months", { formula: `COUNTIF(${heads},"Replace soon")` }, "Eat these or swap them at your next check-up.", "0"],
+    [DUE_NOW, { formula: `COUNTIF(${heads},"${DUE_NOW}")` }, `Past its date or overdue for a check. See the ${EXPIRING_SHEET} tab.`, "0"],
+    ["Due in the next 6 months", { formula: `COUNTIF(${heads},"${DUE_SOON}")` }, "Swap or check these at your next check-up.", "0"],
   ];
   const statRows: number[] = [];
   for (const [label, value, hint, fmt] of stats) {
     statRows.push(row);
     statRow(ws, row++, label, value, hint, fmt);
   }
-  // "Replace now" turns orange only when there's something to do.
+  // "Due now" turns orange only when there's something to do.
   const replaceRow = statRows[3];
   ws.addConditionalFormatting({
     ref: `C${replaceRow}`,
@@ -788,14 +842,14 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   inputStyle(ws.getCell(`C${row}`));
   row++;
 
-  // Days at home: change it and the stay bin's water, food, and costs recalculate.
+  // Days at home: change it and the stay-at-home bin's water, food, and costs recalculate.
   if (row !== DAYS_ROW) throw new Error(`Overview layout moved: days at row ${row}, expected ${DAYS_ROW}`);
   statRow(
     ws,
     row,
     "Days at home",
     ctx.stayDays,
-    "Stay bin amounts and costs follow this. Aim for at least 7.",
+    "Stay-at-home bin amounts and costs follow this. Aim for at least 7.",
     // A plain number: some apps carry a "days" format into the formulas that read it.
     "0",
   );
@@ -830,7 +884,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   }
   const hint = ws.getCell(`D${row}`);
   hint.value = layout.bags
-    ? "Change these to real names. They label each go bag column and fill the Who dropdowns."
+    ? "Change these to real names. They label the person columns and fill the Who dropdowns."
     : "Add names here. They show up in the Who dropdowns on the other tabs.";
   hint.font = font({ size: 10, color: { argb: C.soft } });
   hint.alignment = { vertical: "middle" };
@@ -843,8 +897,8 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     layout.bags
       ? "Packing a go bag? Set that person's column to Done. For everything else, set Status to Have. Finished a task? Set it to Done."
       : "When you get something, set Status to Have. Finished a task? Set it to Done.",
-    `Write your food and water on the ${FOOD_SHEET} tab with their expiration dates. Heads-up shows what to replace.`,
-    "At each check-up, swap anything marked Replace now or Replace soon.",
+    `On the ${EXPIRING_SHEET} tab, add the date you packed things or the date printed on them. Heads-up shows what's due.`,
+    `At each check-up, swap or check anything marked ${DUE_NOW} or ${DUE_SOON}.`,
   ];
   steps.forEach((s, i) => {
     ws.mergeCells(`B${row}:D${row}`);
@@ -907,7 +961,7 @@ function statRow(ws: Worksheet, row: number, label: string, value: ExcelJSNamesp
 
 function summary(answers: Answers, ctx: Context): string {
   const build = resolveBuild(answers);
-  const kits = { stay: "A stay bin", go: "A go bag", both: "A stay bin and a go bag" }[build];
+  const kits = { stay: "A stay-at-home bin", go: "A go bag", both: "A stay-at-home bin and a go bag" }[build];
   const h = answers.household;
   const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
   const who = [

@@ -170,7 +170,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
             value={a.build}
             onChange={(build) => update({ build })}
             options={[
-              { value: "stay", label: "Stay bin", desc: "Supplies to get through days at home without power or running water." },
+              { value: "stay", label: "Stay-at-home bin", desc: "Supplies to get through days at home without power or running water." },
               { value: "go", label: "Go bag", desc: "A grab-and-go bag in case you need to leave fast." },
               { value: "both", label: "Both", badge: "Recommended", desc: "We'll list each one separately so you can do them one at a time." },
               { value: "unsure", label: "Not sure yet", desc: "We'll suggest one after a couple of questions." },
@@ -288,7 +288,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
             {suggestion && (
               <div className="mb-6 rounded-lg border-2 border-orange bg-orange-wash p-4">
                 <p className="font-semibold">
-                  Our suggestion: {suggestion === "both" ? "a stay bin and a go bag" : "start with a stay bin"}
+                  Our suggestion: {suggestion === "both" ? "a stay-at-home bin and a go bag" : "start with a stay-at-home bin"}
                 </p>
                 <p className="mt-1 text-[0.95rem] text-ink-soft">
                   {suggestion === "both"
@@ -304,7 +304,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
                     variant="secondary"
                     onClick={() => update({ build: suggestion === "both" ? "stay" : "both" })}
                   >
-                    {suggestion === "both" ? "Just a stay bin" : "I want both"}
+                    {suggestion === "both" ? "Just a stay-at-home bin" : "I want both"}
                   </Button>
                 </div>
               </div>

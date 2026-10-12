@@ -55,7 +55,7 @@ function ExampleList() {
   return (
     <figure aria-label="Example of a finished list" className="relative mx-auto w-full max-w-md lg:max-w-none">
       <div className="rotate-[-1.2deg] rounded-xl bg-paper p-6 shadow-[0_1px_0_var(--line),0_18px_40px_-24px_rgba(19,41,61,0.45)]">
-        <span className="tag text-lg">Stay bin</span>
+        <span className="tag text-lg">Stay-at-home bin</span>
         <p className="mt-3 text-[0.95rem] text-ink-soft">2 adults, 1 dog. Earthquake, outage, smoke.</p>
         <ul className="mt-4 divide-y divide-line">
           {rows.map(([name, qty, have]) => (

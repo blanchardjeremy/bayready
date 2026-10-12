@@ -253,7 +253,7 @@ function Header({
     h.cats && `${h.cats} ${h.cats === 1 ? "cat" : "cats"}`,
     h.otherPets && `${h.otherPets} other ${h.otherPets === 1 ? "pet" : "pets"}`,
   ].filter(Boolean);
-  const kitsText = { stay: "a stay bin", go: "a go bag", both: "a stay bin and a go bag" }[build];
+  const kitsText = { stay: "a stay-at-home bin", go: "a go bag", both: "a stay-at-home bin and a go bag" }[build];
   const hazards = [...ctx.hazards].map((id) => HAZARD_BY_ID[id].name.toLowerCase());
 
   return (

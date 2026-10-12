@@ -64,9 +64,9 @@ function findRow(ws: ExcelJS.Worksheet, text: string) {
 }
 
 describe("spreadsheet export", () => {
-  it("has Overview, To-dos, Supplies, and Food & water tabs", async () => {
+  it("has Overview, To-dos, Supplies, and Expiration dates tabs", async () => {
     const wb = await roundTrip();
-    expect(wb.worksheets.map((w) => w.name)).toEqual(["Overview", "To-dos", "Supplies", "Food & water"]);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(["Overview", "To-dos", "Supplies", "Expiration dates"]);
   });
 
   it("lists tasks on To-dos and things to pack on Supplies", async () => {
@@ -85,28 +85,50 @@ describe("spreadsheet export", () => {
     for (const gone of ["Bought on", "Expires", "Refresh every", "Replace by", "Heads-up"]) expect(headers).not.toContain(gone);
   });
 
-  it("has a blank Food & water log whose Heads-up works out what to replace", async () => {
+  it("pre-fills an Expiration dates tab, food first, for this household", async () => {
     const wb = await roundTrip();
-    const ws = wb.getWorksheet("Food & water")!;
+    const ws = wb.getWorksheet("Expiration dates")!;
     const headers: string[] = [];
     ws.getRow(4).eachCell((c) => headers.push(c.text));
-    expect(headers).toEqual(["Food or water", "How much", "Kit", "Expires", "Heads-up", "Notes"]);
-    // Rows are ready to fill in, not pre-filled
-    expect(ws.getCell("A5").value).toBeNull();
-    expect(ws.getCell("D5").dataValidation?.type).toBe("date");
-    expect(ws.getCell("C5").dataValidation?.formulae).toEqual(['"Stay bin,Go bag"']);
-    expect((ws.getCell("E5").value as { formula: string }).formula).toBe(
-      'IF(D5="","",IF(D5<=TODAY(),"Replace now",IF(D5<=EDATE(TODAY(),6),"Replace soon","Good")))',
-    );
-    expect((ws.getCell("E64").value as { formula: string }).formula).toContain("D64");
+    expect(headers).toEqual(["Item", "Kit", "Replace every", "Packed on", "Date on package", "Due by", "Heads-up", "Notes"]);
 
-    // The Overview's replace counts read this tab
+    // Sections in order, food first
+    const sections: string[] = [];
+    ws.eachRow((r) => {
+      const v = r.getCell(1).value as { richText?: { text: string }[] } | null;
+      if (v && typeof v === "object" && "richText" in v && v.richText) sections.push(v.richText[0].text);
+    });
+    expect(sections).toEqual(["Food", "Water", "Medicine and first aid", "Batteries and power", "Everything else"]);
+
+    // Example food rows, with blank rows after them
+    const beans = findRowA(ws, "Canned beans");
+    expect(beans).toBe(6);
+    expect(ws.getCell(`C${beans}`).value).toBe(24);
+
+    // Water gets a 6-month default, and Due by and Heads-up work from it
+    const water = findRowA(ws, "Water you bottled from the tap");
+    expect(ws.getCell(`C${water}`).value).toBe(6);
+    expect((ws.getCell(`F${water}`).value as { formula: string }).formula).toBe(
+      `IF(E${water}<>"",E${water},IF(AND(D${water}<>"",C${water}<>""),EDATE(D${water},C${water}),""))`,
+    );
+    expect((ws.getCell(`G${water}`).value as { formula: string }).formula).toBe(
+      `IF(F${water}="","",IF(F${water}<=TODAY(),"Due now",IF(F${water}<=EDATE(TODAY(),6),"Due soon","Good")))`,
+    );
+
+    // Tailored: this household has a dog and a go bag, but no car kit or baby
+    expect(findRowA(ws, "Pet food")).toBeGreaterThan(0);
+    expect(findRowA(ws, "Go bag water bottles")).toBeGreaterThan(0);
+    expect(findRowA(ws, "Water in the car")).toBe(0);
+    expect(findRowA(ws, "Formula and baby food")).toBe(0);
+    expect(findRowA(ws, "Phone power banks")).toBeGreaterThan(0);
+
+    // The Overview's counts read this tab
     const overview = wb.getWorksheet("Overview")!;
     let formula = "";
     overview.eachRow((r) => {
-      if (r.getCell(2).text === "Replace now") formula = (r.getCell(3).value as { formula: string }).formula;
+      if (r.getCell(2).text === "Due now") formula = (r.getCell(3).value as { formula: string }).formula;
     });
-    expect(formula).toBe(`COUNTIF('Food & water'!$E:$E,"Replace now")`);
+    expect(formula).toBe(`COUNTIF('Expiration dates'!$G:$G,"Due now")`);
   });
 
   it("carries list state into Status, and pre-marks owned items", async () => {
@@ -156,7 +178,7 @@ describe("spreadsheet export", () => {
     expect((ws.getCell(`A${water}`).value as { formula: string }).formula).toBe(
       `IF(COUNTIF(D${water}:F${water},"Done")=3,"Have",IF(COUNTIF(D${water}:F${water},"Done")>0,"Partly","Need"))`,
     );
-    // Household items in the go bag, and stay bin items, don't
+    // Household items in the go bag, and stay-at-home bin items, don't
     for (const name of ["First aid kit", "Drinking water"]) {
       const r = findRow(ws, name);
       expect(ws.getCell(`D${r}`).value).toBeNull();
@@ -175,13 +197,16 @@ describe("spreadsheet export", () => {
     expect(findRow(ws, "First aid kit")).toBeGreaterThan(group);
   });
 
-  it("greys out person cells on rows the household needs just one of", async () => {
+  it("leaves person cells empty on rows the household needs just one of", async () => {
     const ws = (await roundTrip()).getWorksheet("Supplies")!;
     for (const name of ["Battery or hand-crank radio", "Duct tape", "First aid kit"]) {
       const cell = ws.getCell(`D${findRow(ws, name)}`);
       expect(cell.value).toBeNull();
-      expect((cell.fill as ExcelJS.FillPattern).fgColor?.argb).toBe("FFF6F8F9");
+      expect((cell.fill as ExcelJS.FillPattern | undefined)?.fgColor).toBeUndefined();
+      expect(cell.dataValidation).toBeUndefined();
     }
+    expect(ws.getCell("D4").value).toBe("Each person");
+    expect(ws.getColumn("D").width).toBe(15);
   });
 
   it("gives per-adult to-dos a checkbox for each adult", async () => {
@@ -191,7 +216,11 @@ describe("spreadsheet export", () => {
     expect(["C4", "D4"].map((c) => (ws.getCell(c).value as { result: string }).result)).toEqual(["Me", "Adult 2"]);
     expect(ws.getCell("E4").value).toBe("Who");
 
+    // Per-adult tasks get their own section at the top
+    expect(findRowA(ws, "Each adult")).toBe(5);
     const alerts = findRow(ws, "Sign up for your county's emergency alerts");
+    expect(alerts).toBeGreaterThan(5);
+    expect(alerts).toBeLessThan(findRowA(ws, "This weekend"));
     expect([ws.getCell(`C${alerts}`).value, ws.getCell(`D${alerts}`).value]).toEqual(["Done", "Not done"]);
     expect((ws.getCell(`A${alerts}`).value as { formula: string }).formula).toContain('"Partly"');
     expect(ws.getCell(`E${alerts}`).value).toBe("Each adult");
@@ -202,7 +231,7 @@ describe("spreadsheet export", () => {
     expect(ws.getCell(`E${plan}`).dataValidation?.formulae).toEqual(["Overview!$B$17:$B$24"]);
   });
 
-  it("has a Days at home setting that stay bin amounts and costs follow", async () => {
+  it("has a Days at home setting that stay-at-home bin amounts and costs follow", async () => {
     const wb = await roundTrip();
     const overview = wb.getWorksheet("Overview")!;
     expect(overview.getCell("B14").value).toBe("Days at home");

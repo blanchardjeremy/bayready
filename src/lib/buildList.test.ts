@@ -39,7 +39,7 @@ describe("item data", () => {
 });
 
 describe("buildList", () => {
-  it("starter list is a stay bin plus home tasks, no go bag", () => {
+  it("starter list is a stay-at-home bin plus home tasks, no go bag", () => {
     const keys = ids(STARTER_ANSWERS);
     expect(keys.has("stay:water")).toBe(true);
     expect(keys.has("home:alerts")).toBe(true);
@@ -52,7 +52,7 @@ describe("buildList", () => {
     expect(keys.has("go:n95")).toBe(true);
   });
 
-  it("doesn't duplicate go bag gear in the stay bin when building both", () => {
+  it("doesn't duplicate go bag gear in the stay-at-home bin when building both", () => {
     expect(ids(answers({ build: "stay" })).has("stay:first-aid")).toBe(true);
     const both = ids(answers({ build: "both" }));
     expect(both.has("go:first-aid")).toBe(true);
@@ -157,7 +157,7 @@ describe("per-person tracking", () => {
     expect(find(family, "go:docs-copies").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     for (const key of ["go:cash-go", "go:powerbank"]) expect(find(family, key).slots).toHaveLength(3);
     expect(find({ ...family, needs: ["meds"] }, "go:rx").slots).toHaveLength(3);
-    // Stay bin copies aren't tracked per person
+    // Stay-at-home bin copies aren't tracked per person
     expect(find({ ...family, build: "stay" }, "stay:powerbank").slots).toEqual([]);
     // Work gloves: one pair for the group
     expect(find(family, "go:gloves").slots).toEqual([]);

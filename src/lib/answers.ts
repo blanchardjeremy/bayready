@@ -1,4 +1,4 @@
-import type { Answers, Container, Context, HazardId, ItemState, Names, NeedId } from "./types";
+import type { Answers, Container, Context, HazardId, Names, NeedId } from "./types";
 
 export const ANSWERS_KEY = "bayready:answers:v1";
 export const STATES_KEY = "bayready:items:v1";
@@ -106,42 +106,25 @@ export function deriveContext(a: Answers): Context {
   };
 }
 
-// ---- Share links -----------------------------------------------------------
-// Answers go in the URL fragment so nothing reaches a server.
-
-function toBase64Url(s: string) {
-  const bytes = new TextEncoder().encode(s);
-  let bin = "";
-  bytes.forEach((b) => (bin += String.fromCharCode(b)));
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function fromBase64Url(s: string) {
-  const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-export function encodeShare(a: Answers, states?: Record<string, ItemState>): string {
-  return toBase64Url(JSON.stringify({ v: 1, a, s: states ?? {} }));
-}
-
-export function decodeShare(hash: string): { answers: Answers; states: Record<string, ItemState> } | null {
-  try {
-    const raw = JSON.parse(fromBase64Url(hash.replace(/^#/, "")));
-    if (!raw || raw.v !== 1 || typeof raw.a !== "object") return null;
-    const answers = normalizeAnswers(raw.a);
-    const states: Record<string, ItemState> = {};
-    if (raw.s && typeof raw.s === "object") {
-      for (const [k, v] of Object.entries(raw.s)) {
-        if (v === "need" || v === "have" || v === "skip") states[k] = v;
-      }
-    }
-    return { answers, states };
-  } catch {
-    return null;
-  }
-}
+// Every allowed value, in a fixed order. Share links store positions in these
+// lists, so only ever add to the end.
+export const BUILDS = ["stay", "go", "both", "unsure"] as const;
+export const COUNTY_IDS = [
+  "alameda", "contra-costa", "marin", "napa", "san-francisco", "san-mateo",
+  "santa-clara", "santa-cruz", "solano", "sonoma", "other", "private",
+] as const;
+export const HAZARD_IDS = ["earthquake", "outage", "smoke", "wildfire", "heat", "flood", "tsunami", "chemical"] as const;
+export const NEED_IDS = ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet"] as const;
+export const STARTS = ["weekend", "weeks", "month", "unsure"] as const;
+export const BUDGETS = ["0", "50", "150", "more", "unsure"] as const;
+export const HOMES = ["house", "apartment-low", "apartment-high", "other"] as const;
+export const DAYS = [7, 14] as const;
+export const CARS = ["yes", "no", "sometimes"] as const;
+export const POWERS = ["cook", "charge", "cold"] as const;
+/** Most people (or pets) of one kind in a household. */
+export const MAX_COUNT = 20;
+/** Longest name, in characters. */
+export const MAX_NAME = 30;
 
 /** Merge untrusted input over defaults, keeping only well-typed fields. */
 export function normalizeAnswers(input: unknown): Answers {
@@ -153,38 +136,35 @@ export function normalizeAnswers(input: unknown): Answers {
   const pickArr = <T,>(v: unknown, allowed: readonly T[]): T[] =>
     Array.isArray(v) ? (v.filter((x) => allowed.includes(x as T)) as T[]) : [];
 
-  a.build = pick(i.build, ["stay", "go", "both", "unsure"] as const);
-  a.county = pick(i.county, [
-    "alameda", "contra-costa", "marin", "napa", "san-francisco", "san-mateo",
-    "santa-clara", "santa-cruz", "solano", "sonoma", "other", "private",
-  ] as const);
-  a.hazards = pickArr(i.hazards, ["earthquake", "outage", "smoke", "wildfire", "heat", "flood", "tsunami", "chemical"] as const);
+  a.build = pick(i.build, BUILDS);
+  a.county = pick(i.county, COUNTY_IDS);
+  a.hazards = pickArr(i.hazards, HAZARD_IDS);
   if (i.household && typeof i.household === "object") {
     const h = i.household as Record<string, unknown>;
     for (const k of Object.keys(a.household) as (keyof Answers["household"])[]) {
       const n = Number(h[k]);
-      if (Number.isFinite(n)) a.household[k] = Math.min(20, Math.max(0, Math.round(n)));
+      if (Number.isFinite(n)) a.household[k] = Math.min(MAX_COUNT, Math.max(0, Math.round(n)));
     }
   }
   if (i.names && typeof i.names === "object") {
     const n = i.names as Record<string, unknown>;
     const clean = (v: unknown) =>
-      Array.isArray(v) ? v.slice(0, MAX_PEOPLE).map((x) => (typeof x === "string" ? x.trim().slice(0, 30) : "")) : [];
+      Array.isArray(v) ? v.slice(0, MAX_PEOPLE).map((x) => (typeof x === "string" ? x.trim().slice(0, MAX_NAME) : "")) : [];
     a.names = { adults: clean(n.adults), kids: clean(n.kids) };
   }
   a.needs =
     i.needs === "private"
       ? "private"
       : Array.isArray(i.needs)
-        ? pickArr(i.needs, ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet"] as const)
+        ? pickArr(i.needs, NEED_IDS)
         : null;
   a.have = Array.isArray(i.have) ? i.have.filter((x): x is string => typeof x === "string").slice(0, 50) : [];
   a.level = i.level === "advanced" ? "advanced" : "basics";
-  a.start = pick(i.start, ["weekend", "weeks", "month", "unsure"] as const);
-  a.budget = pick(i.budget, ["0", "50", "150", "more", "unsure"] as const);
-  a.home = pick(i.home, ["house", "apartment-low", "apartment-high", "other"] as const);
-  a.days = pick(i.days, [7, 14] as const);
-  a.car = pick(i.car, ["yes", "no", "sometimes"] as const);
-  a.power = pickArr(i.power, ["cook", "charge", "cold"] as const);
+  a.start = pick(i.start, STARTS);
+  a.budget = pick(i.budget, BUDGETS);
+  a.home = pick(i.home, HOMES);
+  a.days = pick(i.days, DAYS);
+  a.car = pick(i.car, CARS);
+  a.power = pickArr(i.power, POWERS);
   return a;
 }

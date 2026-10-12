@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_ANSWERS, STARTER_ANSWERS, decodeShare, deriveContext, encodeShare, normalizeAnswers, peopleNames } from "./answers";
+import { EMPTY_ANSWERS, STARTER_ANSWERS, deriveContext, normalizeAnswers, peopleNames } from "./answers";
 import { buildList, firstSteps, slotDone, stageOf, stateOf } from "./buildList";
 import { ITEMS, stayWaterGallons } from "@/data/items";
 import type { Answers } from "./types";
@@ -179,16 +179,8 @@ describe("state and staging", () => {
   });
 });
 
-describe("share links", () => {
-  it("round-trips answers and states", () => {
-    const a = answers({ county: "san-francisco", household: { ...EMPTY_ANSWERS.household, adults: 2 } });
-    const decoded = decodeShare("#" + encodeShare(a, { "stay:water": "have" }));
-    expect(decoded?.answers).toEqual(a);
-    expect(decoded?.states).toEqual({ "stay:water": "have" });
-  });
-
-  it("rejects garbage and sanitizes bad fields", () => {
-    expect(decodeShare("#not-base64!!")).toBeNull();
+describe("normalizeAnswers", () => {
+  it("sanitizes bad fields", () => {
     const a = normalizeAnswers({ build: "nope", household: { adults: 999, kids: -3 }, hazards: ["earthquake", "alien"] });
     expect(a.build).toBeNull();
     expect(a.household.adults).toBe(20);

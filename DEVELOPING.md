@@ -77,11 +77,21 @@ green for done, amber for soon, orange only for "replace now". Everything else i
 | `src/data/counties.ts` | County alert systems, CERT and neighborhood program links, default hazards |
 | `src/data/firstHour.ts` | The "When it happens" card |
 | `src/data/hazards.ts`, `meta.ts`, `havePicks.ts` | Labels and groupings |
-| `src/lib/answers.ts` | Answer defaults, household math (`deriveContext`), share-link encoding |
+| `src/lib/answers.ts` | Answer defaults, allowed values, household math (`deriveContext`) |
+| `src/lib/share.ts` | Share links, packed bit by bit (see the comment at the top) |
 | `src/lib/buildList.ts` | Turns answers + items into the list. Pure and tested |
 | `src/components/wizard/` | Wizard steps and step titles |
 | `src/components/list/` | Results page |
 | `research/` | Source research: `supplies.md` (items, numbers, sources) and `ux.md` (question flow, presentation) |
+
+### Share links
+
+Links store answers as positions in the lists in `answers.ts` and `havePicks.ts`, and checkmarks
+as positions on the household's list. So:
+
+- Only ever add new values to the **end** of those lists.
+- Adding, removing, or reordering items in `ITEMS` changes a one-byte fingerprint. Older links
+  still open with the right answers but without their checkmarks.
 
 ### Adding or changing an item
 

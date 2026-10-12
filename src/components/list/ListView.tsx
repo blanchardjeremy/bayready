@@ -9,13 +9,12 @@ import {
   peopleNames,
   STARTER_ANSWERS,
   STATES_KEY,
-  decodeShare,
   deriveContext,
-  encodeShare,
   resolveBuild,
 } from "@/lib/answers";
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
 import { downloadIcs, firstStepDate } from "@/lib/ics";
+import { decodeShare, encodeShare } from "@/lib/share";
 import { useStored } from "@/lib/storage";
 import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } from "@/lib/types";
 import { COUNTY_BY_ID } from "@/data/counties";

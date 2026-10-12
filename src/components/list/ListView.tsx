@@ -33,6 +33,7 @@ import { KnowYourHome, TaskFacts } from "./HomeFields";
 type States = Record<string, ItemState>;
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
 const EMPTY_STATES: States = {};
+type Export = "print" | "pdf" | "xlsx";
 type View = "kits" | "shop" | "plan";
 
 export function ListView() {
@@ -44,7 +45,9 @@ export function ListView() {
   );
   const [view, setView] = useState<View>("kits");
   const [copied, setCopied] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [busy, setBusy] = useState<Export | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [sharing, setSharing] = useState<{ url: string; copied: boolean } | null>(null);
   const [editingNames, setEditingNames] = useState(false);
   const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
   // Counts clicks on a task's "Print these for your kit" link; the card flashes its print button.
@@ -120,6 +123,30 @@ export function ListView() {
     }
   };
   const shareUrl = () => `${siteUrl("/list")}#${encodeShare(answers, states)}`;
+  const hasHomeInfo =
+    !shared && (homeInfo.notes.trim() !== "" || Object.values(homeInfo.facts).some((v) => v?.trim()));
+  /** What the PDF, printout, and spreadsheet are made from. */
+  const exportInput = () => ({
+    answers,
+    ctx,
+    entries: main,
+    stateOf: st,
+    slotDone: (e: ListEntry, i: number) => slotDone(e, i, states, answers),
+    home: shared ? undefined : homeInfo,
+    shareUrl: shareUrl(),
+  });
+  /** Runs one export at a time, with a message when it's done or fails. */
+  const run = async (kind: Export, task: () => Promise<void>, done: string) => {
+    setBusy(kind);
+    try {
+      await task();
+      if (done) flash(done);
+    } catch {
+      flash("Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6">
@@ -153,11 +180,24 @@ export function ListView() {
       <Progress kits={kits} main={main} st={st} />
 
       <div className="no-print mt-6 flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={() => window.print()}>
-          Print
-        </Button>
-        <Button type="button" variant="secondary" onClick={() => copy(shareUrl(), "Link copied. Anyone with it can see this list.")}>
-          Copy share link
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            // Only explain what's left out when there's something left out.
+            const url = shareUrl();
+            navigator.clipboard.writeText(url).then(
+              () => {
+                if (hasHomeInfo) return setSharing({ url, copied: true });
+                flash("Link copied. Anyone with it can see this list.");
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2500);
+              },
+              () => setSharing({ url, copied: false }),
+            );
+          }}
+        >
+          {linkCopied ? "Link copied ✓" : "Copy share link"}
         </Button>
         <Button type="button" variant="secondary" onClick={() => copy(asText(kits, main, st, ctx), "List copied as text.")}>
           Copy as text
@@ -165,29 +205,34 @@ export function ListView() {
         <Button
           type="button"
           variant="secondary"
-          disabled={exporting}
-          onClick={async () => {
-            setExporting(true);
-            try {
-              const { downloadWorkbook } = await import("@/lib/exportXlsx");
-              await downloadWorkbook({
-                answers,
-                ctx,
-                entries: main,
-                stateOf: st,
-                slotDone: (e, i) => slotDone(e, i, states, answers),
-                home: shared ? undefined : homeInfo,
-                shareUrl: shareUrl(),
-              });
-              flash("Spreadsheet downloaded. It opens in Google Sheets, Excel, or Numbers.");
-            } catch {
-              flash("Couldn't make the spreadsheet. Try again.");
-            } finally {
-              setExporting(false);
-            }
-          }}
+          disabled={busy !== null}
+          onClick={() => run("print", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput())), "")}
         >
-          {exporting ? "Making spreadsheet…" : "Download spreadsheet"}
+          {busy === "print" ? "Getting it ready…" : "Print"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={busy !== null}
+          onClick={() =>
+            run("pdf", () => import("@/lib/exportPdf").then((m) => m.downloadPdf(exportInput())), "PDF downloaded.")
+          }
+        >
+          {busy === "pdf" ? "Making PDF…" : "Download PDF"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={busy !== null}
+          onClick={() =>
+            run(
+              "xlsx",
+              () => import("@/lib/exportXlsx").then((m) => m.downloadWorkbook(exportInput())),
+              "Spreadsheet downloaded. It opens in Google Sheets, Excel, or Numbers.",
+            )
+          }
+        >
+          {busy === "xlsx" ? "Making spreadsheet…" : "Download spreadsheet"}
         </Button>
         <p role="status" className="self-center text-[0.95rem] text-eucalyptus">
           {copied}
@@ -261,6 +306,8 @@ export function ListView() {
       <p className="hidden pt-8 text-sm print:block">
         Made with Bay Ready, a free emergency kit planner for the Bay Area: {BAY_READY_URL}
       </p>
+
+      {sharing && <ShareDialog {...sharing} leftOut={hasHomeInfo} onClose={() => setSharing(null)} />}
 
       {editingNames && (
         <NamesDialog
@@ -885,6 +932,68 @@ function NamesDialog({
         </div>
         <div className="mt-6 flex justify-end">
           <Button type="submit">Done</Button>
+        </div>
+      </form>
+    </dialog>
+  );
+}
+
+/**
+ * Opens when the share link is copied and Know your home or notes are filled in, so
+ * it's clear the link leaves them out. Also shows the link if copying failed.
+ */
+function ShareDialog({
+  url,
+  copied,
+  leftOut,
+  onClose,
+}: {
+  url: string;
+  copied: boolean;
+  /** Whether there's Know your home info or notes the link leaves out. */
+  leftOut: boolean;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      aria-labelledby="share-title"
+      className="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-xl bg-fog p-0 text-ink backdrop:bg-ink/40"
+    >
+      <form method="dialog" className="p-5 sm:p-6">
+        <h2 id="share-title" className="text-2xl font-extrabold tracking-tight">
+          {copied ? "Link copied" : "Copy this link"}
+        </h2>
+        <p className="mt-2 text-ink-soft">
+          {copied
+            ? "Anyone with the link can see this list and what's checked off."
+            : "Your browser didn't let us copy it, so copy it from here. Anyone with the link can see this list and what's checked off."}
+        </p>
+        <input
+          readOnly
+          value={url}
+          aria-label="Share link"
+          onFocus={(e) => e.currentTarget.select()}
+          className="mt-3 min-h-10 w-full rounded-md border border-line bg-paper px-3 text-[0.9rem] text-ink-soft"
+        />
+        {leftOut && (
+          <div className="mt-4 rounded-lg border-l-4 border-orange bg-paper px-4 py-3">
+            <p className="font-semibold">It only includes the list.</p>
+            <p className="mt-1 text-[0.95rem] text-ink-soft">
+              Your Know your home info and notes aren&apos;t in the link, so things like where the spare key is stay on
+              this device. To share those, print them, or download the PDF or spreadsheet.
+            </p>
+          </div>
+        )}
+        <div className="mt-6 flex justify-end">
+          <Button type="submit" autoFocus>
+            Done
+          </Button>
         </div>
       </form>
     </dialog>

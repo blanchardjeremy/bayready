@@ -78,6 +78,7 @@ green for done, amber for soon, orange only for "replace now". Everything else i
 | `src/data/firstHour.ts` | The "When it happens" card |
 | `src/data/hazards.ts`, `meta.ts`, `havePicks.ts` | Labels and groupings |
 | `src/lib/answers.ts` | Answer defaults, allowed values, household math (`deriveContext`) |
+| `src/lib/exportPdf.ts` | The PDF download. The Print button prints this same PDF, so the two always match |
 | `src/lib/share.ts` | Share links, packed bit by bit (see the comment at the top) |
 | `src/lib/buildList.ts` | Turns answers + items into the list. Pure and tested |
 | `src/components/wizard/` | Wizard steps and step titles |
@@ -86,12 +87,16 @@ green for done, amber for soon, orange only for "replace now". Everything else i
 
 ### Share links
 
-Links store answers as positions in the lists in `answers.ts` and `havePicks.ts`, and checkmarks
-as positions on the household's list. So:
+Links hold the answers and checkmarks, never Know your home or notes. They're packed bit by bit
+(see the comment at the top of `src/lib/share.ts`) and built so links people already sent keep
+working as the app grows:
 
-- Only ever add new values to the **end** of those lists.
-- Adding, removing, or reordering items in `ITEMS` changes a one-byte fingerprint. Older links
-  still open with the right answers but without their checkmarks.
+- **New item:** add its id to the end of `SHARE_IDS` in `src/data/shareIds.ts`. A test fails until
+  you do. Never remove or reorder entries there, even for items you delete.
+- **New answer option:** add it to the end of its list in `answers.ts` or `havePicks.ts`. Never
+  remove or reorder.
+- **New question:** add it at the very end of the link, behind a 1-bit "present" flag.
+- A test decodes a link made in October 2026. If it fails, something above was broken.
 
 ### Adding or changing an item
 

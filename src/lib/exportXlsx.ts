@@ -1,14 +1,14 @@
 import type ExcelJSNamespace from "exceljs";
 import type { Answers, Container, Context, ItemState, ListEntry, Stage } from "./types";
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
-import { MAX_PEOPLE, peopleNames, resolveBuild } from "./answers";
+import { MAX_PEOPLE, peopleNames } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
-import { HAZARD_BY_ID } from "@/data/hazards";
 import { expiringSections } from "@/data/expiring";
 import { homeFacts, type HomeInfo } from "@/data/homeFacts";
 import { firstHourCard } from "@/data/firstHour";
 import { BAY_READY_URL, CREDIT } from "./urls";
+import { listSummary } from "./summary";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -985,7 +985,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
 
   ws.mergeCells("B3:D3");
   const sub = ws.getCell("B3");
-  sub.value = summary(answers, ctx);
+  sub.value = listSummary(answers, ctx);
   sub.font = font({ size: 11, color: { argb: C.soft } });
   sub.alignment = { vertical: "top", wrapText: true };
   ws.getRow(3).height = 32;
@@ -1201,24 +1201,6 @@ function statRow(ws: Worksheet, row: number, label: string, value: ExcelJSNamesp
   h.font = font({ size: 10, color: { argb: C.soft } });
   h.alignment = { vertical: "middle" };
   for (const col of ["B", "C", "D"]) ws.getCell(`${col}${row}`).border = { bottom: hairline };
-}
-
-function summary(answers: Answers, ctx: Context): string {
-  const build = resolveBuild(answers);
-  const kits = { stay: "A stay-at-home bin", go: "A go bag", both: "A stay-at-home bin and a go bag" }[build];
-  const h = answers.household;
-  const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-  const who = [
-    plural(h.adults, "adult"),
-    h.kids && plural(h.kids, "kid"),
-    h.babies && plural(h.babies, "baby", "babies"),
-    h.dogs && plural(h.dogs, "dog"),
-    h.cats && plural(h.cats, "cat"),
-    h.otherPets && plural(h.otherPets, "other pet"),
-  ].filter(Boolean);
-  const hazards = [...ctx.hazards].map((id) => HAZARD_BY_ID[id].name.toLowerCase());
-  const level = answers.level === "advanced" ? "Advanced" : "Basics";
-  return `${kits} for ${who.join(", ")}. Ready for ${hazards.join(", ")}. ${level} list.`;
 }
 
 /** Build the workbook and return finished .xlsx bytes. */

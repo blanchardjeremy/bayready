@@ -7,7 +7,8 @@ Answer a few quick questions about your household: how many people and pets, wha
 ## What you get
 
 - A list of what to buy and pack, with the amounts worked out for your household
-- A handful of free things you can knock out this weekend
+- A handful of free things you can knock out this weekend, including a couple you can do with neighbors
+- A short "when it happens" card to print and tape inside your bin, and an OK / HELP sign for your window
 - A spreadsheet you can download and share with the people you live with. It has a column for who's buying what, a spot for each person's go bag, and a place to keep track of when your food and water expire.
 
 ## Basics or Advanced

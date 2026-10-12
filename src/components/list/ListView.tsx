@@ -21,6 +21,7 @@ import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } 
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { ITEMS } from "@/data/items";
+import { firstHourCard } from "@/data/firstHour";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
 import { Button, buttonClass } from "@/components/controls";
 import { ItemRow } from "./ItemRow";
@@ -174,6 +175,8 @@ export function ListView() {
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} />
 
+      <Together />
+
       <div className="no-print mt-12 flex flex-wrap gap-1 rounded-lg bg-paper p-1 sm:inline-flex" role="group" aria-label="How to show your list">
         {(
           [
@@ -218,6 +221,8 @@ export function ListView() {
           <Plan entries={[...main, ...levelUp]} firstKeys={firstKeys} st={st} row={row} answers={answers} />
         )}
       </div>
+
+      <FirstHour ctx={ctx} />
 
       <KeepFresh />
 
@@ -639,6 +644,54 @@ function Plan({
         );
       })}
     </ol>
+  );
+}
+
+function Together() {
+  return (
+    <p className="mt-6 max-w-[70ch] border-l-4 border-eucalyptus pl-4 text-ink-soft">
+      <span className="font-semibold text-ink">You don&apos;t have to do this alone.</span> Neighbors who know each
+      other get through disasters better, and sharing costs less than buying everything yourself. Start by swapping
+      numbers with one neighbor, and send them your list.
+    </p>
+  );
+}
+
+/** What to do when it happens. Its own print button prints just this card. */
+function FirstHour({ ctx }: { ctx: Context }) {
+  const sections = firstHourCard(ctx);
+  if (sections.length === 0) return null;
+  const printCard = () => {
+    document.body.dataset.print = "card";
+    window.addEventListener("afterprint", () => delete document.body.dataset.print, { once: true });
+    window.print();
+  };
+  return (
+    <section id="first-hour" className="print-break-avoid mt-14 rounded-xl border-2 border-ink bg-paper p-5 sm:p-6" aria-labelledby="first-hour-title">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="first-hour-title" className="text-2xl font-extrabold tracking-tight">
+            When it happens
+          </h2>
+          <p className="mt-1 text-ink-soft">Print this card and tape it inside the lid of your bin.</p>
+        </div>
+        <Button type="button" variant="secondary" className="no-print" onClick={printCard}>
+          Print this card
+        </Button>
+      </div>
+      <div className="mt-4 grid gap-6 md:grid-cols-2">
+        {sections.map((s) => (
+          <div key={s.title}>
+            <h3 className="font-extrabold">{s.title}</h3>
+            <ol className="mt-2 list-decimal space-y-1.5 pl-5">
+              {s.lines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

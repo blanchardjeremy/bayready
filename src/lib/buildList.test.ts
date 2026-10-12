@@ -87,6 +87,27 @@ describe("buildList", () => {
     expect(ids(answers({ hazards: ["wildfire"], car: "no" })).has("home:routes")).toBe(true);
   });
 
+  it("puts the person with an access need in charge of their own check-ins", () => {
+    expect(ids(answers()).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["mobility"] })).has("home:support-network")).toBe(true);
+    expect(ids(answers({ needs: "private" })).has("home:support-network")).toBe(false);
+  });
+
+  it("offers a ride only to households with a car, and asks one person to take CERT", () => {
+    const adv = { level: "advanced" as const, hazards: ["earthquake" as const, "wildfire" as const] };
+    expect(ids(answers({ ...adv, car: "yes" })).has("home:offer-ride")).toBe(true);
+    expect(ids(answers({ ...adv, car: "no" })).has("home:offer-ride")).toBe(false);
+    const two = answers({ ...adv, household: { ...EMPTY_ANSWERS.household, adults: 2 } });
+    expect(list(two).find((e) => e.key === "home:training")?.slots).toEqual([]);
+  });
+
+  it("links CERT and neighborhood programs for the county, with fallbacks", () => {
+    const sf = list(answers({ level: "advanced", county: "san-francisco" }));
+    expect(sf.find((e) => e.key === "home:training")!.item.link!(deriveContext(answers({ county: "san-francisco" })))?.url).toContain("sf-fire.org/nert");
+    const block = sf.find((e) => e.key === "home:block")!.item;
+    expect(block.link!(deriveContext(answers({ county: "solano" })))?.url).toContain("listoscalifornia.org");
+  });
+
   it("gives a go-bag-only household a radio", () => {
     expect(list(answers({ build: "go" })).find((e) => e.key === "go:radio-go")?.level).toBe("basics");
     expect(list(answers({ build: "both" })).find((e) => e.key === "go:radio-go")?.level).toBe("advanced");
@@ -182,7 +203,7 @@ describe("per-person tracking", () => {
     expect(find(family, "go:headlamp-go").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "home:alerts").slots).toEqual(["Me", "Adult 2"]);
     expect(find({ ...family, needs: ["meds"] }, "go:med-info").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
-    expect(find(family, "go:cable").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
+    expect(find(family, "go:water-go").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "go:docs-copies").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     for (const key of ["go:cash-go", "go:powerbank"]) expect(find(family, key).slots).toHaveLength(3);
     expect(find({ ...family, needs: ["meds"] }, "go:rx").slots).toHaveLength(3);

@@ -153,4 +153,8 @@ body {
   .print-break-avoid {
     break-inside: avoid;
   }
+  /* "Print this card" on the list prints only the When it happens card. */
+  body[data-print="card"] #main > div > :not(#first-hour) {
+    display: none !important;
+  }
 }

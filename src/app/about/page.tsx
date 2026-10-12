@@ -26,9 +26,19 @@ const SOURCES: { group: string; links: [string, string, string][] }[] = [
     ],
   },
   {
+    group: "Neighbors and community",
+    links: [
+      ["SF NERT", "https://sf-fire.org/nert", "San Francisco's free neighborhood emergency response training."],
+      ["Map Your Neighborhood", "https://sf-fire.org/nert/map-your-neighborhood", "A short guide to getting your block ready together."],
+      ["FEMA: CERT", "https://www.fema.gov/emergency-managers/individuals-communities/preparedness-activities-webinars/community-emergency-response-team", "Free community emergency response training, offered across the Bay Area."],
+      ["Listos California block party", "https://www.listoscalifornia.org/blockparty/", "A kit for getting to know your neighbors and planning together."],
+      ["Klinenberg on the 1995 Chicago heat wave", "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9255631/", "Neighborhoods where people knew each other had far fewer deaths."],
+    ],
+  },
+  {
     group: "Power and access needs",
     links: [
-      ["PG&E outage alerts", "https://www.pge.com/myalerts", "Get warnings before planned shutoffs."],
+      ["PG&E outage alerts", "https://www.pge.com/addressalert", "Get warnings before planned shutoffs. No PG&E account needed."],
       ["PG&E Medical Baseline", "https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html", "For people who rely on powered medical devices."],
       ["PG&E DDAR program", "https://www.pge.com/ddar", "Backup batteries and support for people with disabilities during shutoffs."],
       ["Ready.gov: People with disabilities", "https://www.ready.gov/disability", "Planning for access and functional needs."],
@@ -47,6 +57,12 @@ export default function AboutPage() {
           California, FEMA, and the CDC. When agencies disagree, we say so and pick the more careful number. For
           example, Bay Area agencies recommend about a week of water at home, while FEMA says at least 3 days. We
           use a week.
+        </p>
+        <p>
+          <span className="font-semibold text-ink">Why neighbors are on the list.</span> After the 1995 Kobe
+          earthquake, most people pulled from the rubble were saved by family and neighbors, not rescue crews. In
+          Chicago&apos;s 1995 heat wave, neighborhoods where people knew each other had far fewer deaths. Supplies
+          matter. So do the people around you.
         </p>
         <p>
           Prices are rough estimates to help you plan, not quotes. Nothing you enter leaves your browser. Your

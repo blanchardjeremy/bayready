@@ -6,6 +6,7 @@ import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { expiringSections } from "@/data/expiring";
+import { firstHourCard } from "@/data/firstHour";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -91,6 +92,9 @@ export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
   const todos = wb.addWorksheet("To-dos", sheetOpts());
   const supplies = wb.addWorksheet("Supplies", sheetOpts());
   const expiring = wb.addWorksheet(EXPIRING_SHEET, sheetOpts());
+  const neighbors = wb.addWorksheet(NEIGHBORS_SHEET, sheetOpts());
+  const card = firstHourCard(input.ctx);
+  const whenItHappens = card.length ? wb.addWorksheet(CARD_SHEET, { ...sheetOpts(), pageSetup: { ...sheetOpts().pageSetup, orientation: "portrait" } }) : null;
 
   const active = input.entries.filter((e) => input.stateOf(e) !== "skip");
   const firstKeys = new Set(firstSteps(input.entries, input.stateOf, input.answers).map((e) => e.key));
@@ -98,6 +102,8 @@ export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
   buildTodos(todos, active.filter((e) => e.container === "home"), input, firstKeys);
   const layout = buildSupplies(supplies, active.filter((e) => e.container !== "home"), input);
   buildExpiring(expiring, input.ctx);
+  buildNeighbors(neighbors);
+  if (whenItHappens) buildCard(whenItHappens, card);
   buildOverview(overview, input, layout);
 
   return wb;
@@ -765,6 +771,85 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
 }
 
 // ---------------------------------------------------------------------------
+// Neighbors: a blank sheet. Neighbors' details never go into the app or a share link.
+// ---------------------------------------------------------------------------
+
+const NEIGHBORS_SHEET = "Neighbors";
+
+function buildNeighbors(ws: Worksheet) {
+  const cols = [
+    ["Name", 24],
+    ["How to reach them", 24],
+    ["Where (unit or street)", 20],
+    ["Skills or tools to share", 30],
+    ["Anything they'd like us to know", 34],
+    ["OK to share with the block?", 16],
+  ] as const;
+  ws.columns = cols.map(([, width]) => ({ width, style: { font: font() } }));
+  title(
+    ws,
+    "Neighbors",
+    "People nearby you've swapped numbers with. Only write down what people say they're OK sharing.",
+    "F",
+  );
+  ws.getRow(3).height = 8;
+  const HEADER = 4;
+  headerRow(ws, HEADER, cols.map(([label]) => label), {
+    4: "First aid training, a ladder, a power station, a car, a language they speak.",
+    5: "For example, if they'd like a check-in after a quake or in a heat wave.",
+  });
+  ws.getRow(HEADER).getCell(1).alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+  for (let row = HEADER + 1; row <= HEADER + 12; row++) {
+    const r = ws.getRow(row);
+    r.height = 24;
+    for (let c = 1; c <= cols.length; c++) {
+      bodyCell(r.getCell(c));
+      r.getCell(c).fill = fill(C.input);
+    }
+    r.getCell(6).dataValidation = { type: "list", allowBlank: true, formulae: ['"Yes,No"'], showErrorMessage: false };
+  }
+  const spot = ws.getCell(`A${HEADER + 14}`);
+  spot.value = "Our meeting spot:";
+  spot.font = font({ bold: true });
+  spot.alignment = { indent: 1 };
+  ws.mergeCells(`B${HEADER + 14}:D${HEADER + 14}`);
+  inputStyle(ws.getCell(`B${HEADER + 14}`));
+  ws.views = [{ state: "frozen", ySplit: HEADER, showGridLines: false }];
+}
+
+// ---------------------------------------------------------------------------
+// When it happens: the first-hour card, sized to print on one page.
+// ---------------------------------------------------------------------------
+
+const CARD_SHEET = "When it happens";
+
+function buildCard(ws: Worksheet, sections: ReturnType<typeof firstHourCard>) {
+  ws.columns = [{ width: 5 }, { width: 92 }].map((c) => ({ ...c, style: { font: font() } }));
+  title(ws, "When it happens", "Print this and tape it inside the lid of your bin.", "B");
+  let row = 4;
+  for (const s of sections) {
+    ws.getRow(row).height = 28;
+    const h = ws.getCell(`A${row}`);
+    h.value = s.title;
+    h.font = { name: DISPLAY, size: 13, bold: true, color: { argb: C.ink } };
+    h.alignment = { vertical: "bottom" };
+    row++;
+    s.lines.forEach((line, i) => {
+      const r = ws.getRow(row++);
+      r.height = 34;
+      r.getCell(1).value = `${i + 1}.`;
+      r.getCell(1).font = font({ bold: true });
+      r.getCell(1).alignment = { vertical: "top", horizontal: "right" };
+      r.getCell(2).value = line;
+      r.getCell(2).font = font({ size: 12 });
+      r.getCell(2).alignment = { vertical: "top", wrapText: true, indent: 1 };
+    });
+    row++;
+  }
+  ws.pageSetup.fitToHeight = 1;
+}
+
+// ---------------------------------------------------------------------------
 // Overview
 // ---------------------------------------------------------------------------
 
@@ -899,6 +984,8 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
       : "When you get something, set Status to Have. Finished a task? Set it to Done.",
     `On the ${EXPIRING_SHEET} tab, add the date you packed things or the date printed on them. Heads-up shows what's due.`,
     `At each check-up, swap or check anything marked ${DUE_NOW} or ${DUE_SOON}.`,
+    `Use the ${NEIGHBORS_SHEET} tab for numbers you swap with people nearby.` +
+      (firstHourCard(ctx).length ? ` Print the ${CARD_SHEET} tab and tape it inside your bin lid.` : ""),
   ];
   steps.forEach((s, i) => {
     ws.mergeCells(`B${row}:D${row}`);

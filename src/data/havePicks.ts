@@ -13,5 +13,4 @@ export const HAVE_PICKS: { key: string; label: string }[] = [
   { key: "cash", label: "Cash in small bills" },
   { key: "radio", label: "Battery or crank radio" },
   { key: "whistle", label: "Whistle" },
-  { key: "trashbags", label: "Heavy trash bags" },
 ];

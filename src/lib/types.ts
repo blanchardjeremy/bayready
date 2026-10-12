@@ -64,6 +64,7 @@ export interface Answers {
 export type Container = "stay" | "go" | "car" | "home";
 
 export type Category =
+  | "kit"
   | "water"
   | "food"
   | "light-power"

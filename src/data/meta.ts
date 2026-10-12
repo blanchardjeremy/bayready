@@ -24,6 +24,7 @@ export const CONTAINER_META: Record<Container, { name: string; purpose: string; 
 };
 
 export const CATEGORY_META: Record<Category, string> = {
+  kit: "Something to keep it in",
   water: "Water",
   food: "Food",
   "light-power": "Light and power",
@@ -49,17 +50,20 @@ export const CATEGORY_ORDER: Category[] = [
   "community",
   "signup",
   "home-safety",
+  // Supplies, in the order people pack: the bin or bag itself, then water,
+  // food, and medicine, then hygiene, then light and power, then the rest.
+  "kit",
   "water",
   "food",
   "first-aid",
   "access",
+  "sanitation",
   "light-power",
   "comms",
   "air",
-  "sanitation",
-  "docs-money",
   "clothing-shelter",
   "tools",
+  "docs-money",
   "comfort",
   "baby-kids",
   "pets",

@@ -31,12 +31,12 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
 
   // Shared supplies, food first because it needs replacing most often.
   const everyone: ExpiringRow[] = [
-    { item: "Canned beans", kit: "Stay-at-home bin", every: 24, note: "Example. Most canned food lasts 2 to 5 years. The date on the can wins." },
-    { item: "Canned tuna or chicken", kit: "Stay-at-home bin", every: 24, note: "Example. Pull-tab cans save needing an opener." },
-    { item: "Peanut butter", kit: "Stay-at-home bin", every: 12, note: "Example." },
-    { item: "Crackers", kit: "Stay-at-home bin", every: 6, note: "Example. Go stale fast once opened." },
-    { item: "Cereal or granola", kit: "Stay-at-home bin", every: 6, note: "Example." },
-    { item: "Dried fruit and nuts", kit: "Stay-at-home bin", every: 6, note: "Example. Nuts go rancid in heat." },
+    { item: "[Example] Canned beans", kit: "Stay-at-home bin", every: 24, note: "Most canned food lasts 2 to 5 years. The date on the can wins." },
+    { item: "[Example] Canned tuna or chicken", kit: "Stay-at-home bin", every: 24, note: "Pull-tab cans save needing an opener." },
+    { item: "[Example] Peanut butter", kit: "Stay-at-home bin", every: 12, note: "" },
+    { item: "[Example] Crackers", kit: "Stay-at-home bin", every: 6, note: "Go stale fast once opened." },
+    { item: "[Example] Cereal or granola", kit: "Stay-at-home bin", every: 6, note: "" },
+    { item: "[Example] Dried fruit and nuts", kit: "Stay-at-home bin", every: 6, note: "Nuts go rancid in heat." },
     ...when(ctx.babies > 0, [{ item: "Formula and baby food", kit: "Stay-at-home bin" as const, note: "Use the date on the package." }]),
     ...when(ctx.pets > 0, [{ item: "Pet food", kit: "Stay-at-home bin" as const, every: 6, note: "Dry food goes stale once the bag is open." }]),
     ...when(car, [{ item: "Snacks in the car", kit: "Car kit" as const, every: 6, note: "Car heat shortens shelf life." }]),

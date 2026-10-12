@@ -102,7 +102,7 @@ describe("spreadsheet export", () => {
     const sectionOf = (row: number) => [...sections].reverse().find(([, n]) => n < row)![0];
 
     // Shared food comes first
-    const beans = findRowA(ws, "Canned beans");
+    const beans = findRowA(ws, "[Example] Canned beans");
     expect(beans).toBe(6);
     expect(ws.getCell(`C${beans}`).value).toBe(24);
 

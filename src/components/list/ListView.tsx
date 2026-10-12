@@ -48,6 +48,8 @@ export function ListView() {
   const [exporting, setExporting] = useState(false);
   const [editingNames, setEditingNames] = useState(false);
   const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
+  // Counts clicks on a task's "Print these for your kit" link; the card flashes its print button.
+  const [printPulse, setPrintPulse] = useState(0);
   // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
   useEffect(() => clearReturnToList(), []);
 
@@ -85,7 +87,12 @@ export function ListView() {
     slotDone: (i) => slotDone(e, i, states, answers),
     onEditNames: shared ? undefined : () => setEditingNames(true),
     extra: shared ? undefined : (
-      <TaskFacts facts={facts.filter((f) => f.task === e.item.id)} home={homeInfo} onChange={setFact} />
+      <TaskFacts
+        facts={facts.filter((f) => f.task === e.item.id)}
+        home={homeInfo}
+        onChange={setFact}
+        onShowPrint={() => setPrintPulse((n) => n + 1)}
+      />
     ),
     onSlot: (i, done) => setStates({ [slotKey(e, i)]: done ? "have" : "need" }),
     onChange: (s) => {
@@ -245,6 +252,7 @@ export function ListView() {
           home={homeInfo}
           onFact={setFact}
           onNotes={(notes) => setHome((prev) => ({ ...prev, notes }))}
+          pulse={printPulse}
         />
       )}
 

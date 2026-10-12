@@ -202,7 +202,7 @@ export function Button({
   variant = "primary",
   className = "",
   ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "quiet" }) {
+}: React.ComponentProps<"button"> & { variant?: "primary" | "secondary" | "quiet" }) {
   const styles = {
     primary: "bg-orange text-orange-ink hover:brightness-110",
     secondary: "border-2 border-ink text-ink hover:bg-paper",

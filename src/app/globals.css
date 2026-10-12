@@ -114,6 +114,28 @@ body {
   background: var(--fog);
 }
 
+/* A button that a link elsewhere on the page points to flashes a few times so it's easy to spot. */
+.flash-attention {
+  animation: flash-attention 0.7s ease-in-out 3;
+}
+@keyframes flash-attention {
+  50% {
+    box-shadow: 0 0 0 6px var(--orange);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No blinking: one steady ring that fades out. */
+  .flash-attention {
+    animation: flash-attention-still 2.5s ease-in 1;
+  }
+}
+@keyframes flash-attention-still {
+  from,
+  60% {
+    box-shadow: 0 0 0 4px var(--orange);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .step-enter {
     animation: step-in 220ms ease-out;
@@ -156,5 +178,14 @@ body {
   /* "Print this card" on the list prints only the When it happens card. */
   body[data-print="card"] #main > div > :not(#first-hour) {
     display: none !important;
+  }
+  /* "Print this info" prints only the Know your home sheet. */
+  body[data-print="home"] #main > div > :not(#know-your-home) {
+    display: none !important;
+  }
+  body[data-print="home"] #know-your-home {
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 }

@@ -13,6 +13,8 @@ import { ITEMS } from "@/data/items";
 import { STEP_TITLES, type StepId } from "./steps";
 import { CheckList, GoodToKnow, RadioCards, Stepper, Button } from "@/components/controls";
 import { NamesEditor } from "@/components/NamesEditor";
+import { useReturnToList } from "@/lib/returnToList";
+import Link from "next/link";
 
 const BASE_STEPS: StepId[] = ["build", "county", "hazards", "household", "needs", "have", "level"];
 const ADVANCED_STEPS: StepId[] = ["home", "days", "car", "power"];
@@ -47,6 +49,8 @@ export function Wizard() {
   const segment = useSelectedLayoutSegment();
   const [answers, setAnswers] = useStored<Answers>(ANSWERS_KEY, EMPTY_ANSWERS, normalizeAnswers);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  // Set when someone jumped here from their list to change one answer.
+  const returnToList = useReturnToList();
   const pushes = useRef(0);
   const lastStep = useRef<StepId | null>(null);
 
@@ -126,7 +130,12 @@ export function Wizard() {
           <Button type="button" variant="secondary" onClick={back}>
             Back
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+            {returnToList && step !== "start" && (
+              <Link href="/list" className="font-semibold text-ink underline underline-offset-2">
+                Back to my list
+              </Link>
+            )}
             {view.optional && view.canContinue !== false && (
               <button type="button" onClick={next} className="text-ink-soft underline underline-offset-2 hover:text-ink">
                 Skip

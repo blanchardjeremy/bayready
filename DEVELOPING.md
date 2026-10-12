@@ -52,6 +52,9 @@ using ExcelJS, loaded only on click). It opens in Google Sheets, Excel, or Numbe
 - **Neighbors:** a blank sheet for numbers swapped with people nearby. Neighbors' details are never
   stored in the app or put in a share link, so this is the only place they go.
 - **When it happens:** the first-hour card, sized to print on one page.
+- **Know your home** (`src/data/homeFacts.ts`): shutoffs, meeting spots, where the bins are, and
+  so on. Fields show on the task they belong to and in a card on the list, plus a notes box. They
+  stay on the device and go into the spreadsheet's Overview, but never into share links.
 - **Per-person checkboxes:** items marked `perPerson` in `items.ts` are tracked for each person, in
   the app (a toggle per name) and in the spreadsheet (a Done / Not done column per name from "Your
   people" on the Overview tab). In the go bag that's every bag (backpack, water, headlamp, and so

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { formatCost } from "@/lib/buildList";
 import type { Context, ItemState, ListEntry } from "@/lib/types";
 import { HAZARD_BY_ID } from "@/data/hazards";
@@ -17,6 +17,7 @@ export function ItemRow({
   slotDone,
   onSlot,
   onEditNames,
+  extra,
 }: {
   entry: ListEntry;
   state: ItemState;
@@ -29,6 +30,8 @@ export function ItemRow({
   onSlot?: (i: number, done: boolean) => void;
   /** Opens the names editor. Its button shows on hover, or always on touch screens. */
   onEditNames?: () => void;
+  /** Anything extra under the row, like the "Know your home" fields for this task. */
+  extra?: ReactNode;
 }) {
   const id = useId();
   const { item, qty, cost, hazardTags } = entry;
@@ -115,6 +118,7 @@ export function ItemRow({
             )}
           </div>
         )}
+        {!skipped && extra}
         {!have && (
           <details className="group mt-1 text-[0.93rem]">
             <summary className="no-print cursor-pointer text-ink-soft hover:text-ink">Why this</summary>

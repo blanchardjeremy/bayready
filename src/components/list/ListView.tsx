@@ -28,6 +28,8 @@ import { ItemRow } from "./ItemRow";
 import { BAY_READY_URL, CREDIT, sitePath, siteUrl } from "@/lib/urls";
 import { clearReturnToList, markReturnToList } from "@/lib/returnToList";
 import { NamesEditor } from "@/components/NamesEditor";
+import { EMPTY_HOME, HOME_KEY, homeFacts, normalizeHome, type HomeFactId, type HomeInfo } from "@/data/homeFacts";
+import { KnowYourHome, TaskFacts } from "./HomeFields";
 
 type States = Record<string, ItemState>;
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
@@ -45,6 +47,7 @@ export function ListView() {
   const [copied, setCopied] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [editingNames, setEditingNames] = useState(false);
+  const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
   // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
   useEffect(() => clearReturnToList(), []);
 
@@ -69,6 +72,11 @@ export function ListView() {
 
   const st = (e: ListEntry) => stateOf(e, states, answers);
 
+  // Know your home: device-only answers, shown on their task and in one card. Not for shared lists.
+  const facts = homeFacts(ctx);
+  const homeInfo = home ?? EMPTY_HOME;
+  const setFact = (id: HomeFactId, value: string) => setHome((prev) => ({ ...prev, facts: { ...prev.facts, [id]: value } }));
+
   /** Props for one item row. Per-person rows tick everyone at once from the main checkbox. */
   const row: RowProps = (e) => ({
     entry: e,
@@ -76,6 +84,9 @@ export function ListView() {
     ctx,
     slotDone: (i) => slotDone(e, i, states, answers),
     onEditNames: shared ? undefined : () => setEditingNames(true),
+    extra: shared ? undefined : (
+      <TaskFacts facts={facts.filter((f) => f.task === e.item.id)} home={homeInfo} onChange={setFact} />
+    ),
     onSlot: (i, done) => setStates({ [slotKey(e, i)]: done ? "have" : "need" }),
     onChange: (s) => {
       const patch: States = { [e.key]: s };
@@ -159,6 +170,7 @@ export function ListView() {
                 entries: main,
                 stateOf: st,
                 slotDone: (e, i) => slotDone(e, i, states, answers),
+                home: shared ? undefined : homeInfo,
                 shareUrl: shareUrl(),
               });
               flash("Spreadsheet downloaded. It opens in Google Sheets, Excel, or Numbers.");
@@ -226,6 +238,15 @@ export function ListView() {
       </div>
 
       <FirstHour ctx={ctx} />
+
+      {!shared && (
+        <KnowYourHome
+          facts={facts}
+          home={homeInfo}
+          onFact={setFact}
+          onNotes={(notes) => setHome((prev) => ({ ...prev, notes }))}
+        />
+      )}
 
       <KeepFresh />
 

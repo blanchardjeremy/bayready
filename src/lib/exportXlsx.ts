@@ -1,11 +1,12 @@
 import type ExcelJSNamespace from "exceljs";
-import type { Answers, Container, Context, HazardId, ItemState, ListEntry, Stage } from "./types";
+import type { Answers, Container, Context, ItemState, ListEntry, Stage } from "./types";
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
 import { MAX_PEOPLE, peopleNames, resolveBuild } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { expiringSections } from "@/data/expiring";
+import { homeFacts, type HomeInfo } from "@/data/homeFacts";
 import { firstHourCard } from "@/data/firstHour";
 import { BAY_READY_URL, CREDIT } from "./urls";
 
@@ -20,6 +21,8 @@ export interface ExportInput {
   /** The entries on the user's current list (their level), skipped ones included. */
   entries: ListEntry[];
   stateOf: (e: ListEntry) => ItemState;
+  /** Know your home answers and notes typed in the app. Device-only, never in share links. */
+  home?: HomeInfo;
   /** For entries tracked per person (entry.slots): whether that person's part is done. */
   slotDone: (e: ListEntry, i: number) => boolean;
   shareUrl: string;
@@ -895,7 +898,7 @@ function buildNeighbors(ws: Worksheet) {
     ["Where (unit or street)", 20],
     ["Skills or tools to share", 30],
     ["Anything they'd like us to know", 34],
-    ["OK to share with the block?", 16],
+    ["OK to share with the block?", 28],
   ] as const;
   ws.columns = cols.map(([, width]) => ({ width, style: { font: font() } }));
   title(
@@ -1089,24 +1092,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
 
   // Know your home: blanks for the things the to-dos ask people to find out.
   overviewSection(ws, row++, "Know your home");
-  const leaving = (["wildfire", "flood", "tsunami"] as HazardId[]).some((h) => ctx.hazards.has(h));
-  const facts = (
-    [
-      ["Gas shutoff", "Where the meter and valve are, and where the wrench is. Only shut it off if you smell gas or hear hissing.", true],
-      ["Water shutoff", "Close it if pipes break after a quake.", true],
-      ["Breaker box", "Where it is, and which switch is the main.", true],
-      ["Out-of-area contact", "Name and number everyone texts after a disaster.", true],
-      ["Meeting spot outside", "Right outside, if you have to leave the house fast.", true],
-      ["Meeting spot nearby", "Outside the neighborhood, if you can't get home.", true],
-      ["Stay-at-home bin is", "Somewhere you can reach after a quake.", ctx.kits.includes("stay")],
-      ["Go bags are", "By the door you'd use.", ctx.kits.includes("go")],
-      ["Spare key is with", "A neighbor, friend, or lockbox.", true],
-      ["Evacuation zone", "Alerts name the zone, so you'll know right away when it's yours.", leaving],
-      ["Picks up the kids", "If you can't get to school. Make sure they're on the school's emergency card.", ctx.kids + ctx.babies > 0],
-      ["Grabs the pets", "A neighbor who can get them if you're not home.", ctx.pets > 0],
-    ] as const
-  ).filter(([, , show]) => show);
-  for (const [label, hint] of facts) {
+  for (const { id, label, hint } of homeFacts(ctx)) {
     ws.getRow(row).height = 24;
     const l = ws.getCell(`B${row}`);
     l.value = label;
@@ -1115,6 +1101,9 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     l.border = { bottom: hairline };
     ws.mergeCells(`C${row}:D${row}`);
     const v = ws.getCell(`C${row}`);
+    const answer = input.home?.facts[id]?.trim();
+    if (answer) v.value = answer;
+    v.font = font();
     v.fill = fill(C.input);
     v.border = { bottom: hairline };
     v.alignment = { vertical: "middle", indent: 1, wrapText: true };
@@ -1124,10 +1113,16 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   row++;
 
   overviewSection(ws, row++, "Notes and reminders");
-  for (let i = 0; i < 8; i++) {
+  // One line of notes per row; anything past the last row goes in the last one.
+  const NOTE_ROWS = 8;
+  const lines = (input.home?.notes ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const noteRows = [...lines.slice(0, NOTE_ROWS - 1), lines.slice(NOTE_ROWS - 1).join(" ")];
+  for (let i = 0; i < NOTE_ROWS; i++) {
     ws.getRow(row).height = 24;
     ws.mergeCells(`B${row}:D${row}`);
     const c = ws.getCell(`B${row}`);
+    if (noteRows[i]) c.value = noteRows[i];
+    c.font = font();
     c.fill = fill(C.input);
     c.border = { bottom: hairline };
     c.alignment = { vertical: "middle", indent: 1, wrapText: true };

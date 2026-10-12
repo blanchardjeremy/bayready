@@ -404,6 +404,30 @@ describe("spreadsheet export", () => {
     expect(row.rules.map((r) => r.formulae[0])).toEqual(['$G5="Due now"', '$G5="Due soon"']);
   });
 
+  it("fills Know your home and notes from the app", async () => {
+    const input = makeInput();
+    const buf = await toXlsx(ExcelJS, {
+      ...input,
+      home: { facts: { gas: "Side of the house, wrench on a hook", contact: "Aunt Pat 555-0100" }, notes: "Radio is in Sam's go bag\nCheck the car kit in June" },
+    });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf as unknown as ArrayBuffer);
+    const ws = wb.getWorksheet("Overview")!;
+    const valueFor = (label: string) => {
+      let v: unknown = null;
+      ws.eachRow((r) => {
+        if (r.getCell(2).text === label) v = r.getCell(3).value;
+      });
+      return v;
+    };
+    expect(valueFor("Gas shutoff")).toBe("Side of the house, wrench on a hook");
+    expect(valueFor("Out-of-area contact")).toBe("Aunt Pat 555-0100");
+    expect(valueFor("Water shutoff")).toBeNull();
+    const notesTitle = findRow(ws, "Notes and reminders");
+    expect(ws.getCell(`B${notesTitle + 1}`).value).toBe("Radio is in Sam's go bag");
+    expect(ws.getCell(`B${notesTitle + 2}`).value).toBe("Check the car kit in June");
+  });
+
   it("leaves out person columns for a one-person household", async () => {
     const answers = normalizeAnswers({ build: "both", hazards: ["earthquake"] });
     const ctx = deriveContext(answers);

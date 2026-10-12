@@ -389,6 +389,10 @@ describe("spreadsheet export", () => {
         .conditionalFormattings.find((c) => c.ref.startsWith("B"))!;
       expect(cf.rules.find((r) => r.formulae[0].includes(`"${done}"`))!.style.fill!.bgColor!.argb, sheet).toBe("FFE2F0E7");
       expect(cf.rules.find((r) => r.formulae[0] === `OR(${notDone})`)!.style.fill!.bgColor!.argb, sheet).toBe("FFFFF2B8");
+      // The Status cell matches the item name
+      const status = (ws as unknown as { conditionalFormattings: { ref: string; rules: { formulae: string[]; style: { fill?: { bgColor?: { argb: string } } } }[] }[] })
+        .conditionalFormattings.find((c) => c.ref.startsWith("A") && c.rules.some((r) => r.formulae[0] === `OR(${notDone})`))!;
+      expect(status.rules.find((r) => r.formulae[0] === `OR(${notDone})`)!.style.fill!.bgColor!.argb, sheet).toBe("FFFFF2B8");
     }
   });
 

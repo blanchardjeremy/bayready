@@ -208,8 +208,8 @@ function linkCell(cell: ExcelJSNamespace.Cell, link: { label: string; url: strin
 
 /** Conditional formats keyed off the Status column (A). */
 /**
- * Status colors. The Status cell turns green when done; the item name follows
- * along: yellow while it still needs doing, green when done, struck through
+ * Status colors, on both the Status cell and the item name: yellow while it
+ * still needs doing, green when done, grey (and struck through on the name)
  * when skipped. Same colors as the per-person Not done / Done cells.
  */
 function statusFormats(ws: Worksheet, first: number, last: number, done: string, notDone: string[], itemCols: string) {
@@ -223,7 +223,13 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
         formulae: [`$A${first}="${done}"`],
         style: { font: { color: { argb: C.green }, bold: true }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.greenWash } } },
       },
-      { type: "expression", priority: 2, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted } } } },
+      {
+        type: "expression",
+        priority: 2,
+        formulae: [`OR(${notDone.map((w) => `$A${first}="${w}"`).join(",")})`],
+        style: { font: { color: { argb: C.yellow } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.yellowWash } } },
+      },
+      { type: "expression", priority: 3, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted } } } },
     ],
   });
   ws.addConditionalFormatting({

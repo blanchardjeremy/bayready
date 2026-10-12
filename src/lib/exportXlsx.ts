@@ -848,6 +848,24 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
       { type: "expression", priority: 3, formulae: [`$G${first}="Good"`], style: { font: { color: { argb: C.green } } } },
     ],
   });
+  // The rest of the row gets the same tint, so due items stand out while scrolling.
+  ws.addConditionalFormatting({
+    ref: `A${first}:H${last}`,
+    rules: [
+      {
+        type: "expression",
+        priority: 4,
+        formulae: [`$G${first}="${DUE_NOW}"`],
+        style: { fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.orangeWash } } },
+      },
+      {
+        type: "expression",
+        priority: 5,
+        formulae: [`$G${first}="${DUE_SOON}"`],
+        style: { fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.amberWash } } },
+      },
+    ],
+  });
 
   const tip = ws.getCell(`A${last + 2}`);
   tip.value = "Eat the oldest food first and replace it on your next shop. Need more rows? Copy a row down so the formulas come with it.";

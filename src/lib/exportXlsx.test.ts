@@ -392,6 +392,14 @@ describe("spreadsheet export", () => {
     }
   });
 
+  it("tints the whole Expiration dates row when something is due", async () => {
+    const ws = (await roundTrip()).getWorksheet("Expiration dates")!;
+    const cfs = (ws as unknown as { conditionalFormattings: { ref: string; rules: { formulae: string[] }[] }[] }).conditionalFormattings;
+    const row = cfs.find((c) => c.ref.startsWith("A"))!;
+    expect(row.ref).toMatch(/^A5:H\d+$/);
+    expect(row.rules.map((r) => r.formulae[0])).toEqual(['$G5="Due now"', '$G5="Due soon"']);
+  });
+
   it("leaves out person columns for a one-person household", async () => {
     const answers = normalizeAnswers({ build: "both", hazards: ["earthquake"] });
     const ctx = deriveContext(answers);

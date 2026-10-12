@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .preview/
+
+# The wizard lives at src/app/build. Keep it even if a global gitignore ignores build/ folders.
+!/src/app/build/

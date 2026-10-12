@@ -1,0 +1,78 @@
+import type { Category, Container, Shop, Stage } from "@/lib/types";
+
+export const CONTAINER_META: Record<Container, { name: string; purpose: string; where: string }> = {
+  stay: {
+    name: "Stay bin",
+    purpose: "Think of it as camping at home: no power, no running water, stores closed, and help may be slow to reach you.",
+    where: "Keep it somewhere you can reach after a quake: a closet near the door, not the back of the garage.",
+  },
+  go: {
+    name: "Go bag",
+    purpose: "Think of going to a friend's place or a shelter for a few days. One bag per person, ready to grab in minutes.",
+    where: "Keep it by the door. You should be able to carry it comfortably, and don't pack anything you don't know how to use.",
+  },
+  car: {
+    name: "Car kit",
+    purpose: "For getting stuck on the road or leaving by car.",
+    where: "Keep it in the trunk, out of sight. Keep your gas tank at least half full, and don't leave copies of IDs in the car in case of a break-in.",
+  },
+  home: {
+    name: "Around the house",
+    purpose: "One-time tasks and plans. Most are free and take under an hour.",
+    where: "",
+  },
+};
+
+export const CATEGORY_META: Record<Category, string> = {
+  water: "Water",
+  food: "Food",
+  "light-power": "Light and power",
+  comms: "Alerts and staying in touch",
+  "first-aid": "First aid and medicine",
+  sanitation: "Toilet and hygiene",
+  "docs-money": "Documents and cash",
+  "clothing-shelter": "Clothing and warmth",
+  tools: "Tools",
+  air: "Smoke and air",
+  "baby-kids": "Babies and kids",
+  pets: "Pets",
+  access: "Health and access needs",
+  "home-safety": "Make your home safer",
+  comfort: "Comfort and calm",
+  plan: "Make a plan",
+};
+
+export const CATEGORY_ORDER: Category[] = [
+  "plan",
+  "home-safety",
+  "water",
+  "food",
+  "first-aid",
+  "access",
+  "light-power",
+  "comms",
+  "air",
+  "sanitation",
+  "docs-money",
+  "clothing-shelter",
+  "tools",
+  "comfort",
+  "baby-kids",
+  "pets",
+];
+
+export const SHOP_META: Record<Shop, string> = {
+  free: "Gather or make at home",
+  grocery: "Grocery store",
+  pharmacy: "Pharmacy",
+  hardware: "Hardware store",
+  outdoor: "Outdoor or camping store",
+  online: "Online or big-box store",
+};
+export const SHOP_ORDER: Shop[] = ["free", "grocery", "pharmacy", "hardware", "outdoor", "online"];
+
+export const STAGE_META: Record<Stage, { name: string; desc: string }> = {
+  weekend: { name: "This weekend", desc: "Free quick wins. About an hour all together." },
+  month: { name: "This month", desc: "Gather what you have, pack it up, and make a shopping trip or two." },
+  later: { name: "Later", desc: "Extra days, backups, and gear for when you're ready." },
+};

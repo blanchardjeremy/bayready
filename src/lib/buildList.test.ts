@@ -85,6 +85,8 @@ describe("buildList", () => {
     expect(apt.has("home:water-heater")).toBe(false);
     expect(ids(answers({ home: "house" })).has("home:water-heater")).toBe(true);
     expect(ids(answers({ hazards: ["wildfire"], car: "no" })).has("home:routes")).toBe(true);
+    expect(ids(answers({ hazards: ["wildfire"], car: "yes" })).has("home:half-tank")).toBe(true);
+    expect(ids(answers({ hazards: ["wildfire"], car: "no" })).has("home:half-tank")).toBe(false);
   });
 
   it("puts the person with an access need in charge of their own check-ins", () => {

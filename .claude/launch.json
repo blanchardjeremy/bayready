@@ -4,8 +4,27 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "3217"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3217"
+      ],
       "port": 3217
+    },
+    {
+      "name": "pages-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3218",
+        "--directory",
+        ".preview/site"
+      ],
+      "port": 3218,
+      "url": "http://localhost:3218"
     }
   ]
 }

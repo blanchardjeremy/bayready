@@ -24,6 +24,7 @@ import { ITEMS } from "@/data/items";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
 import { Button, buttonClass } from "@/components/controls";
 import { ItemRow } from "./ItemRow";
+import { sitePath, siteUrl } from "@/lib/urls";
 import { NamesEditor } from "@/components/NamesEditor";
 
 type States = Record<string, ItemState>;
@@ -97,7 +98,7 @@ export function ListView() {
       flash("Couldn't copy. Your browser blocked it.");
     }
   };
-  const shareUrl = () => `${window.location.origin}/list#${encodeShare(answers, states)}`;
+  const shareUrl = () => `${siteUrl("/list")}#${encodeShare(answers, states)}`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6">
@@ -113,7 +114,7 @@ export function ListView() {
               onClick={() => {
                 setStoredAnswers(shared.answers);
                 setStoredStates(shared.states);
-                history.replaceState(null, "", "/list");
+                history.replaceState(null, "", sitePath("/list"));
                 setShared(null);
               }}
             >
@@ -360,7 +361,7 @@ function StartHere({
             downloadIcs(
               "emergency-prep-first-step.ics",
               "Emergency prep: first steps",
-              firsts.map((e) => `- ${e.item.name}`).join("\n") + "\n\nYour list: " + window.location.origin + "/list",
+              firsts.map((e) => `- ${e.item.name}`).join("\n") + "\n\nYour list: " + siteUrl("/list"),
               firstStepDate(answers.start),
             )
           }
@@ -667,8 +668,7 @@ function KeepFresh() {
               "emergency-kit-check.ics",
               "Emergency kit 6-month check",
               "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents.\n\nYour list: " +
-                window.location.origin +
-                "/list",
+                siteUrl("/list"),
               d,
               45,
             );

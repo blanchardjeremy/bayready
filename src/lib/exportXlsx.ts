@@ -44,6 +44,9 @@ const C = {
   greenWash: "FFE2F0E7",
   amber: "FF8A5A00",
   yellow: "FF6B5200",
+  // Advanced extras: a quiet lavender, so they read as optional at a glance.
+  extra: "FF5B4E8C",
+  extraWash: "FFF4F1FB",
   yellowWash: "FFFFF2B8",
   amberWash: "FFFBF0D6",
   orange: "FFB0381C",
@@ -323,6 +326,50 @@ function subSectionRow(ws: Worksheet, row: number, name: string, desc: string, c
   cell.alignment = { vertical: "bottom", indent: 1 };
 }
 
+/** Heading for the Advanced items at the bottom of a section. */
+function extrasRow(ws: Worksheet, row: number, cols: number) {
+  const r = ws.getRow(row);
+  r.height = 26;
+  for (let i = 1; i <= cols; i++) {
+    r.getCell(i).fill = fill(C.extraWash);
+    r.getCell(i).border = { bottom: { style: "thin", color: { argb: C.muted } } };
+  }
+  const cell = r.getCell(1);
+  cell.value = {
+    richText: [
+      { text: "Advanced extras", font: { name: DISPLAY, size: 10, bold: true, color: { argb: C.extra } } },
+      { text: "    Nice to have. Skip these if you're just getting started", font: { name: BODY, size: 10, color: { argb: C.extra } } },
+    ],
+  };
+  cell.alignment = { vertical: "bottom", indent: 1 };
+}
+
+function markExtra(ws: Worksheet, row: number, cols: number) {
+  const r = ws.getRow(row);
+  for (let i = 1; i <= cols; i++) r.getCell(i).fill = fill(C.extraWash);
+}
+
+/** Basics first, then Advanced items under an "Advanced extras" heading. */
+function writeWithExtras(
+  ws: Worksheet,
+  startRow: number,
+  list: ListEntry[],
+  cols: number,
+  write: (row: number, e: ListEntry) => void,
+): number {
+  let row = startRow;
+  for (const e of list.filter((e) => e.level === "basics")) write(row++, e);
+  const extras = list.filter((e) => e.level === "advanced");
+  if (extras.length) {
+    extrasRow(ws, row++, cols);
+    for (const e of extras) {
+      write(row, e);
+      markExtra(ws, row++, cols);
+    }
+  }
+  return row;
+}
+
 function sortByCategory(list: ListEntry[]) {
   return [...list].sort((a, b) => CATEGORY_ORDER.indexOf(a.item.category) - CATEGORY_ORDER.indexOf(b.item.category));
 }
@@ -389,7 +436,7 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
   for (const [name, desc, items] of sections) {
     if (items.length === 0) continue;
     sectionRow(ws, row++, name, desc, WHY);
-    for (const e of items) {
+    row = writeWithExtras(ws, row, items, WHY, (row, e) => {
       const r = ws.getRow(row);
       r.height = 24;
       const each = perPerson(e);
@@ -410,8 +457,7 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
       linkCell(r.getCell(LINK), e.item.link?.(input.ctx));
       r.getCell(WHY).value = e.item.why;
       bodyCell(r.getCell(WHY), { size: 10, color: { argb: C.soft } });
-      row++;
-    }
+    });
   }
   const last = row - 1;
   statusFormats(ws, first, last, "Done", "B{f}:B{l}");
@@ -556,10 +602,10 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
           }
         }
         row++;
-        for (const e of group) writeSupplyRow(ws, row++, e, input, idx, bags);
+        row = writeWithExtras(ws, row, group, cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
       }
     } else {
-      for (const e of items) writeSupplyRow(ws, row++, e, input, idx, bags);
+      row = writeWithExtras(ws, row, items, cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
     }
   }
   const last = row - 1;

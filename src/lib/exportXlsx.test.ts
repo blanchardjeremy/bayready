@@ -357,6 +357,27 @@ describe("spreadsheet export", () => {
     }
   });
 
+  it("puts Advanced items last in each section, shaded, in an Advanced export", async () => {
+    const input = makeInput();
+    const answers = { ...input.answers, level: "advanced" as const };
+    const ctx = deriveContext(answers);
+    const entries = buildList(ctx, ITEMS); // everything, like an Advanced list
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load((await toXlsx(ExcelJS, { ...input, answers, ctx, entries })) as unknown as ArrayBuffer);
+    const ws = wb.getWorksheet("Supplies")!;
+
+    const stay = findRowA(ws, "Stay-at-home bin");
+    const extras = findRowA(ws, "Advanced extras");
+    expect(extras).toBeGreaterThan(stay);
+    // Every row between the section heading and Advanced extras is Basics, and after it, Advanced
+    const basicsNames = new Set(entries.filter((e) => e.container === "stay" && e.level === "basics").map((e) => e.item.name));
+    const advancedNames = new Set(entries.filter((e) => e.container === "stay" && e.level === "advanced").map((e) => e.item.name));
+    for (let r = stay + 1; r < extras; r++) expect(basicsNames.has(ws.getCell(`B${r}`).text), ws.getCell(`B${r}`).text).toBe(true);
+    const firstExtra = ws.getCell(`B${extras + 1}`);
+    expect(advancedNames.has(firstExtra.text)).toBe(true);
+    expect((firstExtra.fill as ExcelJS.FillPattern).fgColor?.argb).toBe("FFF4F1FB");
+  });
+
   it("leaves out person columns for a one-person household", async () => {
     const answers = normalizeAnswers({ build: "both", hazards: ["earthquake"] });
     const ctx = deriveContext(answers);

@@ -365,7 +365,8 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
             }}
             options={[
               { value: "meds", label: "Daily prescription medicine" },
-              { value: "power-device", label: "A medical device that needs power", desc: "CPAP, oxygen, power wheelchair, or medicine that must stay cold" },
+              { value: "cold-meds", label: "Medicine that has to stay cold", desc: "Like insulin" },
+              { value: "power-device", label: "A medical device that needs power", desc: "CPAP, oxygen, or a power wheelchair" },
               { value: "mobility", label: "A mobility aid, or trouble with stairs" },
               { value: "vision-hearing", label: "Glasses, contacts, or hearing aids" },
               { value: "diet", label: "A special diet, food allergy, or baby formula" },

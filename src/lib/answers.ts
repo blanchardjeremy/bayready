@@ -176,7 +176,7 @@ export function normalizeAnswers(input: unknown): Answers {
     i.needs === "private"
       ? "private"
       : Array.isArray(i.needs)
-        ? pickArr(i.needs, ["meds", "power-device", "mobility", "vision-hearing", "diet"] as const)
+        ? pickArr(i.needs, ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet"] as const)
         : null;
   a.have = Array.isArray(i.have) ? i.have.filter((x): x is string => typeof x === "string").slice(0, 50) : [];
   a.level = i.level === "advanced" ? "advanced" : "basics";

@@ -293,3 +293,22 @@ describe("names", () => {
     expect(normalizeAnswers({}).names).toEqual({ adults: [], kids: [] });
   });
 });
+
+describe("cooler", () => {
+  const level = (a: Answers) => list(a).find((e) => e.key === "stay:cooler")?.level;
+
+  it("is an Advanced item for outages, not something daily medicine adds", () => {
+    expect(level(answers({ needs: ["meds"] }))).toBe("advanced");
+    expect(list(answers({ build: "both", needs: ["meds"] })).some((e) => e.item.id === "cold-med-pouch")).toBe(false);
+  });
+
+  it("moves into Basics for medicine that has to stay cold", () => {
+    const a = answers({ build: "both", needs: ["cold-meds"] });
+    expect(level(a)).toBe("basics");
+    expect(list(a).some((e) => e.key === "go:cold-med-pouch")).toBe(true);
+  });
+
+  it("isn't added by a powered medical device on its own", () => {
+    expect(level(answers({ needs: ["power-device"] }))).toBe("advanced");
+  });
+});

@@ -178,9 +178,13 @@ describe("spreadsheet export", () => {
   it("adds a Done column for each person who carries a go bag", async () => {
     const wb = await roundTrip();
     const ws = wb.getWorksheet("Supplies")!;
-    // 2 adults + 1 kid = 3 bags, named from the Overview list
-    expect(["D5", "E5", "F5"].map((c) => (ws.getCell(c).value as { result: string }).result)).toEqual(["Me", "Adult 2", "Kid 1"]);
-    expect((ws.getCell("D5").value as { formula: string }).formula).toBe('IF(Overview!$B$17="","Person 1",Overview!$B$17)');
+    // 2 adults + 1 kid = 3 bags. The sticky header leaves them unnamed; the names
+    // sit on the go bag's "In every bag" row, from the Overview list.
+    expect(["D5", "E5", "F5"].map((c) => ws.getCell(c).value)).toEqual(["", "", ""]);
+    const every = findRowA(ws, "In every bag");
+    expect(["D", "E", "F"].map((c) => (ws.getCell(`${c}${every}`).value as { result: string }).result)).toEqual(["Me", "Adult 2", "Kid 1"]);
+    expect((ws.getCell(`D${every}`).value as { formula: string }).formula).toBe('IF(Overview!$B$17="","Person 1",Overview!$B$17)');
+    expect(ws.getCell(`D${findRowA(ws, "One for the group")}`).value).toBeNull();
     expect(wb.getWorksheet("Overview")!.getCell("B19").value).toBe("Kid 1");
 
     // Per-person rows get boxes and a Status that follows them
@@ -217,7 +221,7 @@ describe("spreadsheet export", () => {
       expect((cell.fill as ExcelJS.FillPattern | undefined)?.fgColor).toBeUndefined();
       expect(cell.dataValidation).toBeUndefined();
     }
-    expect(ws.getCell("D4").value).toBe("Each person");
+    expect(ws.getCell("D4").value).toBeNull(); // no "Each person" group label
     expect(ws.getColumn("D").width).toBe(15);
   });
 
@@ -298,7 +302,8 @@ describe("spreadsheet export", () => {
     const overview = wb.getWorksheet("Overview")!;
     expect(["B17", "B18", "B19"].map((c) => overview.getCell(c).value)).toEqual(["Alex", "Sam", "Riley"]);
     const ws = wb.getWorksheet("Supplies")!;
-    expect(["D5", "E5", "F5"].map((c) => (ws.getCell(c).value as { result: string }).result)).toEqual(["Alex", "Sam", "Riley"]);
+    const every = findRowA(ws, "In every bag");
+    expect(["D", "E", "F"].map((c) => (ws.getCell(`${c}${every}`).value as { result: string }).result)).toEqual(["Alex", "Sam", "Riley"]);
   });
 
   it("credits and links back to Bay Ready on every tab", async () => {

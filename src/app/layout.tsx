@@ -25,7 +25,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
+    // Extensions like LanguageTool add attributes to <html> before React loads.
+    // This only ignores attribute differences on this one tag, not its children.
+    <html lang="en" className={`${atkinson.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <a
           href="#main"

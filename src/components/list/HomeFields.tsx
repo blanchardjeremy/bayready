@@ -122,7 +122,7 @@ export function KnowYourHome({
   }, [pulse]);
 
   return (
-    <section id={HOME_CARD_ID} className="print-break-avoid mt-6 scroll-mt-4 border-t border-line pt-10" aria-labelledby={`${HOME_CARD_ID}-title`}>
+    <section id={HOME_CARD_ID} className="print-break-avoid mt-6 scroll-mt-4 border-t border-line pt-10 print:-order-1 print:mb-8 print:border-0 print:pt-0" aria-labelledby={`${HOME_CARD_ID}-title`}>
       <div className="no-print">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 id={`${HOME_CARD_ID}-title`} className="text-2xl font-extrabold tracking-tight">

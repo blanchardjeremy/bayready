@@ -149,7 +149,8 @@ export function ListView() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6">
+    // In print, a flex column lets Know your home move up under the header.
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 print:flex print:flex-col">
       {shared && (
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-ink bg-paper p-4">
           <p>
@@ -361,7 +362,7 @@ function Header({
   ];
 
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+    <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end print:-order-2">
       <div>
         <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">Your emergency list</h1>
         <dl className="mt-4 flex max-w-[60rem] flex-wrap items-center gap-x-4 gap-y-2">

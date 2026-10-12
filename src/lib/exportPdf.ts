@@ -201,16 +201,20 @@ function whenItHappens(p: Pages, input: ExportInput) {
   }
 }
 
-/** A box per answer, like the printed sheet, so blanks can be filled in by hand. */
+/**
+ * A box per answer, like the printed sheet, so blanks can be filled in by hand.
+ * It comes first, right under the title: it's what you'll want on the day.
+ */
 function knowYourHome(p: Pages, input: ExportInput) {
   const home = input.home;
   if (!home) return;
   const { doc } = p;
-  p.newPage();
-  p.para("Know your home", 20, { bold: true, after: 2 });
-  p.para("Fill in anything that's blank. Keep a copy in your stay-at-home bin and in each go bag.", 10, {
+  p.para("Know your home", 16, { bold: true, after: 2 });
+  p.rule(INK, 1.2);
+  p.y += 6;
+  p.para("Fill in anything that's blank. Keep a copy in your stay-at-home bin and in each go bag.", 9.5, {
     color: SOFT,
-    after: 10,
+    after: 8,
   });
 
   const gap = 8;
@@ -220,7 +224,7 @@ function knowYourHome(p: Pages, input: ExportInput) {
     const pair = facts.slice(i, i + 2);
     p.font(10);
     const valueLines = pair.map((f) => p.lines(home.facts[f.id]?.trim() ?? "", boxW - 16));
-    const boxH = Math.max(56, 26 + Math.max(...valueLines.map((l) => l.length)) * 13);
+    const boxH = Math.max(44, 26 + Math.max(...valueLines.map((l) => l.length)) * 13);
     p.room(boxH + gap);
     pair.forEach((f, k) => {
       const x = M + k * (boxW + gap);
@@ -238,7 +242,7 @@ function knowYourHome(p: Pages, input: ExportInput) {
   // Notes: a big box to write in, or flowing text if they've written more than fits on a page.
   p.font(10);
   const noteLines = p.lines(home.notes.trim(), CONTENT_W - 16);
-  const boxH = Math.max(170, 30 + noteLines.length * 13);
+  const boxH = Math.max(110, 30 + noteLines.length * 13);
   if (boxH <= BOTTOM - M) {
     p.room(boxH);
     doc.setDrawColor(...INK);
@@ -280,13 +284,17 @@ export function buildPdf(JsPDFClass: typeof JsPDF, input: ExportInput): JsPDF {
   doc.line(linkX, p.y + 10, linkX + linkW, p.y + 10);
   p.y += 22;
 
+  if (input.home) {
+    knowYourHome(p, input);
+    p.newPage();
+  }
+
   const shown = entries.filter((e) => input.stateOf(e) !== "skip");
   for (const c of CONTAINER_ORDER) {
     const list = shown.filter((e) => e.container === c);
     if (ctx.kits.includes(c) && list.length > 0) kitSection(p, c, list, input);
   }
   whenItHappens(p, input);
-  knowYourHome(p, input);
 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {

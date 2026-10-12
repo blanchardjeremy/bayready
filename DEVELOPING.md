@@ -36,8 +36,9 @@ using ExcelJS, loaded only on click). It opens in Google Sheets, Excel, or Numbe
   Who, and links.
 - **Supplies:** grouped by kit, with Status (Need, Have, Skip), who's buying, rough cost, and where
   to get it. Stay-at-home bin amounts follow **Days at home** on the Overview tab.
-- **Expiration dates:** things that expire or need a regular check, food first, then water,
-  medicine, batteries and power, and everything else. Rows are pre-filled for the household
+- **Expiration dates:** things that expire or need a regular check, grouped by whose they are: an
+  **Everyone** section for shared supplies (food first), then one section per person for their
+  own go bag. Rows are pre-filled for the household
   (`src/data/expiring.ts`) with a default **Replace every**, plus blank rows. Enter **Packed on**
   or the **Date on package**, and **Due by** and **Heads-up** (Due now, Due soon, Good) fill in on
   their own. The Overview counts these. In Apple Numbers, only Date on package calculates.

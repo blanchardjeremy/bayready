@@ -85,22 +85,23 @@ describe("spreadsheet export", () => {
     for (const gone of ["Bought on", "Expires", "Refresh every", "Replace by", "Heads-up"]) expect(headers).not.toContain(gone);
   });
 
-  it("pre-fills an Expiration dates tab, food first, for this household", async () => {
+  it("pre-fills an Expiration dates tab: shared supplies, then each person's go bag", async () => {
     const wb = await roundTrip();
     const ws = wb.getWorksheet("Expiration dates")!;
     const headers: string[] = [];
     ws.getRow(4).eachCell((c) => headers.push(c.text));
     expect(headers).toEqual(["Item", "Kit", "Replace every", "Packed on", "Date on package", "Due by", "Heads-up", "Notes"]);
 
-    // Sections in order, food first
-    const sections: string[] = [];
-    ws.eachRow((r) => {
+    // One shared section, then one per person who carries a go bag
+    const sections: [string, number][] = [];
+    ws.eachRow((r, n) => {
       const v = r.getCell(1).value as { richText?: { text: string }[] } | null;
-      if (v && typeof v === "object" && "richText" in v && v.richText) sections.push(v.richText[0].text);
+      if (v && typeof v === "object" && "richText" in v && v.richText) sections.push([v.richText[0].text, n]);
     });
-    expect(sections).toEqual(["Food", "Water", "Medicine and first aid", "Batteries and power", "Everything else"]);
+    expect(sections.map(([name]) => name)).toEqual(["Everyone", "Me", "Adult 2", "Kid 1"]);
+    const sectionOf = (row: number) => [...sections].reverse().find(([, n]) => n < row)![0];
 
-    // Example food rows, with blank rows after them
+    // Shared food comes first
     const beans = findRowA(ws, "Canned beans");
     expect(beans).toBe(6);
     expect(ws.getCell(`C${beans}`).value).toBe(24);
@@ -115,12 +116,23 @@ describe("spreadsheet export", () => {
       `IF(F${water}="","",IF(F${water}<=TODAY(),"Due now",IF(F${water}<=EDATE(TODAY(),6),"Due soon","Good")))`,
     );
 
+    expect(sectionOf(water)).toBe("Everyone");
+
+    // Each person's own go bag rows, in their section
+    const goWater: string[] = [];
+    ws.eachRow((r, n) => {
+      if (r.getCell(1).text === "Go bag water") goWater.push(sectionOf(n));
+    });
+    expect(goWater).toEqual(["Me", "Adult 2", "Kid 1"]);
+    const kidClothes = findRowA(ws, "Clothes and shoes");
+    expect(sectionOf(kidClothes)).toBe("Kid 1");
+    expect(sectionOf(findRowA(ws, "Change of clothes"))).toBe("Me");
+
     // Tailored: this household has a dog and a go bag, but no car kit or baby
-    expect(findRowA(ws, "Pet food")).toBeGreaterThan(0);
-    expect(findRowA(ws, "Go bag water bottles")).toBeGreaterThan(0);
+    expect(sectionOf(findRowA(ws, "Pet food"))).toBe("Everyone");
     expect(findRowA(ws, "Water in the car")).toBe(0);
     expect(findRowA(ws, "Formula and baby food")).toBe(0);
-    expect(findRowA(ws, "Phone power banks")).toBeGreaterThan(0);
+    expect(findRowA(ws, "Prescription medicine")).toBe(0); // nobody said they take daily medicine
 
     // The Overview's counts read this tab
     const overview = wb.getWorksheet("Overview")!;

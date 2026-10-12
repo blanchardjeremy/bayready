@@ -261,7 +261,8 @@ describe("items that scale with days at home", () => {
         expect(lo * units, e.item.id).toBeCloseTo(e.cost[0]);
         expect(hi * units, e.item.id).toBeCloseTo(e.cost[1]);
         if (!e.qty) continue;
-        const text = s.perDay ? `${Math.ceil(s.perDay(ctx) * days)} ${s.unit}` : `${days} days${s.suffix?.(ctx) ?? ""}`;
+        const n = s.perDay ? Math.ceil(s.perDay(ctx) * days) : 0;
+        const text = s.perDay ? `${n} ${n === 1 && s.unitOne ? s.unitOne : s.unit}` : `${days} days${s.suffix?.(ctx) ?? ""}`;
         expect(e.qty.text, e.item.id).toBe(text);
       }
     });

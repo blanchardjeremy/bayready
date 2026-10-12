@@ -517,7 +517,8 @@ const GROUP_LABEL: Record<Exclude<Group, "bags" | "notes">, string> = {
   buy: "Buying",
 };
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+// Enough precision that the sheet's rounded-up counts match the app's.
+const round2 = (n: number) => Math.round(n * 10000) / 10000;
 
 function colLetter(n: number): string {
   let s = "";
@@ -691,10 +692,11 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
     const days = input.ctx.stayDays;
     if (scale.perDay) {
       const perDay = round2(scale.perDay(input.ctx));
-      amount.value = {
-        formula: `ROUNDUP(${perDay}*${DAYS},0)&" ${scale.unit ?? ""}"`,
-        result: `${Math.ceil(perDay * days)} ${scale.unit ?? ""}`,
-      };
+      const n = `ROUNDUP(${perDay}*${DAYS},0)`;
+      const count = Math.ceil(perDay * days);
+      amount.value = scale.unitOne
+        ? { formula: `${n}&IF(${n}=1," ${scale.unitOne}"," ${scale.unit}")`, result: `${count} ${count === 1 ? scale.unitOne : scale.unit}` }
+        : { formula: `${n}&" ${scale.unit ?? ""}"`, result: `${count} ${scale.unit ?? ""}` };
     } else {
       const suffix = scale.suffix?.(input.ctx) ?? "";
       amount.value = { formula: `${DAYS}&" days${suffix}"`, result: `${days} days${suffix}` };

@@ -31,6 +31,40 @@ const eachBag = (amount: string) => (ctx: Context): Quantity => ({
   buy: ctx.carriers > 1 ? `for ${ctx.carriers} bags` : undefined,
 });
 
+/** People eating regular food: adults and teens count as one, kids about two-thirds. Babies have formula and baby food. */
+const eaters = (ctx: Context) => ctx.adults + ctx.kids * 0.7;
+
+/** One row of the stay-at-home food plan, counted in store units and scaled by days at home. */
+function foodPart(o: {
+  id: string;
+  name: string;
+  perPersonPerDay: number;
+  unit: [string, string];
+  unitCost: [number, number];
+  why: string;
+  tip?: string;
+}): Item {
+  const perDay = (ctx: Context) => eaters(ctx) * o.perPersonPerDay;
+  const count = (ctx: Context) => Math.ceil(perDay(ctx) * ctx.stayDays);
+  const [one, many] = o.unit;
+  return {
+    id: o.id,
+    name: o.name,
+    category: "food",
+    containers: ["stay"],
+    level: "basics",
+    hazards: "all",
+    scalesWithDays: { perDay, unit: many, unitOne: one, costPerDay: (ctx) => range(o.unitCost[0], o.unitCost[1], perDay(ctx)) },
+    why: o.why,
+    tip: o.tip,
+    qty: (ctx) => ({ text: `${count(ctx)} ${count(ctx) === 1 ? one : many}` }),
+    cost: (ctx) => range(o.unitCost[0], o.unitCost[1], count(ctx)),
+    stage: "month",
+    shop: "grocery",
+    haveKey: "food",
+  };
+}
+
 const isEastBay = (ctx: Context) => ctx.answers.county === "alameda" || ctx.answers.county === "contra-costa";
 
 const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
@@ -721,22 +755,53 @@ export const ITEMS: Item[] = [
     stage: "month",
     shop: "pharmacy",
   },
-  {
+  // A simple daily food plan: per person, a can of protein, a can of fruit or
+  // vegetables, a couple of servings of crackers or cereal, a spoonful of nut
+  // butter, and a snack. About 1,200 to 1,500 calories, which Ready.gov says
+  // healthy people can live on for a while. Kids count as about two-thirds.
+  foodPart({
     id: "food",
-    scalesWithDays: { suffix: (ctx) => ` for ${ctx.people}`, costPerDay: (ctx) => range(3, 6, ctx.people) },
-    name: "Food you can eat without cooking",
-    category: "food",
-    containers: ["stay"],
-    level: "basics",
-    hazards: "all",
-    why: "Canned and dry foods that don't need a stove or fridge: beans, tuna, nut butter, crackers, cereal, dried fruit.",
-    tip: "Most kitchens already have a few days of this. Buy what you already eat, so you can rotate it into meals and replace it.",
-    qty: (ctx) => ({ text: `${ctx.stayDays} days for ${ctx.people}`, buy: `about ${ctx.stayDays * ctx.people * 3} meals` }),
-    cost: (ctx) => range(3, 6, ctx.stayDays * ctx.people),
-    stage: "month",
-    shop: "grocery",
-    haveKey: "food",
-  },
+    name: "Canned protein: beans, tuna, chicken, or chili",
+    perPersonPerDay: 1,
+    unit: ["can", "cans"],
+    unitCost: [1.5, 3],
+    why: "The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals.",
+    tip: "Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.",
+  }),
+  foodPart({
+    id: "food-fruit-veg",
+    name: "Canned fruit and vegetables",
+    perPersonPerDay: 1,
+    unit: ["can", "cans"],
+    unitCost: [1, 2.5],
+    why: "About one can per person per day, for vitamins and fiber. The juice counts toward what you drink.",
+  }),
+  foodPart({
+    id: "food-grains",
+    name: "Crackers, cereal, or granola",
+    perPersonPerDay: 1 / 4,
+    unit: ["box", "boxes"],
+    unitCost: [3, 5],
+    why: "About two servings per person per day. A box has around eight.",
+    tip: "Pick sealed boxes or sleeves. They go stale fast once opened.",
+  }),
+  foodPart({
+    id: "food-nut-butter",
+    name: "Peanut butter or other nut butter",
+    perPersonPerDay: 1 / 14,
+    unit: ["jar", "jars"],
+    unitCost: [3, 6],
+    why: "A spoonful or two each a day. Lots of calories and protein, and no cooking. A jar has about 14 servings.",
+    tip: "Sunflower seed butter works for nut allergies.",
+  }),
+  foodPart({
+    id: "food-snacks",
+    name: "Granola bars, trail mix, or dried fruit",
+    perPersonPerDay: 1,
+    unit: ["snack", "snacks"],
+    unitCost: [0.75, 1.5],
+    why: "One a day each, for energy between meals. A familiar treat helps a lot when things are stressful, especially for kids.",
+  }),
   {
     id: "special-diet",
     scalesWithDays: { suffix: () => "", costPerDay: () => [5, 10] },

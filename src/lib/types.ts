@@ -157,6 +157,8 @@ export interface Item {
     /** Amount per day for the household, shown as a rounded-up count with this unit (e.g. gallons). */
     perDay?: (ctx: Context) => number;
     unit?: string;
+    /** Singular form, used when the rounded-up count is 1 ("1 jar"). */
+    unitOne?: string;
     /** Without perDay, the amount reads "7 days" plus this, e.g. " for 3". */
     suffix?: (ctx: Context) => string;
     /** Rough cost per day for the whole household, [low, high]. */

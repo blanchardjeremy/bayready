@@ -299,8 +299,13 @@ describe("spreadsheet export", () => {
     expect(cost.formula).toBe("ROUND(1.5*ROUNDUP(3.5*Overview!$C$14,0),0)");
     expect(cost.result).toBe(38);
 
-    const food = findRow(ws, "Food you can eat without cooking");
-    expect((ws.getCell(`C${food}`).value as { formula: string }).formula).toBe('Overview!$C$14&" days for 3"');
+    // Food is a plan in store units: 2 adults + 1 kid eat like 2.7 people
+    const protein = findRow(ws, "Canned protein: beans, tuna, chicken, or chili");
+    const cell = ws.getCell(`C${protein}`).value as { formula: string; result: string };
+    expect(cell.formula).toBe('ROUNDUP(2.7*Overview!$C$14,0)&IF(ROUNDUP(2.7*Overview!$C$14,0)=1," can"," cans")');
+    expect(cell.result).toBe("19 cans");
+    const butter = ws.getCell(`C${findRow(ws, "Peanut butter or other nut butter")}`).value as { result: string };
+    expect(butter.result).toBe("2 jars");
 
     // Go bag amounts don't change with days at home
     expect(ws.getCell(`C${findRow(ws, "Ready-to-eat food")}`).value).toBe("3 days each");

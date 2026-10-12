@@ -41,8 +41,8 @@ using ExcelJS, loaded only on click). It opens in Google Sheets, Excel, or Numbe
   "Notes and reminders" rows.
 - **To-dos:** grouped into This weekend, This month, and Later, with Status (To do, Done, Skip),
   Who, and links.
-- **Supplies:** grouped by kit, with Status (Need, Have, Skip), who's buying, rough cost, and where
-  to get it. Stay-at-home bin amounts follow **Days at home** on the Overview tab.
+- **Supplies:** grouped by kit, with Status (Need, Have, Skip), who's buying, rough cost, an
+  example product, and a Notes column (e.g. "the radio is in Sam's go bag"). Stay-at-home bin amounts follow **Days at home** on the Overview tab.
 - **Expiration dates:** things that expire or need a regular check, grouped by whose they are: an
   **Everyone** section for shared supplies (food first), then one section per person for their
   own go bag. Rows are pre-filled for the household

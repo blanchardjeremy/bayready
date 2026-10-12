@@ -237,6 +237,17 @@ describe("spreadsheet export", () => {
     expect(findRow(ws, "First aid kit")).toBeGreaterThan(group);
   });
 
+  it("has a Notes column instead of Where", async () => {
+    const ws = (await roundTrip()).getWorksheet("Supplies")!;
+    const headers: string[] = [];
+    ws.getRow(5).eachCell((c) => headers.push(c.text));
+    expect(headers).not.toContain("Where");
+    expect(headers[headers.length - 1]).toBe("Notes");
+    // Empty and ready to type in
+    const notes = col(ws, "Notes");
+    expect(ws.getCell(`${notes}${findRow(ws, "Battery or hand-crank radio")}`).value).toBeNull();
+  });
+
   it("leaves person cells empty on rows the household needs just one of", async () => {
     const ws = (await roundTrip()).getWorksheet("Supplies")!;
     for (const name of ["Battery or hand-crank radio", "Duct tape", "First aid kit"]) {

@@ -1,5 +1,5 @@
 import type ExcelJSNamespace from "exceljs";
-import type { Answers, Container, Context, HazardId, ItemState, ListEntry, Shop, Stage } from "./types";
+import type { Answers, Container, Context, HazardId, ItemState, ListEntry, Stage } from "./types";
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
 import { MAX_PEOPLE, peopleNames, resolveBuild } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
@@ -61,14 +61,6 @@ const hairline = { style: "thin" as const, color: { argb: C.line } };
 const DATE_FMT = "mmm d, yyyy";
 const MONEY_FMT = '"$"#,##0';
 
-const SHOP_SHORT: Record<Shop, string> = {
-  free: "At home",
-  grocery: "Grocery",
-  pharmacy: "Pharmacy",
-  hardware: "Hardware store",
-  outdoor: "Outdoor store",
-  online: "Online",
-};
 
 // The "Your people" names on the Overview tab feed every Who dropdown and
 // name the per-person columns.
@@ -438,7 +430,7 @@ interface SupplyLayout {
   bags: number;
 }
 
-type Group = "what" | "bags" | "buy";
+type Group = "what" | "bags" | "buy" | "notes";
 interface Col {
   key: string;
   label: string;
@@ -448,8 +440,8 @@ interface Col {
   auto?: boolean;
 }
 
-// The "bags" columns have no group label on purpose (see buildSupplies).
-const GROUP_LABEL: Record<Exclude<Group, "bags">, string> = {
+// The "bags" and "notes" columns have no group label on purpose (see buildSupplies).
+const GROUP_LABEL: Record<Exclude<Group, "bags" | "notes">, string> = {
   what: "What to get",
   buy: "Buying",
 };
@@ -475,8 +467,14 @@ function supplyColumns(bags: number): Col[] {
     ...Array.from({ length: bags }, (_, i): Col => ({ key: `bag${i}`, label: defaultLabel(i), width: PERSON_COL_WIDTH, group: "bags" })),
     { key: "who", label: "Who's buying", width: 14, group: "buy", note: "Who's getting it. Pick a name from the Overview tab, or type one." },
     { key: "cost", label: "Est. cost", width: 11, group: "buy", note: "A rough estimate for the whole amount." },
-    { key: "where", label: "Where", width: 15, group: "buy" },
     { key: "example", label: "Example", width: 22, group: "buy" },
+    {
+      key: "notes",
+      label: "Notes",
+      width: 44,
+      group: "notes",
+      note: "Anything worth remembering. For example, the radio is in Sam's go bag, so you have one even though it's listed under the stay-at-home bin.",
+    },
   ];
 }
 
@@ -659,10 +657,9 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
   bodyCell(costCell, {}, 0);
   costCell.alignment = { vertical: "middle", horizontal: "right", indent: 1 };
 
-  cell("where").value = SHOP_SHORT[e.item.shop];
-  bodyCell(cell("where"), { size: 10, color: { argb: C.soft } });
-
   linkCell(cell("example"), e.item.examples?.[0]);
+
+  bodyCell(cell("notes"), { size: 10 });
 
 }
 

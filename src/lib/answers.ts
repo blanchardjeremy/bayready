@@ -107,7 +107,7 @@ export function deriveContext(a: Answers): Context {
 }
 
 // Every allowed value, in a fixed order. Share links store positions in these
-// lists, so only ever add to the end.
+// lists, so only ever add to the end, and never remove or reorder.
 export const BUILDS = ["stay", "go", "both", "unsure"] as const;
 export const COUNTY_IDS = [
   "alameda", "contra-costa", "marin", "napa", "san-francisco", "san-mateo",
@@ -121,6 +121,7 @@ export const HOMES = ["house", "apartment-low", "apartment-high", "other"] as co
 export const DAYS = [7, 14] as const;
 export const CARS = ["yes", "no", "sometimes"] as const;
 export const POWERS = ["cook", "charge", "cold"] as const;
+export const LEVELS = ["basics", "advanced"] as const;
 /** Most people (or pets) of one kind in a household. */
 export const MAX_COUNT = 20;
 /** Longest name, in characters. */

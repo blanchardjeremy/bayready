@@ -1,29 +1,40 @@
-import type { Answers, ItemState } from "./types";
+import type { Answers, Container, ItemState } from "./types";
 import {
-  BUDGETS, BUILDS, CARS, COUNTY_IDS, DAYS, HAZARD_IDS, HOMES, MAX_COUNT, MAX_NAME, NEED_IDS, POWERS, STARTS,
-  deriveContext, normalizeAnswers,
+  BUDGETS, BUILDS, CARS, COUNTY_IDS, DAYS, HAZARD_IDS, HOMES, LEVELS, MAX_COUNT, MAX_NAME, NEED_IDS, POWERS,
+  STARTS, deriveContext, normalizeAnswers,
 } from "./answers";
 import { buildList, slotKey } from "./buildList";
 import { ITEMS } from "@/data/items";
 import { HAVE_PICKS } from "@/data/havePicks";
+import { SHARE_IDS } from "@/data/shareIds";
 
 /*
- * Share links. Everything goes in the URL fragment, so nothing reaches a server,
- * packed bit by bit to keep links short:
+ * Share links. Everything goes in the URL fragment, so nothing reaches a server.
+ * They hold the answers and checkmarks, never the Know your home info or notes.
  *
- * - Each answer is a position in a fixed list (answers.ts), using as few bits as
- *   that list needs. Sets like hazards are bitmasks.
+ * Packed bit by bit to keep links short, but built so the app can grow without
+ * breaking links people already sent:
+ *
+ * - An answer is its position in a fixed, append-only list (answers.ts), written
+ *   with a code that grows with the number (Elias gamma), so lists can get longer.
+ *   Unset costs 1 bit. A value a link doesn't know about yet reads as unset.
+ * - Sets like hazards are bitmasks with their length up front, so they can grow too.
  * - Names use a 6-bit alphabet for letters, spaces, and common punctuation.
- * - Checkmarks aren't stored by name. Both ends rebuild the same list from the
- *   answers, so a mark is just its position on that list. Only marks that differ
- *   from the default are stored, either as gaps between them (few marks) or as a
- *   bitmap (lots), whichever is shorter.
- * - A one-byte fingerprint of the item list guards against a link made before the
- *   list changed. If it doesn't match, the answers still load but the marks don't.
+ * - A checkmark is the item's permanent number (shareIds.ts), its kit, and the
+ *   person, if any. Only marks that differ from what the list shows by default
+ *   are stored, sorted by item, with the gap from the last item's number.
+ *
+ * To add a field later, put it at the very end behind a 1-bit "present" flag.
+ * Older links end before it, or in zero padding, which reads as "not present".
  */
 
 type States = Record<string, ItemState>;
 const VERSION = 1;
+
+/** Kits in mark order, most common first since earlier ones take fewer bits. Append only. */
+const MARK_KITS: Container[] = ["home", "go", "stay", "car"];
+/** Mark states, most common first. Append only. */
+const MARK_STATES: ItemState[] = ["have", "skip", "need"];
 
 // ---- Bits ----------------------------------------------------------------------
 
@@ -35,7 +46,7 @@ class BitWriter {
   flag(on: boolean) {
     this.bits.push(on ? 1 : 0);
   }
-  /** Elias gamma: short for small numbers, no fixed limit. n >= 1. */
+  /** Elias gamma: 1 is "1", 2-3 take 3 bits, 4-7 take 5, and so on. n >= 1. */
   gamma(n: number) {
     const len = Math.floor(Math.log2(n));
     this.write(0, len);
@@ -72,22 +83,26 @@ class BitReader {
   }
 }
 
-const bitsFor = (count: number) => Math.ceil(Math.log2(count + 1));
-
-/** One value from a list, or none: 0 means unset. */
+/** One value from a list, or none. */
 function writeOne<T>(w: BitWriter, list: readonly T[], v: T | null) {
-  w.write(v === null ? 0 : list.indexOf(v) + 1, bitsFor(list.length));
+  w.gamma(v === null || !list.includes(v) ? 1 : list.indexOf(v) + 2);
 }
 function readOne<T>(r: BitReader, list: readonly T[]): T | null {
-  const i = r.read(bitsFor(list.length));
-  return i === 0 ? null : (list[i - 1] ?? null);
+  const n = r.gamma();
+  return n === 1 ? null : (list[n - 2] ?? null);
 }
 
+/** A set, as a bitmask that stops at the last value that's in it. */
 function writeSet<T>(w: BitWriter, list: readonly T[], vs: readonly T[]) {
-  list.forEach((x) => w.flag(vs.includes(x)));
+  const len = list.findLastIndex((x) => vs.includes(x)) + 1;
+  w.gamma(len + 1);
+  list.slice(0, len).forEach((x) => w.flag(vs.includes(x)));
 }
 function readSet<T>(r: BitReader, list: readonly T[]): T[] {
-  return list.filter(() => r.flag());
+  const len = r.gamma() - 1;
+  const out: T[] = [];
+  for (let i = 0; i < len; i++) if (r.flag() && i < list.length) out.push(list[i]);
+  return out;
 }
 
 /** Household counts are almost always 0 to 2, so those take 2 bits. */
@@ -95,12 +110,12 @@ function writeCount(w: BitWriter, n: number) {
   if (n <= 2) w.write(n, 2);
   else {
     w.write(3, 2);
-    w.write(Math.min(n, MAX_COUNT), bitsFor(MAX_COUNT));
+    w.gamma(n - 2);
   }
 }
 function readCount(r: BitReader) {
   const n = r.read(2);
-  return n < 3 ? n : r.read(bitsFor(MAX_COUNT));
+  return n < 3 ? n : r.gamma() + 2;
 }
 
 // Letters, space, and the punctuation names tend to have fit in 6 bits. Anything
@@ -112,7 +127,7 @@ function writeName(w: BitWriter, name: string) {
   w.gamma(name.length + 1);
   for (const ch of name) {
     const i = NAME_CHARS.indexOf(ch);
-    if (i >= 0 && i < ESCAPE) w.write(i, 6);
+    if (i >= 0) w.write(i, 6);
     else
       for (let k = 0; k < ch.length; k++) {
         w.write(ESCAPE, 6);
@@ -133,118 +148,61 @@ function readName(r: BitReader) {
 
 // ---- Checkmarks ----------------------------------------------------------------
 
-const ORDER: ItemState[] = ["need", "have", "skip"];
-/** The two states other than the default, so a changed mark needs one bit to say which. */
-const others = (def: ItemState) => ORDER.filter((s) => s !== def);
+interface Mark {
+  code: number;
+  kit: number;
+  /** Person index, for marks on one person's part of an item. */
+  slot: number | null;
+  state: ItemState;
+}
 
-/**
- * Every checkmark spot on this household's list, in order: each item, then each
- * person's part of it. Both ends of a link build the same list from the answers.
- */
-function markSpots(answers: Answers) {
-  const spots: { key: string; parent?: string; haveKey?: string }[] = [];
+/** The marks that differ from what the list would show untouched. */
+function changedMarks(answers: Answers, states: States): Mark[] {
+  const marks: Mark[] = [];
   for (const e of buildList(deriveContext(answers), ITEMS)) {
-    spots.push({ key: e.key, haveKey: e.item.haveKey });
-    e.slots.forEach((_, i) => spots.push({ key: slotKey(e, i), parent: e.key }));
+    const code = SHARE_IDS.indexOf(e.item.id);
+    const kit = MARK_KITS.indexOf(e.container);
+    if (code < 0 || kit < 0) continue;
+    const def = e.item.haveKey && answers.have.includes(e.item.haveKey) ? "have" : "need";
+    const shown = states[e.key] ?? def;
+    if (shown !== def) marks.push({ code, kit, slot: null, state: shown });
+    // A person's part shows the item's state unless it was set on its own.
+    e.slots.forEach((_, i) => {
+      const own = states[slotKey(e, i)];
+      if (own && own !== shown) marks.push({ code, kit, slot: i, state: own });
+    });
   }
-  return spots;
+  return marks.sort((a, b) => a.code - b.code || a.kit - b.kit || (a.slot ?? -1) - (b.slot ?? -1));
 }
 
-/** One byte that changes when items are added, removed, or reordered. */
-function itemsFingerprint() {
-  let h = 0x811c9dc5;
-  for (const item of ITEMS) {
-    for (const ch of `${item.id}:${item.containers.join(",")};`) {
-      h ^= ch.charCodeAt(0);
-      h = Math.imul(h, 0x01000193);
-    }
-  }
-  return (h ^ (h >>> 8) ^ (h >>> 16) ^ (h >>> 24)) & 0xff;
-}
-
-function writeMarks(w: BitWriter, answers: Answers, states: States) {
-  // What each spot shows, and what it would show untouched.
-  const shown: Record<string, ItemState> = {};
-  const marks: { pos: number; alt: number }[] = [];
-  markSpots(answers).forEach((spot, pos) => {
-    const def: ItemState = spot.parent
-      ? shown[spot.parent]
-      : spot.haveKey && answers.have.includes(spot.haveKey)
-        ? "have"
-        : "need";
-    const now = states[spot.key] ?? def;
-    shown[spot.key] = now;
-    if (now !== def) marks.push({ pos, alt: others(def).indexOf(now) });
-  });
-  const total = Object.keys(shown).length;
-
-  w.flag(marks.length > 0);
-  if (marks.length === 0) return;
-  w.write(itemsFingerprint(), 8);
-
-  const gaps = new BitWriter();
-  gaps.gamma(marks.length);
-  let prev = -1;
+function writeMarks(w: BitWriter, marks: Mark[]) {
+  w.gamma(marks.length + 1);
+  let prev = 0;
   for (const m of marks) {
-    gaps.gamma(m.pos - prev);
-    gaps.write(m.alt, 1);
-    prev = m.pos;
-  }
-  const bitmapSize = total + marks.length;
-  w.flag(gaps.bits.length <= bitmapSize);
-  if (gaps.bits.length <= bitmapSize) w.bits.push(...gaps.bits);
-  else {
-    let next = 0;
-    for (let pos = 0; pos < total; pos++) {
-      const hit = marks[next]?.pos === pos;
-      w.flag(hit);
-      if (hit) w.write(marks[next++].alt, 1);
-    }
+    w.gamma(m.code - prev + 1);
+    prev = m.code;
+    w.gamma(m.kit + 1);
+    w.flag(m.slot !== null);
+    if (m.slot !== null) w.gamma(m.slot + 1);
+    w.gamma(MARK_STATES.indexOf(m.state) + 1);
   }
 }
 
-function readMarks(r: BitReader, answers: Answers): States {
-  // The marks come last, so a problem here still leaves the answers usable.
-  try {
-    return readMarksOrThrow(r, answers);
-  } catch {
-    return {};
-  }
-}
-
-function readMarksOrThrow(r: BitReader, answers: Answers): States {
-  if (!r.flag()) return {};
-  const fingerprint = r.read(8);
-  const spots = markSpots(answers);
-  const alts = new Map<number, number>();
-  if (r.flag()) {
-    // Gaps between marks.
-    const count = r.gamma();
-    let pos = -1;
-    for (let k = 0; k < count; k++) {
-      pos += r.gamma();
-      alts.set(pos, r.read(1));
-    }
-  } else {
-    // A bit for every spot.
-    for (let pos = 0; pos < spots.length; pos++) if (r.flag()) alts.set(pos, r.read(1));
-  }
-  // Made from a different version of the list: the positions would point at the wrong items.
-  if (fingerprint !== itemsFingerprint()) return {};
-
-  const shown: Record<string, ItemState> = {};
+function readMarks(r: BitReader): States {
   const states: States = {};
-  spots.forEach((spot, pos) => {
-    const def: ItemState = spot.parent
-      ? shown[spot.parent]
-      : spot.haveKey && answers.have.includes(spot.haveKey)
-        ? "have"
-        : "need";
-    const alt = alts.get(pos);
-    const now = alt === undefined ? def : others(def)[alt];
-    if (alt !== undefined) states[spot.key] = now;
-    shown[spot.key] = now;
-  });
+  const count = r.gamma() - 1;
+  let code = 0;
+  for (let k = 0; k < count; k++) {
+    code += r.gamma() - 1;
+    const kit = MARK_KITS[r.gamma() - 1];
+    const slot = r.flag() ? r.gamma() - 1 : null;
+    const state = MARK_STATES[r.gamma() - 1];
+    const id = SHARE_IDS[code];
+    // Skip anything this version doesn't know. Marks for items that aren't on
+    // this household's list do nothing, so they don't need checking.
+    if (!id || !kit || !state) continue;
+    states[slot === null ? `${kit}:${id}` : `${kit}:${id}@${slot}`] = state;
+  }
   return states;
 }
 
@@ -264,32 +222,23 @@ export function encodeShare(answers: Answers, states: States = {}): string {
 
   // Trailing blank names are the same as no name, so they're left off.
   const trim = (names: string[]) => names.slice(0, names.findLastIndex((n) => n !== "") + 1);
-  const adults = trim(a.names.adults);
-  const kids = trim(a.names.kids);
-  w.flag(adults.length + kids.length > 0);
-  if (adults.length + kids.length > 0)
-    for (const list of [adults, kids]) {
-      w.gamma(list.length + 1);
-      list.forEach((n) => writeName(w, n));
-    }
-
-  w.write(a.needs === null ? 0 : a.needs === "private" ? 1 : 2, 2);
-  if (Array.isArray(a.needs)) writeSet(w, NEED_IDS, a.needs);
-  w.flag(a.have.length > 0);
-  if (a.have.length > 0) writeSet(w, HAVE_KEYS, a.have);
-  w.flag(a.level === "advanced");
-  writeOne(w, STARTS, a.start);
-  writeOne(w, BUDGETS, a.budget);
-  const extras = a.home !== null || a.days !== null || a.car !== null || a.power.length > 0;
-  w.flag(extras);
-  if (extras) {
-    writeOne(w, HOMES, a.home);
-    writeOne(w, DAYS, a.days);
-    writeOne(w, CARS, a.car);
-    writeSet(w, POWERS, a.power);
+  for (const list of [trim(a.names.adults), trim(a.names.kids)]) {
+    w.gamma(list.length + 1);
+    list.forEach((n) => writeName(w, n));
   }
 
-  writeMarks(w, a, states);
+  w.gamma(a.needs === null ? 1 : a.needs === "private" ? 2 : 3);
+  if (Array.isArray(a.needs)) writeSet(w, NEED_IDS, a.needs);
+  writeSet(w, HAVE_KEYS, a.have);
+  writeOne(w, LEVELS, a.level);
+  writeOne(w, STARTS, a.start);
+  writeOne(w, BUDGETS, a.budget);
+  writeOne(w, HOMES, a.home);
+  writeOne(w, DAYS, a.days);
+  writeOne(w, CARS, a.car);
+  writeSet(w, POWERS, a.power);
+
+  writeMarks(w, changedMarks(a, states));
   return toBase64Url(w.bytes());
 }
 
@@ -301,29 +250,27 @@ export function decodeShare(hash: string): { answers: Answers; states: States } 
     const county = readOne(r, COUNTY_IDS);
     const hazards = readSet(r, HAZARD_IDS);
     const [adults, kids, babies, dogs, cats, otherPets] = Array.from({ length: 6 }, () => readCount(r));
-    const names = { adults: [] as string[], kids: [] as string[] };
-    if (r.flag())
-      for (const role of ["adults", "kids"] as const) {
-        const n = r.gamma() - 1;
-        if (n > MAX_COUNT) return null;
-        names[role] = Array.from({ length: n }, () => readName(r));
-      }
-    const needsTag = r.read(2);
-    const needs = needsTag === 0 ? null : needsTag === 1 ? "private" : readSet(r, NEED_IDS);
-    const have = r.flag() ? readSet(r, HAVE_KEYS) : [];
-    const level = r.flag() ? "advanced" : "basics";
-    const start = readOne(r, STARTS);
-    const budget = readOne(r, BUDGETS);
-    const extras = r.flag();
-    const answers = normalizeAnswers({
-      build, county, hazards, names, needs, have, level, start, budget,
-      household: { adults, kids, babies, dogs, cats, otherPets },
-      home: extras ? readOne(r, HOMES) : null,
-      days: extras ? readOne(r, DAYS) : null,
-      car: extras ? readOne(r, CARS) : null,
-      power: extras ? readSet(r, POWERS) : [],
+    const [namedAdults, namedKids] = Array.from({ length: 2 }, () => {
+      const n = r.gamma() - 1;
+      if (n > MAX_COUNT) throw new Error("Too many names");
+      return Array.from({ length: n }, () => readName(r));
     });
-    return { answers, states: readMarks(r, answers) };
+    const needsTag = r.gamma();
+    const needs = needsTag === 1 ? null : needsTag === 2 ? "private" : readSet(r, NEED_IDS);
+    const answers = normalizeAnswers({
+      build, county, hazards, needs,
+      household: { adults, kids, babies, dogs, cats, otherPets },
+      names: { adults: namedAdults, kids: namedKids },
+      have: readSet(r, HAVE_KEYS),
+      level: readOne(r, LEVELS),
+      start: readOne(r, STARTS),
+      budget: readOne(r, BUDGETS),
+      home: readOne(r, HOMES),
+      days: readOne(r, DAYS),
+      car: readOne(r, CARS),
+      power: readSet(r, POWERS),
+    });
+    return { answers, states: readMarks(r) };
   } catch {
     return null;
   }

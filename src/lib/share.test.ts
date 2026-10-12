@@ -4,6 +4,7 @@ import { buildList, slotDone, slotKey, stateOf } from "./buildList";
 import { decodeShare, encodeShare } from "./share";
 import type { Answers, ItemState } from "./types";
 import { ITEMS } from "@/data/items";
+import { SHARE_IDS } from "@/data/shareIds";
 
 const family: Answers = {
   ...EMPTY_ANSWERS,
@@ -75,6 +76,25 @@ describe("share links", () => {
       .forEach((e) => (states[e.key] = "have"));
     expect(encodeShare(family, states).length).toBeLessThan(40);
     expect(encodeShare(family).length).toBeLessThan(12);
+  });
+
+  it("still opens a link made in October 2026", () => {
+    // Links people already sent have to keep working as items and options are added.
+    // If this fails, an append-only list was reordered or the format changed.
+    const decoded = decodeShare("#SIuyIIlgBmaK_L1F0ETMPMg")!;
+    expect(decoded.answers).toEqual({ ...family, names: { adults: ["Sam"], kids: [] } });
+    expect(decoded.states).toEqual({
+      "home:alerts@1": "have",
+      "home:shutoffs": "have",
+      "stay:water": "need",
+      "stay:radio": "skip",
+    });
+  });
+
+  it("gives every item a permanent number", () => {
+    const missing = ITEMS.map((i) => i.id).filter((id) => !SHARE_IDS.includes(id));
+    expect(missing, "Add these to the end of SHARE_IDS in src/data/shareIds.ts").toEqual([]);
+    expect(new Set(SHARE_IDS).size).toBe(SHARE_IDS.length);
   });
 
   it("rejects garbage", () => {

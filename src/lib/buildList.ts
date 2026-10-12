@@ -85,9 +85,15 @@ export function formatCost([lo, hi]: [number, number]): string {
 
 export const CONTAINER_ORDER: Container[] = ["home", "stay", "go", "car"];
 
-/** Up to 6 free, quick wins for the first weekend ("Start here"). */
+/** Up to 6 free, quick wins for the first weekend ("Start here"), highest impact first. */
 export function firstSteps(entries: ListEntry[], st: (e: ListEntry) => ItemState, answers: Answers): ListEntry[] {
-  return entries.filter((e) => stageOf(e, answers) === "weekend" && e.cost[1] === 0 && st(e) !== "skip").slice(0, 6);
+  const rank = (e: ListEntry) => e.item.startRank ?? Infinity;
+  return entries
+    .filter((e) => stageOf(e, answers) === "weekend" && e.cost[1] === 0 && st(e) !== "skip")
+    .map((e, i) => ({ e, i }))
+    .sort((a, b) => rank(a.e) - rank(b.e) || a.i - b.i)
+    .slice(0, 6)
+    .map(({ e }) => e);
 }
 
 /** Plan stage that keeps the first weekend small: only the Start here steps. */

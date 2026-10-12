@@ -164,6 +164,11 @@ export interface Item {
    * bag gets one. For to-dos: every adult does it (their own phone, accounts, IDs).
    */
   perPerson?: boolean;
+  /**
+   * Rank among the free first-weekend steps for "Start here" (lower comes first).
+   * Unranked steps follow in list order.
+   */
+  startRank?: number;
   /** id in the "what do you already have" quick-pick list */
   haveKey?: string;
 }

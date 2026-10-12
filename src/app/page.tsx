@@ -9,7 +9,7 @@ export default function Home() {
             Build your Bay Area emergency kit list
           </h1>
           <p className="mt-5 max-w-[46ch] text-lg text-ink-soft">
-            Answer 8 quick questions and get a list sized for your household, for a bin at home, a bag by the door,
+            Answer a few quick questions and get a list sized for your household, for a bin at home, a bag by the door,
             or both. It starts with what you already have.
           </p>
           <StartActions />

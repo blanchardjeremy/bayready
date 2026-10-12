@@ -671,6 +671,7 @@ function KeepFresh() {
                 siteUrl("/list"),
               d,
               45,
+              6,
             );
           }}
         >
@@ -724,7 +725,7 @@ function EmptyState({ onStarter }: { onStarter: () => void }) {
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
       <h1 className="text-[2.2rem] font-extrabold leading-tight tracking-tight">You haven&apos;t built a list yet</h1>
       <p className="mt-3 text-lg text-ink-soft">
-        Answer 8 quick questions to get one sized for your household, or start from a simple one-person list and
+        Answer a few quick questions to get one sized for your household, or start from a simple one-person list and
         change it later.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-5">

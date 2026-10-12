@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, STARTER_ANSWERS, decodeShare, deriveContext, encodeShare, normalizeAnswers, peopleNames } from "./answers";
-import { buildList, slotDone, stageOf, stateOf } from "./buildList";
+import { buildList, firstSteps, slotDone, stageOf, stateOf } from "./buildList";
 import { ITEMS, stayWaterGallons } from "@/data/items";
 import type { Answers } from "./types";
 
@@ -78,6 +78,25 @@ describe("buildList", () => {
     expect(device?.level).toBe("basics");
   });
 
+  it("uses home type and car answers in Basics too", () => {
+    const apt = ids(answers({ home: "apartment-high" }));
+    expect(apt.has("home:high-rise")).toBe(true);
+    expect(apt.has("home:garage-door")).toBe(false);
+    expect(apt.has("home:water-heater")).toBe(false);
+    expect(ids(answers({ home: "house" })).has("home:water-heater")).toBe(true);
+    expect(ids(answers({ hazards: ["wildfire"], car: "no" })).has("home:routes")).toBe(true);
+  });
+
+  it("gives a go-bag-only household a radio", () => {
+    expect(list(answers({ build: "go" })).find((e) => e.key === "go:radio-go")?.level).toBe("basics");
+    expect(list(answers({ build: "both" })).find((e) => e.key === "go:radio-go")?.level).toBe("advanced");
+  });
+
+  it("asks kids to carry less cash than adults", () => {
+    const fam = answers({ build: "go", household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 1 } });
+    expect(list(fam).find((e) => e.key === "go:cash-go")?.qty?.text).toContain("$20 per kid");
+  });
+
   it("adds a car kit only for advanced users with a car", () => {
     expect(ids(answers({ car: "yes" })).has("car:car-water")).toBe(false);
     expect(ids(answers({ level: "advanced", car: "yes" })).has("car:car-water")).toBe(true);
@@ -119,6 +138,16 @@ describe("state and staging", () => {
     const entry = list(answers()).find((e) => e.key === "stay:bin")!;
     expect(stageOf(entry, answers())).toBe("weekend");
     expect(stageOf(entry, answers({ budget: "0" }))).toBe("month");
+  });
+
+  it("Start here picks the highest-impact free steps, not the first in the list", () => {
+    const a = answers({ hazards: ["earthquake", "outage", "smoke", "wildfire"] });
+    const entries = list(a).filter((e) => e.level === "basics");
+    const firsts = firstSteps(entries, (e) => stateOf(e, {}, a), a).map((e) => e.item.id);
+    expect(firsts).toHaveLength(6);
+    expect(firsts.slice(0, 3)).toEqual(["alerts", "evac-zone", "contact"]);
+    expect(firsts).toContain("shoes-bed");
+    expect(firsts).toContain("drop-cover");
   });
 
   it("advanced items land in later", () => {

@@ -100,8 +100,8 @@ export function deriveContext(a: Answers): Context {
     needs,
     stayDays: a.level === "advanced" ? (a.days ?? DEFAULT_ADVANCED_STAY_DAYS) : BASICS_STAY_DAYS,
     goDays: GO_DAYS,
-    home: a.level === "advanced" ? a.home : null,
-    car: a.level === "advanced" ? a.car : null,
+    home: a.home,
+    car: a.car,
     power: new Set(a.level === "advanced" ? a.power : []),
   };
 }

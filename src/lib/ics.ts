@@ -21,7 +21,8 @@ export function firstStepDate(start: StartWhen | null, now = new Date()): Date {
   return d;
 }
 
-export function downloadIcs(filename: string, title: string, description: string, start: Date, minutes = 60) {
+/** `repeatMonths` makes it a repeating event, e.g. 6 for a twice-a-year check. */
+export function downloadIcs(filename: string, title: string, description: string, start: Date, minutes = 60, repeatMonths?: number) {
   const end = new Date(start.getTime() + minutes * 60_000);
   const ics = [
     "BEGIN:VCALENDAR",
@@ -32,6 +33,7 @@ export function downloadIcs(filename: string, title: string, description: string
     `DTSTAMP:${fmt(new Date())}`,
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,
+    ...(repeatMonths ? [`RRULE:FREQ=MONTHLY;INTERVAL=${repeatMonths}`] : []),
     `SUMMARY:${escapeText(title)}`,
     `DESCRIPTION:${escapeText(description)}`,
     "END:VEVENT",

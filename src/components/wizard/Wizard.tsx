@@ -14,11 +14,20 @@ import { STEP_TITLES, type StepId } from "./steps";
 import { CheckList, GoodToKnow, RadioCards, Stepper, Button } from "@/components/controls";
 import { NamesEditor } from "@/components/NamesEditor";
 
-const BASE_STEPS: StepId[] = ["build", "county", "hazards", "household", "needs", "have", "level"];
-const ADVANCED_STEPS: StepId[] = ["home", "days", "car", "power"];
+/** Hazards where people may have to leave, so whether they have a car matters even in Basics. */
+const LEAVING_HAZARDS: HazardId[] = ["wildfire", "tsunami", "flood"];
 
 function stepsFor(a: Answers): StepId[] {
-  return [...BASE_STEPS, ...(a.level === "advanced" ? ADVANCED_STEPS : []), "start"];
+  const hazards = a.hazards.length ? a.hazards : defaultHazards(a.county);
+  const carEarly = hazards.some((h) => LEAVING_HAZARDS.includes(h));
+  const advanced = a.level === "advanced";
+  return [
+    "build", "county", "hazards", "household", "home",
+    ...(carEarly ? ["car" as const] : []),
+    "needs", "have", "level",
+    ...(advanced ? (["days", ...(carEarly ? [] : ["car" as const]), "power"] as StepId[]) : []),
+    "start",
+  ];
 }
 
 export function defaultHazards(county: Answers["county"]): HazardId[] {
@@ -407,7 +416,8 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
     case "home":
       return {
         optional: true,
-        why: "It changes how you store water, whether stairs matter when elevators stop, and which home fixes make sense.",
+        hint: "Renting or owning doesn't matter here. Where something is usually the landlord's job, your list will say so.",
+        why: "It changes which home fixes show up on your list, and whether stairs matter when elevators stop.",
         body: (
           <RadioCards
             name="home"
@@ -444,7 +454,10 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
     case "car":
       return {
         optional: true,
-        why: "A car can hold a small kit of its own. Without one, we'll keep your go bag light enough to carry.",
+        why:
+          a.level === "advanced"
+            ? "A car can hold a small kit of its own. Without one, we'll help you plan another way out."
+            : "If you might need to leave fast, it changes how you'd get out. Without a car, we'll help you plan another way.",
         body: (
           <RadioCards
             name="car"
@@ -525,14 +538,16 @@ function LevelChoice({ a, update }: { a: Answers; update: Update }) {
   const stats = useMemo(() => {
     const calc = (level: Answers["level"]) => {
       const entries = buildList(deriveContext({ ...a, level }), ITEMS).filter(
-        (e) =>
-          e.container !== "home" &&
-          (level === "advanced" || e.level === "basics") &&
-          !(e.item.haveKey && a.have.includes(e.item.haveKey)),
+        (e) => (level === "advanced" || e.level === "basics") && !(e.item.haveKey && a.have.includes(e.item.haveKey)),
       );
-      return { count: entries.length, cost: formatCost(sumCost(entries)) };
+      const things = entries.filter((e) => e.container !== "home");
+      const tasks = entries.length - things.length;
+      return {
+        line: `About ${things.length} things to gather or buy and ${tasks} to do around the house, roughly ${formatCost(sumCost(entries))}`,
+      };
     };
-    return { basics: calc("basics"), advanced: calc("advanced") };
+    const extraSteps = stepsFor({ ...a, level: "advanced" }).length - stepsFor({ ...a, level: "basics" }).length;
+    return { basics: calc("basics"), advanced: calc("advanced"), extraSteps };
   }, [a]);
 
   return (
@@ -550,9 +565,7 @@ function LevelChoice({ a, update }: { a: Answers; update: Update }) {
             <>
               The essentials that cover most situations, with a week of water and food at home, as Bay Area
               agencies recommend. Usually one weekend and a shopping trip or two.
-              <span className="mt-1 block font-semibold text-ink">
-                About {stats.basics.count} things to gather or buy, roughly {stats.basics.cost}
-              </span>
+              <span className="mt-1 block font-semibold text-ink">{stats.basics.line}</span>
               <span className="mt-0.5 block">
                 Most people spread this over a few months. Your first steps are free.
               </span>
@@ -564,10 +577,8 @@ function LevelChoice({ a, update }: { a: Answers; update: Update }) {
           label: "Advanced",
           desc: (
             <>
-              Two weeks of supplies, backups, and extra gear. Adds 4 short questions.
-              <span className="mt-1 block font-semibold text-ink">
-                About {stats.advanced.count} things to gather or buy, roughly {stats.advanced.cost}
-              </span>
+              Two weeks of supplies, backups, and extra gear. Adds {stats.extraSteps} short questions.
+              <span className="mt-1 block font-semibold text-ink">{stats.advanced.line}</span>
             </>
           ),
         },

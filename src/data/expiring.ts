@@ -37,6 +37,8 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
     { item: "[Example] Crackers", kit: "Stay-at-home bin", every: 6, note: "Go stale fast once opened." },
     { item: "[Example] Cereal or granola", kit: "Stay-at-home bin", every: 6, note: "" },
     { item: "[Example] Dried fruit and nuts", kit: "Stay-at-home bin", every: 6, note: "Nuts go rancid in heat." },
+    // Placeholder rows so there's an obvious spot to write down your own food.
+    ...Array.from({ length: 5 }, () => ({ item: "[Example] Add your food here", kit: "Stay-at-home bin" as const, note: "" })),
     ...when(ctx.babies > 0, [{ item: "Formula and baby food", kit: "Stay-at-home bin" as const, note: "Use the date on the package." }]),
     ...when(ctx.pets > 0, [{ item: "Pet food", kit: "Stay-at-home bin" as const, every: 6, note: "Dry food goes stale once the bag is open." }]),
     ...when(car, [{ item: "Snacks in the car", kit: "Car kit" as const, every: 6, note: "Car heat shortens shelf life." }]),

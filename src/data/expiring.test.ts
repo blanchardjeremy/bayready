@@ -27,7 +27,9 @@ describe("expiringSections", () => {
     ]);
   });
 
-  it("starts shared supplies with food", () => {
-    expect(sections({ build: "both" })[0].rows[0].item).toBe("[Example] Canned beans");
+  it("starts shared supplies with food, then places to add your own", () => {
+    const rows = sections({ build: "both" })[0].rows.map((r) => r.item);
+    expect(rows[0]).toBe("[Example] Canned beans");
+    expect(rows.slice(6, 11)).toEqual(Array(5).fill("[Example] Add your food here"));
   });
 });

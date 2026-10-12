@@ -635,16 +635,42 @@ function Plan({
                 {need.length === 0 ? "All done" : `${need.length} to go · ${formatCost(sumCost(need))}`}
               </p>
             </div>
-            <ul className="divide-y divide-line">
-              {list.map((e) => (
-                <ItemRow key={e.key} {...row(e)} showContainer />
+            <div className="grid gap-8">
+              {planGroups(list).map(([heading, group]) => (
+                <div key={heading ?? "all"}>
+                  {heading && (
+                    <h3 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
+                      {heading}
+                      <span className="text-[0.95rem] font-semibold text-ink-soft">{group.length}</span>
+                    </h3>
+                  )}
+                  <ul className="divide-y divide-line">
+                    {group.map((e) => (
+                      <ItemRow key={e.key} {...row(e)} showContainer />
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </li>
         );
       })}
     </ol>
   );
+}
+
+/**
+ * Long plan steps split into what's free (tasks and things already at home) and
+ * what to buy, with the buying sorted by store so it reads like a shopping trip.
+ */
+function planGroups(list: ListEntry[]): [string | null, ListEntry[]][] {
+  const free = list.filter((e) => e.cost[1] === 0);
+  const buy = list.filter((e) => e.cost[1] > 0).sort((a, b) => SHOP_ORDER.indexOf(a.item.shop) - SHOP_ORDER.indexOf(b.item.shop));
+  if (list.length <= 10 || free.length === 0 || buy.length === 0) return [[null, list]];
+  return [
+    ["Do or gather, free", free],
+    ["To buy", buy],
+  ];
 }
 
 function Together() {

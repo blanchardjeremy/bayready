@@ -14,20 +14,11 @@ import { STEP_TITLES, type StepId } from "./steps";
 import { CheckList, GoodToKnow, RadioCards, Stepper, Button } from "@/components/controls";
 import { NamesEditor } from "@/components/NamesEditor";
 
-/** Hazards where people may have to leave, so whether they have a car matters even in Basics. */
-const LEAVING_HAZARDS: HazardId[] = ["wildfire", "tsunami", "flood"];
+const BASE_STEPS: StepId[] = ["build", "county", "hazards", "household", "home", "car", "needs", "have", "level"];
+const ADVANCED_STEPS: StepId[] = ["days", "power"];
 
 function stepsFor(a: Answers): StepId[] {
-  const hazards = a.hazards.length ? a.hazards : defaultHazards(a.county);
-  const carEarly = hazards.some((h) => LEAVING_HAZARDS.includes(h));
-  const advanced = a.level === "advanced";
-  return [
-    "build", "county", "hazards", "household", "home",
-    ...(carEarly ? ["car" as const] : []),
-    "needs", "have", "level",
-    ...(advanced ? (["days", ...(carEarly ? [] : ["car" as const]), "power"] as StepId[]) : []),
-    "start",
-  ];
+  return [...BASE_STEPS, ...(a.level === "advanced" ? ADVANCED_STEPS : []), "start"];
 }
 
 export function defaultHazards(county: Answers["county"]): HazardId[] {
@@ -454,10 +445,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
     case "car":
       return {
         optional: true,
-        why:
-          a.level === "advanced"
-            ? "A car can hold a small kit of its own. Without one, we'll help you plan another way out."
-            : "If you might need to leave fast, it changes how you'd get out. Without a car, we'll help you plan another way.",
+        why: "It changes how you'd get out if you need to leave fast. Without a car, we'll help you plan another way. With one, Advanced adds a small car kit.",
         body: (
           <RadioCards
             name="car"

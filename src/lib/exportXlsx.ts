@@ -1,5 +1,5 @@
 import type ExcelJSNamespace from "exceljs";
-import type { Answers, Container, Context, ItemState, ListEntry, Shop, Stage } from "./types";
+import type { Answers, Container, Context, HazardId, ItemState, ListEntry, Shop, Stage } from "./types";
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
 import { MAX_PEOPLE, peopleNames, resolveBuild } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
@@ -974,6 +974,54 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   hint.font = font({ size: 10, color: { argb: C.soft } });
   hint.alignment = { vertical: "middle" };
   row += NAMES_COUNT + 1;
+
+  // Know your home: blanks for the things the to-dos ask people to find out.
+  overviewSection(ws, row++, "Know your home");
+  const leaving = (["wildfire", "flood", "tsunami"] as HazardId[]).some((h) => ctx.hazards.has(h));
+  const facts = (
+    [
+      ["Gas shutoff", "Where the meter and valve are, and where the wrench is. Only shut it off if you smell gas or hear hissing.", true],
+      ["Water shutoff", "Close it if pipes break after a quake.", true],
+      ["Breaker box", "Where it is, and which switch is the main.", true],
+      ["Out-of-area contact", "Name and number everyone texts after a disaster.", true],
+      ["Meeting spot outside", "Right outside, if you have to leave the house fast.", true],
+      ["Meeting spot nearby", "Outside the neighborhood, if you can't get home.", true],
+      ["Stay-at-home bin is", "Somewhere you can reach after a quake.", ctx.kits.includes("stay")],
+      ["Go bags are", "By the door you'd use.", ctx.kits.includes("go")],
+      ["Spare key is with", "A neighbor, friend, or lockbox.", true],
+      ["Evacuation zone", "Alerts name the zone, so you'll know right away when it's yours.", leaving],
+      ["Picks up the kids", "If you can't get to school. Make sure they're on the school's emergency card.", ctx.kids + ctx.babies > 0],
+      ["Grabs the pets", "A neighbor who can get them if you're not home.", ctx.pets > 0],
+    ] as const
+  ).filter(([, , show]) => show);
+  for (const [label, hint] of facts) {
+    ws.getRow(row).height = 24;
+    const l = ws.getCell(`B${row}`);
+    l.value = label;
+    l.font = font();
+    l.alignment = { vertical: "middle", indent: 1 };
+    l.border = { bottom: hairline };
+    ws.mergeCells(`C${row}:D${row}`);
+    const v = ws.getCell(`C${row}`);
+    v.fill = fill(C.input);
+    v.border = { bottom: hairline };
+    v.alignment = { vertical: "middle", indent: 1, wrapText: true };
+    v.note = hint;
+    row++;
+  }
+  row++;
+
+  overviewSection(ws, row++, "Notes and reminders");
+  for (let i = 0; i < 8; i++) {
+    ws.getRow(row).height = 24;
+    ws.mergeCells(`B${row}:D${row}`);
+    const c = ws.getCell(`B${row}`);
+    c.fill = fill(C.input);
+    c.border = { bottom: hairline };
+    c.alignment = { vertical: "middle", indent: 1, wrapText: true };
+    row++;
+  }
+  row++;
 
   // How to use
   overviewSection(ws, row++, "How to use this");

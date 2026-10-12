@@ -15,11 +15,13 @@ npm run build     # production build
 
 ## How it works
 
-- **Wizard** (`/build/[step]`): one question per screen, 9 steps for Basics (10 when a hazard like
-  wildfire means people may need to leave, which adds the car question), plus 2 or 3 more for Advanced. Every step has a default, so pressing Continue all the way through still gives a
+- **Wizard** (`/build/[step]`): one question per screen, 10 steps for Basics, plus 2 more for
+  Advanced (days at home and power). Every step has a default, so pressing Continue all the way through still gives a
   good list. Each step is its own URL, so the browser Back button and page titles work.
 - **List** (`/list`): grouped by kit (around the house, stay-at-home bin, go bag, car), with a "Start here"
-  card of free first steps, a shopping view, and a weekend / month / later plan. Items can be marked
+  card of free first steps, a shopping view, and a weekend / month / later plan. Long plan steps split
+  into "Do or gather, free" and "To buy" (sorted by store). Around-the-house tasks are grouped into
+  Make a plan, Neighbors and community, Sign-ups and paperwork, and Make your home safer. Items can be marked
   "have it" or skipped. Advanced items sit in a collapsed "Level up" group for Basics users. Start
   here takes up to 6 free first-weekend steps, highest `startRank` first. A "When it happens" card
   (`src/data/firstHour.ts`) has its own Print button and is also a spreadsheet tab.
@@ -33,8 +35,10 @@ npm run build     # production build
 using ExcelJS, loaded only on click). It opens in Google Sheets, Excel, or Numbers.
 
 - **Overview:** progress at a glance (to-dos done, supplies ready, still to buy, food and water to
-  replace), the next check-up date, days at home, and a "Your people" list that names the
-  per-person columns and feeds the Who dropdowns.
+  replace), the next check-up date, days at home, a "Your people" list that names the
+  per-person columns and feeds the Who dropdowns, a "Know your home" section with blanks for what
+  the to-dos ask people to find out (shutoffs, breaker box, meeting spots, spare key), and free
+  "Notes and reminders" rows.
 - **To-dos:** grouped into This weekend, This month, and Later, with Status (To do, Done, Skip),
   Who, and links.
 - **Supplies:** grouped by kit, with Status (Need, Have, Skip), who's buying, rough cost, and where

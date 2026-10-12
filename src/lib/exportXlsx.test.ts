@@ -71,6 +71,15 @@ describe("spreadsheet export", () => {
     ]);
   });
 
+  it("leaves room on the Overview to note where the shutoffs are, plus free notes", async () => {
+    const ws = (await roundTrip()).getWorksheet("Overview")!;
+    for (const label of ["Know your home", "Gas shutoff", "Water shutoff", "Breaker box", "Grabs the pets", "Notes and reminders"]) {
+      expect(findRow(ws, label), label).toBeGreaterThan(0);
+    }
+    expect(findRow(ws, "Picks up the kids")).toBeGreaterThan(0);
+    expect(findRow(ws, "Evacuation zone")).toBe(0); // no wildfire, flood, or tsunami picked
+  });
+
   it("leaves the Neighbors tab blank, and fits the first-hour card to the household's hazards", async () => {
     const wb = await roundTrip();
     const neighbors = wb.getWorksheet("Neighbors")!;

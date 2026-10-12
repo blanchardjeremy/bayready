@@ -79,7 +79,9 @@ export type Category =
   | "access"
   | "home-safety"
   | "comfort"
-  | "plan";
+  | "plan"
+  | "community"
+  | "signup";
 
 export type Stage = "weekend" | "month" | "later";
 export type Shop = "grocery" | "hardware" | "pharmacy" | "outdoor" | "free" | "online";

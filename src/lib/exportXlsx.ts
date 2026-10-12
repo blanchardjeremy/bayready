@@ -207,7 +207,12 @@ function linkCell(cell: ExcelJSNamespace.Cell, link: { label: string; url: strin
 }
 
 /** Conditional formats keyed off the Status column (A). */
-function statusFormats(ws: Worksheet, first: number, last: number, done: string, itemCols: string) {
+/**
+ * Status colors. The Status cell turns green when done; the item name follows
+ * along: yellow while it still needs doing, green when done, struck through
+ * when skipped. Same colors as the per-person Not done / Done cells.
+ */
+function statusFormats(ws: Worksheet, first: number, last: number, done: string, notDone: string[], itemCols: string) {
   if (last < first) return;
   ws.addConditionalFormatting({
     ref: `A${first}:A${last}`,
@@ -224,8 +229,19 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
   ws.addConditionalFormatting({
     ref: itemCols.replace(/\{f\}/g, String(first)).replace(/\{l\}/g, String(last)),
     rules: [
-      { type: "expression", priority: 3, formulae: [`$A${first}="${done}"`], style: { font: { color: { argb: C.soft } } } },
-      { type: "expression", priority: 4, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted }, strike: true } } },
+      {
+        type: "expression",
+        priority: 3,
+        formulae: [`$A${first}="${done}"`],
+        style: { font: { color: { argb: C.green } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.greenWash } } },
+      },
+      {
+        type: "expression",
+        priority: 4,
+        formulae: [`OR(${notDone.map((w) => `$A${first}="${w}"`).join(",")})`],
+        style: { font: { color: { argb: C.yellow } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.yellowWash } } },
+      },
+      { type: "expression", priority: 5, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted }, strike: true } } },
     ],
   });
 }
@@ -460,7 +476,7 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
     });
   }
   const last = row - 1;
-  statusFormats(ws, first, last, "Done", "B{f}:B{l}");
+  statusFormats(ws, first, last, "Done", ["To do", "Partly"], "B{f}:B{l}");
   personFormats(ws, first, last, P, people);
   ws.autoFilter = { from: { row: HEADER, column: 1 }, to: { row: Math.max(last, HEADER), column: WHY } };
   ws.views = [{ state: "frozen", ySplit: HEADER, xSplit: 2, showGridLines: false }];
@@ -627,7 +643,7 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   for (let i = 1; i <= cols.length; i++) total.getCell(i).border = { top: { style: "thin", color: { argb: C.ink } } };
 
   if (last >= first) {
-    statusFormats(ws, first, last, "Have", "B{f}:C{l}");
+    statusFormats(ws, first, last, "Have", ["Need", "Partly"], "B{f}:B{l}");
     if (bags) personFormats(ws, first, last, idx.bag0, bags);
   }
 

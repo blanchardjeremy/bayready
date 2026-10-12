@@ -378,6 +378,20 @@ describe("spreadsheet export", () => {
     expect((firstExtra.fill as ExcelJS.FillPattern).fgColor?.argb).toBe("FFF4F1FB");
   });
 
+  it("colors the item name by its status on Supplies and To-dos", async () => {
+    const wb = await roundTrip();
+    for (const [sheet, done, notDone] of [
+      ["Supplies", "Have", '$A6="Need",$A6="Partly"'],
+      ["To-dos", "Done", '$A5="To do",$A5="Partly"'],
+    ] as const) {
+      const ws = wb.getWorksheet(sheet)!;
+      const cf = (ws as unknown as { conditionalFormattings: { ref: string; rules: { formulae: string[]; style: { fill?: { bgColor?: { argb: string } } } }[] }[] })
+        .conditionalFormattings.find((c) => c.ref.startsWith("B"))!;
+      expect(cf.rules.find((r) => r.formulae[0].includes(`"${done}"`))!.style.fill!.bgColor!.argb, sheet).toBe("FFE2F0E7");
+      expect(cf.rules.find((r) => r.formulae[0] === `OR(${notDone})`)!.style.fill!.bgColor!.argb, sheet).toBe("FFFFF2B8");
+    }
+  });
+
   it("leaves out person columns for a one-person household", async () => {
     const answers = normalizeAnswers({ build: "both", hazards: ["earthquake"] });
     const ctx = deriveContext(answers);

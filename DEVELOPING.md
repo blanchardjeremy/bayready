@@ -192,6 +192,12 @@ list to buy first, add its key to `src/data/essentials.ts`.
 - **Renting and owning aren't inferred from home type.** Rows where the job is usually the
   landlord's say so in the copy.
 
+## Translations
+
+The app speaks English and Spanish. See `src/i18n/README.md` for how it's organized, the Spanish
+style, and the glossary. The rule: any change to English text comes with the matching Spanish
+change. The language follows the browser unless someone picks one with the switcher in the header.
+
 ## PDF
 
 `src/lib/exportPdf.ts` draws the PDF with jsPDF, loaded on click. Print and Download PDF use the same

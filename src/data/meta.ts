@@ -1,4 +1,6 @@
 import type { Category, Container, Shop, Stage } from "@/lib/types";
+import type { Lang } from "@/i18n/lang";
+import { META_ES } from "@/i18n/es/meta";
 
 export const CONTAINER_META: Record<Container, { name: string; purpose: string; where: string }> = {
   stay: {
@@ -86,3 +88,10 @@ export const STAGE_META: Record<Stage, { name: string; desc: string }> = {
   month: { name: "This month", desc: "Gather what you have, pack it up, and make a shopping trip or two." },
   later: { name: "Later", desc: "Extra days, backups, and gear for when you're ready." },
 };
+
+const META_EN = { container: CONTAINER_META, category: CATEGORY_META, shop: SHOP_META, stage: STAGE_META };
+
+/** Labels for kits, categories, stores, and stages in a language. The constants above are the English ones. */
+export function metaFor(lang: Lang): typeof META_EN {
+  return lang === "es" ? META_ES : META_EN;
+}

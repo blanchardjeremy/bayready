@@ -1,5 +1,6 @@
 import type { Answers, Container, Context, Item, ItemState, ListEntry, Stage } from "./types";
 import { peopleNames } from "./answers";
+import { localizeItem } from "@/i18n/items";
 
 /**
  * Who an entry is tracked for separately: each bag in the go bag (or only the
@@ -26,7 +27,7 @@ export function buildList(ctx: Context, items: Item[]): ListEntry[] {
       if (container === "stay" && item.coveredByGo && ctx.kits.includes("go")) continue;
       out.push({
         key: `${container}:${item.id}`,
-        item,
+        item: localizeItem(item, ctx.lang),
         container,
         level,
         qty: item.qty ? item.qty(ctx, container) : null,

@@ -1,3 +1,4 @@
+import type { Lang } from "@/i18n/lang";
 import type { Answers, Container, Context, HazardId, Names, NeedId } from "./types";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { lookupZip } from "@/data/zips";
@@ -81,7 +82,7 @@ export function suggestBuild(a: Answers): "stay" | "both" {
   return a.hazards.includes("wildfire") || a.hazards.includes("tsunami") ? "both" : "stay";
 }
 
-export function deriveContext(a: Answers): Context {
+export function deriveContext(a: Answers, lang: Lang = "en"): Context {
   const build = resolveBuild(a);
   const kits: Container[] = [];
   if (build === "stay" || build === "both") kits.push("stay");
@@ -101,6 +102,7 @@ export function deriveContext(a: Answers): Context {
 
   return {
     answers: a,
+    lang,
     kits,
     hazards,
     level: a.level,

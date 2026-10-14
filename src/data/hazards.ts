@@ -1,4 +1,6 @@
 import type { HazardId } from "@/lib/types";
+import type { Lang } from "@/i18n/lang";
+import { HAZARDS_ES } from "@/i18n/es/hazards";
 
 export interface Hazard {
   id: HazardId;
@@ -59,3 +61,13 @@ export const HAZARDS: Hazard[] = [
 ];
 
 export const HAZARD_BY_ID = Object.fromEntries(HAZARDS.map((h) => [h.id, h])) as Record<HazardId, Hazard>;
+
+/** Hazards in a language, same order as HAZARDS. */
+export function hazardsFor(lang: Lang): Hazard[] {
+  return lang === "es" ? HAZARDS.map((h) => ({ ...h, ...HAZARDS_ES[h.id] })) : HAZARDS;
+}
+
+/** One hazard by id, in a language. */
+export function hazardFor(id: HazardId, lang: Lang): Hazard {
+  return lang === "es" ? { ...HAZARD_BY_ID[id], ...HAZARDS_ES[id] } : HAZARD_BY_ID[id];
+}

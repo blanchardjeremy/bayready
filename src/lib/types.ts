@@ -1,3 +1,4 @@
+import type { Lang } from "@/i18n/lang";
 export type HazardId = "earthquake" | "outage" | "smoke" | "wildfire" | "heat" | "flood" | "tsunami" | "chemical";
 
 export type CountyId =
@@ -106,6 +107,8 @@ export type Shop = "grocery" | "hardware" | "pharmacy" | "outdoor" | "free" | "o
 /** Facts about the household used to evaluate items. Derived from Answers. */
 export interface Context {
   answers: Answers;
+  /** The language to write quantities and other built text in. Item names and notes are swapped in by buildList. */
+  lang: Lang;
   kits: Container[];
   hazards: Set<HazardId>;
   level: Level;

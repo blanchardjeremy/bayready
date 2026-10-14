@@ -46,6 +46,8 @@ export function ItemRow({
   const link = item.link?.(ctx) ?? null;
   const isTask = entry.container === "home";
 
+  const showCost = !isTask && !!item.cost && !have;
+
   return (
     <li className="print-break-avoid flex items-start gap-3 py-3">
       <input
@@ -61,40 +63,35 @@ export function ItemRow({
         <span className="sr-only">{isTask ? "Done" : "Have it"}</span>
       </label>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-          <span>
-            <label
-              htmlFor={id}
-              className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"} ${skipped ? "text-ink-soft" : ""}`}
-            >
-              {item.name}
-            </label>
-            {essential && !skipped && (
-              <span className="ml-2 inline-block rounded bg-orange-wash px-1.5 align-[0.1em] text-[0.75rem] font-semibold leading-5 text-orange">
-                Essential
-              </span>
-            )}
+        <label
+          htmlFor={id}
+          className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"} ${skipped ? "text-ink-soft" : ""}`}
+        >
+          {item.name}
+        </label>
+        {essential && !skipped && (
+          <span className="ml-2 inline-block rounded bg-orange-wash px-1.5 align-[0.1em] text-[0.75rem] font-semibold leading-5 text-orange">
+            Essential
           </span>
-          {qty && (
-            <span className={`text-[0.95rem] tabular-nums ${have ? "text-ink-soft" : ""}`}>{qty.text}</span>
-          )}
-        </div>
+        )}
         {note && !skipped && <p className="mt-1 max-w-[62ch] text-[0.88rem] text-ink">{note}</p>}
-        {!have && (
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.88rem] text-ink-soft">
-            {qty?.buy && <span>{qty.buy}</span>}
-            {showContainer && <span>{CONTAINER_META[entry.container].name}</span>}
-            {hazardTags.length > 0 && (
-              <span>For {hazardTags.map((h) => HAZARD_BY_ID[h].short.toLowerCase()).join(", ")}</span>
-            )}
-            {!isTask && item.cost && <span>{formatCost(cost)}</span>}
+        {!have && (showContainer || hazardTags.length > 0 || link) && (
+          // One quiet line of context: which kit, which hazards, and a link if there is one.
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.82rem] text-ink-soft">
+            {[
+              showContainer && CONTAINER_META[entry.container].name,
+              hazardTags.length > 0 && `For ${hazardTags.map((h) => HAZARD_BY_ID[h].short.toLowerCase()).join(", ")}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
             {link && (
               <a href={link.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink underline underline-offset-2">
                 {link.label}
               </a>
             )}
-          </div>
+          </p>
         )}
+        {!have && qty?.buy && <p className="mt-1 max-w-[62ch] text-[0.9rem] leading-snug text-ink-soft">{qty.buy}</p>}
         {!have && !skipped && entry.slots.length > 0 && slotDone && (
           <div role="group" aria-label={`Who's done: ${item.name}`} className="group/names mt-2 flex flex-wrap items-center gap-1.5">
             {entry.slots.map((name, i) => {
@@ -134,37 +131,69 @@ export function ItemRow({
         )}
         {!skipped && extra}
         {!have && (
-          <details className="group mt-1 text-[0.93rem]">
-            <summary className="no-print cursor-pointer text-ink-soft hover:text-ink">Why this</summary>
-            <p className="mt-1 max-w-[62ch]">{item.why}</p>
-            {item.tip && <p className="mt-1 max-w-[62ch] text-ink-soft">{item.tip}</p>}
-            {item.examples && (
-              <p className="mt-1 max-w-[62ch] text-ink-soft">
-                Examples:{" "}
-                {item.examples.map((ex, i) => (
-                  <span key={ex.url}>
-                    {i > 0 && ", "}
-                    <a href={ex.url} target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2">
-                      {ex.label}
-                    </a>
-                  </span>
-                ))}
-                . These are examples, not endorsements.
-              </p>
-            )}
+          <details className="group/why mt-1">
+            <summary className="no-print inline-flex min-h-8 cursor-pointer list-none items-center gap-1 text-[0.82rem] text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
+              <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <circle cx="8" cy="8" r="6.25" />
+                <path d="M8 7.25v4M8 4.75v.5" strokeLinecap="round" />
+              </svg>
+              <span className="underline-offset-2 group-open/why:underline">Why this</span>
+            </summary>
+            <div className="text-[0.93rem]">
+              <p className="mt-1 max-w-[62ch]">{item.why}</p>
+              {item.tip && <p className="mt-1 max-w-[62ch] text-ink-soft">{item.tip}</p>}
+              {item.examples && (
+                <p className="mt-1 max-w-[62ch] text-ink-soft">
+                  Examples:{" "}
+                  {item.examples.map((ex, i) => (
+                    <span key={ex.url}>
+                      {i > 0 && ", "}
+                      <a href={ex.url} target="_blank" rel="noopener noreferrer" className="text-ink underline underline-offset-2">
+                        {ex.label}
+                      </a>
+                    </span>
+                  ))}
+                  . These are examples, not endorsements.
+                </p>
+              )}
+            </div>
           </details>
         )}
       </div>
-      {!readOnly && (
-        <button
-          type="button"
-          onClick={() => onChange(skipped ? "need" : "skip")}
-          className="no-print -my-2.5 min-h-11 shrink-0 rounded px-2 text-[0.88rem] text-ink-soft underline-offset-2 hover:text-ink hover:underline"
-          aria-label={skipped ? `Bring back ${item.name}` : `Skip ${item.name}`}
-        >
-          {skipped ? "Bring back" : "Skip"}
-        </button>
+      {(qty || showCost) && (
+        // The amount gets its own column, with the rough cost under it, so the list scans like a shopping list.
+        <div className="w-24 shrink-0 text-right sm:w-28">
+          {qty && (
+            <p className={`text-[0.95rem] font-semibold leading-snug tabular-nums ${have ? "font-normal text-ink-soft" : ""}`}>
+              {qty.text}
+            </p>
+          )}
+          {showCost && <p className="mt-0.5 text-[0.82rem] tabular-nums text-ink-soft">{formatCost(cost)}</p>}
+        </div>
       )}
+      {!readOnly &&
+        (skipped ? (
+          <button
+            type="button"
+            onClick={() => onChange("need")}
+            className="no-print -my-2.5 min-h-11 shrink-0 rounded px-2 text-[0.88rem] text-ink-soft underline underline-offset-2 hover:text-ink"
+            aria-label={`Bring back ${item.name}`}
+          >
+            Bring back
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onChange("skip")}
+            title="Skip"
+            aria-label={`Skip ${item.name}`}
+            className="no-print -my-2 -mr-2 grid size-10 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper hover:text-ink"
+          >
+            <svg viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+              <path d="m4.5 4.5 7 7M11.5 4.5l-7 7" strokeLinecap="round" />
+            </svg>
+          </button>
+        ))}
     </li>
   );
 }

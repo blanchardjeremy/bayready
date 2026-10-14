@@ -9,7 +9,13 @@ English is the source. Spanish follows it.
 - `es/meta.ts`, `es/hazards.ts`: kit, category, store, stage, and hazard labels.
   Use `metaFor(lang)` and `hazardFor(id, lang)` instead of the English constants.
 - Text built in data files (quantities, card lines, Know your home labels, the refresh log)
-  reads `ctx.lang`.
+  reads `ctx.lang`. In `items.ts`, `tr(ctx, en, es)` picks the words and `UNITS` holds each
+  unit in both languages. Example product labels go in `es/items.ts` as `examples`, in order.
+- `scalesWithDays` units stay English in `items.ts`; `buildList` swaps in the Spanish ones
+  (`scaleIn`), so the spreadsheet's formulas use whatever `entry.item` carries.
+- Expiration rows: `kit` is already in the household's language (`container` is the id), and
+  example rows start with `EXAMPLE_PREFIX[lang]` and set `example` (and `placeholder` for the
+  "Add your food here" blanks). Use the flags, not the English text.
 
 In components, `const t = useT()` gives the current language's messages, and `useLang()` the
 language itself. The language is saved in localStorage (`bayready:lang`); without a saved

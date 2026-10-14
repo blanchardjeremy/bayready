@@ -1,4 +1,17 @@
 import type { CountyId, HazardId } from "@/lib/types";
+import type { Lang } from "@/i18n/lang";
+
+/** A link with an English label, plus a Spanish one where the label isn't just a program's name. */
+export interface CountyLink {
+  label: string;
+  url: string;
+  es?: string;
+}
+
+/** A county link with its label in a language. */
+export function countyLink(link: CountyLink, lang: Lang): { label: string; url: string } {
+  return { label: lang === "es" && link.es ? link.es : link.label, url: link.url };
+}
 
 export interface County {
   id: CountyId;
@@ -11,9 +24,9 @@ export interface County {
   /** Served (mostly or partly) by EBMUD, which recommends 2 gallons per person per day. */
   ebmud?: boolean;
   /** Free neighbor-response training (CERT, NERT). Falls back to FEMA's CERT page. */
-  cert?: { label: string; url: string };
+  cert?: CountyLink;
   /** A neighborhood organizing program. Falls back to Listos California's block party kit. */
-  block?: { label: string; url: string };
+  block?: CountyLink;
 }
 
 /** Oakland runs its own training, CORE, instead of Alameda County Fire's CERT (checked 2026-10-14). */
@@ -33,7 +46,7 @@ export const COUNTIES: County[] = [
     hazards: ["heat"],
     tsunami: true,
     ebmud: true,
-    cert: { label: "CERT classes (Alameda County Fire)", url: "https://fire.acgov.org/emergency-preparedness" },
+    cert: { label: "CERT classes (Alameda County Fire)", es: "Clases de CERT (Bomberos del Condado de Alameda)", url: "https://fire.acgov.org/emergency-preparedness" },
     // Alameda County Fire's CERT doesn't serve Oakland, Berkeley, Fremont, or Hayward, which
     // run their own. We only know the county, so the training item names Oakland's CORE in its
     // text, and the Sources page links it.
@@ -45,7 +58,7 @@ export const COUNTIES: County[] = [
     hazards: ["heat", "wildfire", "chemical"],
     tsunami: true,
     ebmud: true,
-    cert: { label: "CERT programs in Contra Costa", url: "https://www.cocosheriff.org/disaster-preparedness/links" },
+    cert: { label: "CERT programs in Contra Costa", es: "Programas de CERT en Contra Costa", url: "https://www.cocosheriff.org/disaster-preparedness/links" },
   },
   {
     id: "marin",
@@ -53,7 +66,7 @@ export const COUNTIES: County[] = [
     alert: { name: "Alert Marin", url: "https://emergency.marincounty.gov/pages/alertmarin" },
     hazards: ["wildfire", "flood"],
     tsunami: true,
-    cert: { label: "Ready Marin classes", url: "https://readymarin.marincounty.gov" },
+    cert: { label: "Ready Marin classes", es: "Clases de Ready Marin", url: "https://readymarin.marincounty.gov" },
   },
   {
     id: "napa",
@@ -70,8 +83,8 @@ export const COUNTIES: County[] = [
     alert: { name: "AlertSF", url: "https://www.alertsf.org" },
     hazards: [],
     tsunami: true,
-    cert: { label: "Sign up for NERT", url: "https://sf-fire.org/nert" },
-    block: { label: "Map Your Neighborhood (SF NERT)", url: "https://sf-fire.org/nert/map-your-neighborhood" },
+    cert: { label: "Sign up for NERT", es: "Inscríbase en NERT", url: "https://sf-fire.org/nert" },
+    block: { label: "Map Your Neighborhood (SF NERT)", es: "Map Your Neighborhood: organice su cuadra (SF NERT)", url: "https://sf-fire.org/nert/map-your-neighborhood" },
   },
   {
     id: "san-mateo",
@@ -79,7 +92,7 @@ export const COUNTIES: County[] = [
     alert: { name: "SMC Alert", url: "https://www.smcgov.org/dem/smc-alert" },
     hazards: ["wildfire"],
     tsunami: true,
-    cert: { label: "Free Get Ready and CERT classes", url: "https://smcgov.org/ceo/emergency-training-options" },
+    cert: { label: "Free Get Ready and CERT classes", es: "Clases gratis de Get Ready y CERT", url: "https://smcgov.org/ceo/emergency-training-options" },
   },
   {
     id: "santa-clara",

@@ -1,6 +1,21 @@
 import type { Answers, Container, Context, Item, ItemState, ListEntry, Stage } from "./types";
 import { peopleNames } from "./answers";
+import type { Lang } from "@/i18n/lang";
 import { localizeItem } from "@/i18n/items";
+import { ITEMS_ES } from "@/i18n/es/items";
+import { scaleIn } from "@/data/items";
+
+/** An item in a language: its words, plus the units the spreadsheet scales and the example labels. */
+function inLang(item: Item, lang: Lang): Item {
+  const out = localizeItem(item, lang);
+  if (lang === "en") return out;
+  const labels = ITEMS_ES[item.id]?.examples;
+  return {
+    ...out,
+    ...(out.scalesWithDays ? { scalesWithDays: scaleIn(out.scalesWithDays, lang) } : {}),
+    ...(out.examples && labels ? { examples: out.examples.map((ex, i) => ({ ...ex, label: labels[i] ?? ex.label })) } : {}),
+  };
+}
 
 /**
  * Who an entry is tracked for separately: each bag in the go bag (or only the
@@ -27,7 +42,7 @@ export function buildList(ctx: Context, items: Item[]): ListEntry[] {
       if (container === "stay" && item.coveredByGo && ctx.kits.includes("go")) continue;
       out.push({
         key: `${container}:${item.id}`,
-        item: localizeItem(item, ctx.lang),
+        item: inLang(item, ctx.lang),
         container,
         level,
         qty: item.qty ? item.qty(ctx, container) : null,
@@ -79,8 +94,9 @@ export function sumCost(entries: ListEntry[]): [number, number] {
   return entries.reduce<[number, number]>((acc, e) => [acc[0] + e.cost[0], acc[1] + e.cost[1]], [0, 0]);
 }
 
-export function formatCost([lo, hi]: [number, number]): string {
-  if (hi === 0) return "Free";
+/** "$20–40", "~$15", or "Free" ("Gratis" in Spanish). Numbers stay American in both languages. */
+export function formatCost([lo, hi]: [number, number], lang: Lang = "en"): string {
+  if (hi === 0) return lang === "es" ? "Gratis" : "Free";
   const r = (n: number) => (n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
   if (r(lo) === r(hi)) return `~$${r(hi)}`;
   return `$${r(lo)}–${r(hi)}`;

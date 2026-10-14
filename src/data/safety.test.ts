@@ -4,6 +4,7 @@ import { buildList } from "@/lib/buildList";
 import { firstHourCard } from "./firstHour";
 import { ITEMS } from "./items";
 import type { Answers } from "@/lib/types";
+import { ITEMS_ES } from "@/i18n/es/items";
 
 // Safety rules from the October 2026 expert review (research/expert-review/README.md).
 
@@ -54,6 +55,32 @@ describe("safety rules", () => {
     expect(family).toMatch(/Warning: leave now/);
     const solo = cardLines({ hazards: ["wildfire"], car: "yes" }).join(" ");
     expect(solo).toMatch(/Warning: get ready/);
+  });
+});
+
+describe("safety rules in Spanish", () => {
+  const es = (a: Partial<Answers>) => deriveContext(normalizeAnswers({ ...EMPTY_ANSWERS, build: "both", ...a }), "es");
+  const lines = (a: Partial<Answers>) => firstHourCard(es(a)).flatMap((s) => s.lines);
+  const t = (id: string) => ITEMS_ES[id];
+
+  it("keeps the item warnings", () => {
+    expect(t("stove").tip).toMatch(/oxígeno/);
+    expect(t("device-power").tip).toMatch(/nunca en la cochera/);
+    expect(t("cool-place").why).toMatch(/seca o sudada/);
+    expect(t("cool-place").why).toMatch(/Llame al 911/);
+    expect(t("purify-go").why).not.toMatch(/filtr/i);
+    expect(t("water-filter").tip).toMatch(/no eliminan los virus/);
+  });
+
+  it("keeps the card's rules", () => {
+    expect(lines({ needs: ["oxygen"], hazards: ["earthquake"] }).join(" ")).toMatch(/nunca velas, sobre todo cerca del oxígeno/);
+    expect(lines({ build: "stay", hazards: ["earthquake"] }).join(" ")).not.toMatch(/mochila/);
+    expect(lines({ build: "both", hazards: ["earthquake"] }).join(" ")).toMatch(/tome sus mochilas de emergencia/);
+    expect(lines({ hazards: ["earthquake", "tsunami"] })[1]).toMatch(/terreno alto/);
+    expect(lines({ needs: ["mobility"], hazards: ["earthquake", "tsunami"] })[1]).toMatch(/plan para que lo lleven/);
+    const family = lines({ hazards: ["wildfire"], household: { ...EMPTY_ANSWERS.household, kids: 1 } }).join(" ");
+    expect(family).toMatch(/Advertencia de evacuación por incendio: salga ya/);
+    expect(lines({ hazards: ["wildfire"], car: "yes" }).join(" ")).toMatch(/Advertencia de evacuación por incendio: prepárese/);
   });
 });
 

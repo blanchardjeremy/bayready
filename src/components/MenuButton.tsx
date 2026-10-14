@@ -10,6 +10,8 @@ export interface MenuItem {
   /** A link opens in a new tab; otherwise onSelect runs. */
   href?: string;
   onSelect?: () => void;
+  /** A small group label, not something to pick. Arrow keys skip it. */
+  heading?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export function MenuButton({
   align = "right",
   disabled = false,
   className = "",
+  buttonClassName = "",
 }: {
   label: ReactNode;
   icon?: ReactNode;
@@ -36,6 +39,8 @@ export function MenuButton({
   align?: "left" | "right" | "responsive";
   disabled?: boolean;
   className?: string;
+  /** Extra classes for the button itself, like a smaller size. */
+  buttonClassName?: string;
 }) {
   const newTab = useT().list.calendar.newTab;
   const [open, setOpen] = useState(false);
@@ -63,7 +68,7 @@ export function MenuButton({
     if (e.key === "Escape") close();
     else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const n = items.length;
+      const n = items.filter((it) => !it.heading).length;
       refs.current[(i + (e.key === "ArrowDown" ? 1 : n - 1)) % n]?.focus();
     }
   };
@@ -79,7 +84,7 @@ export function MenuButton({
         aria-controls={menuId}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className={`${buttonClass[variant]} disabled:opacity-60`}
+        className={`${buttonClass[variant]} disabled:opacity-60 ${buttonClassName}`}
       >
         {icon}
         {label}
@@ -91,10 +96,22 @@ export function MenuButton({
         <div
           id={menuId}
           role="menu"
-          className={`absolute ${{ left: "left-0", right: "right-0", responsive: "left-0 sm:left-auto sm:right-0" }[align]} z-20 mt-1.5 min-w-56 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]`}
+          className={`absolute ${{ left: "left-0", right: "right-0", responsive: "left-0 sm:left-auto sm:right-0" }[align]} z-20 mt-1.5 min-w-64 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]`}
         >
-          {items.map((it, i) =>
-            it.href ? (
+          {items.map((it) => {
+            // Refs only hold the choices, so the arrow keys skip group labels.
+            const i = items.filter((x) => !x.heading).indexOf(it);
+            if (it.heading)
+              return (
+                <div
+                  key={it.key}
+                  role="presentation"
+                  className="px-4 pb-1 pt-3 text-[0.75rem] font-semibold uppercase tracking-wider text-ink-soft first:pt-1.5"
+                >
+                  {it.label}
+                </div>
+              );
+            return it.href ? (
               <a
                 key={it.key}
                 ref={(el) => {
@@ -127,8 +144,8 @@ export function MenuButton({
               >
                 {it.label}
               </button>
-            ),
-          )}
+            );
+          })}
         </div>
       )}
     </div>

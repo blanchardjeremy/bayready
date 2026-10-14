@@ -116,6 +116,23 @@ export const list = {
     everythingDetail: "(the full list and refresh log)",
   },
 
+  /** The bar that stays at the top of the list page as you scroll. */
+  bar: {
+    saveShare: "Save / share",
+    whole: "Your whole list",
+    working: "Getting it ready…",
+    share: "Share",
+    print: "Print",
+    download: "Download",
+    printShort: "Short version",
+    printAll: "Everything",
+    pdfShort: "PDF, short version",
+    pdfAll: "PDF, everything",
+    xlsx: "Spreadsheet (Google Sheets, Excel)",
+    count: (done: number, total: number) => `${done} of ${total}`,
+    progress: (title: string) => `${title} progress`,
+  },
+
   /** Short messages after a button does its thing. */
   flash: {
     copyFailed: "Couldn't copy. Your browser blocked it.",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, buttonClass } from "@/components/controls";
-import { CheckIcon, LinkIcon, PdfIcon, PrinterIcon } from "@/components/icons";
+import { CheckIcon, LinkIcon, PdfIcon, PrinterIcon, SaveIcon } from "@/components/icons";
 import { useStandalone } from "@/components/useStandalone";
 import { useT } from "@/i18n/useLang";
 
@@ -43,15 +43,12 @@ export function SaveYourList({
 
   return (
     <section
-      className="no-print mt-8 rounded-xl border-2 border-orange bg-paper p-5 sm:p-6"
+      className="no-print mt-8 rounded-xl border-2 border-ink bg-paper p-5 sm:p-6"
       aria-labelledby="save-list-title"
     >
       <div className="flex items-start justify-between gap-3">
         <h2 id="save-list-title" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
-          <svg viewBox="0 0 16 16" className="size-5 shrink-0 text-orange" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-            <path d="M8 1.75 14.5 13.5h-13L8 1.75Z" strokeLinejoin="round" />
-            <path d="M8 6v3.5M8 11.25v.25" strokeLinecap="round" />
-          </svg>
+<SaveIcon />
           {t.title}
         </h2>
         <button

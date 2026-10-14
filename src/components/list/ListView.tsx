@@ -20,7 +20,7 @@ import { Reveal } from "./Reveal";
 import { MenuButton, type MenuItem } from "@/components/MenuButton";
 import { downloadPdf, printPdf, type PdfPart } from "@/lib/exportPdf";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, SheetIcon } from "@/components/icons";
+import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, ShareIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
 import { clearAllStored, useStored } from "@/lib/storage";
 import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } from "@/lib/types";
@@ -39,6 +39,7 @@ import { useStandalone } from "@/components/useStandalone";
 import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
 import { SaveYourList } from "./SaveYourList";
+import { StickyBar, type BarSection } from "./StickyBar";
 import { ShareDialog } from "./ShareDialog";
 import {
   LIST_ANCHORS,
@@ -63,7 +64,7 @@ import {
   type FactField,
   type HomeInfo,
 } from "@/data/homeFacts";
-import { KnowYourHome, TaskFacts } from "./HomeFields";
+import { HOME_CARD_ID, KnowYourHome, TaskFacts } from "./HomeFields";
 
 type States = Record<string, ItemState>;
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
@@ -285,6 +286,36 @@ export function ListView() {
       () => open(false),
     );
   };
+  const downloadSpreadsheet = () =>
+    run("xlsx", () => import("@/lib/exportXlsx").then((m) => m.downloadWorkbook(exportInput())), t.flash.xlsxDone);
+
+  // Everything you can do with the list, in one menu in the bar at the top.
+  const saveShareItems: MenuItem[] = [
+    { key: "h-share", heading: true, label: t.bar.share },
+    { key: "link", label: t.exports.copyLink, onSelect: copyShareLink },
+    { key: "text", label: t.exports.copyText, onSelect: () => copy(asText(kits, main, st, ctx), t.flash.textCopied) },
+    { key: "h-print", heading: true, label: t.bar.print },
+    { key: "print-short", label: t.bar.printShort, onSelect: () => run("print", () => printPdf(exportInput(), "short"), "") },
+    { key: "print-all", label: t.bar.printAll, onSelect: () => run("print", () => printPdf(exportInput(), "list"), "") },
+    { key: "h-download", heading: true, label: t.bar.download },
+    { key: "pdf-short", label: t.bar.pdfShort, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "short"), t.flash.pdfDone) },
+    { key: "pdf-all", label: t.bar.pdfAll, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone) },
+    { key: "xlsx", label: t.bar.xlsx, onSelect: downloadSpreadsheet },
+  ];
+  const progressOf = (list: ListEntry[]) => {
+    const active = list.filter((e) => st(e) !== "skip");
+    return { done: active.filter((e) => st(e) === "have").length, total: active.length };
+  };
+  const barSections: BarSection[] = [
+    { id: "start-here", progress: progressOf(firsts) },
+    { id: "essentials-title", progress: progressOf(main.filter(isEssential)) },
+    { id: "full-list-title", progress: progressOf(main) },
+    ...kits.map((c) => ({ id: `kit-${c}`, progress: progressOf(main.filter((e) => e.container === c)) })),
+    { id: "first-hour-title" },
+    { id: `${HOME_CARD_ID}-title` },
+    { id: "keep-fresh" },
+  ];
+
   const shareButton = (
     <Button type="button" variant="secondary" onClick={copyShareLink}>
       {linkCopied ? <CheckIcon /> : <LinkIcon />}
@@ -294,7 +325,25 @@ export function ListView() {
 
   return (
     // In print, a flex column lets Know your home move up under the header.
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 print:flex print:flex-col">
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-2 sm:px-6 print:flex print:flex-col">
+      <StickyBar
+        title={t.bar.whole}
+        progress={progressOf(main)}
+        sections={barSections}
+        countText={t.bar.count}
+        progressLabel={t.bar.progress}
+        status={copied}
+        actions={
+          <MenuButton
+            label={busy ? t.bar.working : t.bar.saveShare}
+            icon={<ShareIcon />}
+            align="right"
+            disabled={busy !== null}
+            items={saveShareItems}
+            buttonClassName="min-h-10 px-4"
+          />
+        }
+      />
       {shared && (
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-ink bg-paper p-4">
           <p>
@@ -320,26 +369,6 @@ export function ListView() {
         answers={answers}
         readOnly={!!shared}
         hasFirstHour={hasFirstHour}
-        actions={
-          // The same Print and Download PDF as the export row further down, so they're easy to find up top.
-          <>
-            {shareButton}
-            <MenuButton
-              label={busy === "print" ? t.exports.preparing : t.exports.print}
-              icon={<PrinterIcon />}
-              align="responsive"
-              disabled={busy !== null}
-              items={pdfChoices(t, (part) => run("print", () => printPdf(exportInput(), part), ""))}
-            />
-            <MenuButton
-              label={busy === "pdf" ? t.exports.makingPdf : t.exports.pdf}
-              icon={<PdfIcon />}
-              align="responsive"
-              disabled={busy !== null}
-              items={pdfChoices(t, (part) => run("pdf", () => downloadPdf(exportInput(), part), t.flash.pdfDone))}
-            />
-          </>
-        }
       />
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
@@ -378,18 +407,7 @@ export function ListView() {
           disabled={busy !== null}
           items={pdfChoices(t, (part) => run("pdf", () => downloadPdf(exportInput(), part), t.flash.pdfDone))}
         />
-        <Button
-          type="button"
-          variant="primary"
-          disabled={busy !== null}
-          onClick={() =>
-            run(
-              "xlsx",
-              () => import("@/lib/exportXlsx").then((m) => m.downloadWorkbook(exportInput())),
-              t.flash.xlsxDone,
-            )
-          }
-        >
+        <Button type="button" variant="secondary" disabled={busy !== null} onClick={downloadSpreadsheet}>
           <SheetIcon />
           {busy === "xlsx" ? t.exports.makingXlsx : t.exports.xlsx}
         </Button>

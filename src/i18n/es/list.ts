@@ -113,6 +113,22 @@ export const list: Translation<typeof en> = {
     everythingDetail: "(la lista completa y el registro de revisiones)",
   },
 
+  bar: {
+    saveShare: "Guardar / compartir",
+    whole: "Toda su lista",
+    working: "Preparándolo…",
+    share: "Compartir",
+    print: "Imprimir",
+    download: "Descargar",
+    printShort: "Versión corta",
+    printAll: "Todo",
+    pdfShort: "PDF, versión corta",
+    pdfAll: "PDF, todo",
+    xlsx: "Hoja de cálculo (Google Sheets, Excel)",
+    count: (done, total) => `${done} de ${total}`,
+    progress: (title) => `Avance: ${title}`,
+  },
+
   flash: {
     copyFailed: "No se pudo copiar. Su navegador lo bloqueó.",
     failed: "Algo salió mal. Intente de nuevo.",

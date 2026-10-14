@@ -64,3 +64,17 @@ export const CheckIcon = () => (
     <path d="M5 12.5 10 17.5 19 7" />
   </Icon>
 );
+
+export const ShareIcon = () => (
+  <Icon>
+    <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" />
+    <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
+  </Icon>
+);
+
+export const SaveIcon = () => (
+  <Icon>
+    <path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+    <path d="M8 3v5h7V3M8 21v-6h8v6" />
+  </Icon>
+);

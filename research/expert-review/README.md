@@ -18,6 +18,48 @@ The full reports are in this folder (`1-` through `6-`). The sample lists they r
 - **B:** Oakland hills family with a baby, two kids, a dog, and a cat, Basics
 - **C:** older Santa Cruz couple with oxygen or CPAP, insulin, and a mobility aid, Advanced
 
+## What's been done (October 14, 2026)
+
+Owner's answers to the panel: the audience is people starting from scratch; success means they bought the main things and stored them; an essentials-first view is fine if going deeper is obvious; a ZIP lookup is fine; no outside reviewer, partner, or translation for now; the iPhone storage problem needs fixing; and keep "away from home" content to a minimum.
+
+Done:
+- **Safety table S1–S10.**
+- **The factual corrections table.**
+- **Essentials first** (theme 1). The list leads with Start here, then a short essentials list with its own finish line, then "Your full list". The budget answer orders the essentials and marks where the money runs out, with free ways to start.
+- **People and practice** (theme 2).
+  - Meeting neighbors is in Basics.
+  - The household plan is split into tasks, with wallet cards in the PDF.
+  - A Practice group, and a CPR or Stop the Bleed task.
+- **The card** (theme 3). "In the days after" and lines for smoke, heat, CO, devices, and kids at school. Tsunami comes first on the coast, and the card fits on one page, early in the PDF.
+- **Health** (themes 4–5).
+  - EBMUD homes get 2 gallons of water per person a day.
+  - The toilet and food plan scale with the household, and kids count fully.
+  - No N95s or power banks for little kids.
+  - First aid and tetanus.
+  - New needs: communication, cognitive, caregiver, dialysis, pregnancy, and service animals. "Prefer not to say" gets general items.
+  - How to get extra medicine.
+- **The wizard** (theme 7). Situation comes first and the kit after. An optional ZIP lookup sets county, EBMUD, and tsunami. Accessibility fixes, and corrected copy.
+- **Outputs** (theme 8).
+  - Short and complete PDFs.
+  - A font that keeps accented names.
+  - Field contrast fixed.
+  - Calmer page order, and "Planning for" instead of "Ready for".
+- **Follow-through** (theme 9).
+  - A "Save your list" prompt.
+  - Calendar events carry the list link.
+  - Twice-yearly reminders at the spring time change and ShakeOut.
+  - An installable, offline-capable site.
+  - "Make it my list" confirms before replacing a list.
+  - "Clear everything", and share links without names or health info.
+
+Not done, by choice or for later:
+- Away-from-home planning (commutes, work kits).
+- Translation.
+- Outside expert review.
+- Household sync between phones.
+- A tagged, accessible PDF.
+- Lighter: implementation-intention prompts ("when, where, with whom").
+
 ## The short version
 
 All six said some version of: **this is better than most prep tools out there, including some agency pages, but it's a shopping list with a plan stapled to the front.**

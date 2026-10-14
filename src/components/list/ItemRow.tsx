@@ -172,7 +172,7 @@ export function ItemRow({
               {qty.text}
             </p>
           )}
-          {showCost && <p className="mt-0.5 text-[0.82rem] tabular-nums text-ink-soft">{formatCost(cost)}</p>}
+          {showCost && <p className="mt-0.5 text-[0.82rem] tabular-nums text-ink-soft">{formatCost(cost, ctx.lang)}</p>}
         </div>
       )}
       {!readOnly &&

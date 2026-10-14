@@ -15,6 +15,7 @@ import {
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
 import { firstStepDate, firstStepsEvent, twiceYearlyChecks } from "@/lib/ics";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { Reveal } from "./Reveal";
 import { MenuButton, type MenuItem } from "@/components/MenuButton";
 import { downloadPdf, printPdf, type PdfPart } from "@/lib/exportPdf";
@@ -113,9 +114,7 @@ export function ListView() {
   // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
   useEffect(() => clearReturnToList(), []);
   // The page's <title> is set at build time in English; follow the visitor's language once it's known.
-  useEffect(() => {
-    document.title = t.pageTitle;
-  }, [t.pageTitle]);
+  useDocumentTitle(t.pageTitle);
 
   // Opening a link to the list already saved here (a calendar reminder, a bookmark) is just your own list.
   const sameAsMine =
@@ -835,7 +834,7 @@ function KitSection({
           {meta.purpose} {meta.where}
         </p>
         {container !== "home" && need.length > 0 && (
-          <p className="text-[0.95rem] font-semibold text-ink">{t.stillToGet(formatCost(sumCost(need)))}</p>
+          <p className="text-[0.95rem] font-semibold text-ink">{t.stillToGet(formatCost(sumCost(need), ctx.lang))}</p>
         )}
       </div>
       {container === "go" && ctx.carriers > 1 && (
@@ -897,7 +896,7 @@ function KitSection({
         <Reveal
           className="mt-2"
           label={t.moreReady(levelUpActive.length)}
-          detail={t.moreDetail(formatCost(sumCost(levelUpActive)))}
+          detail={t.moreDetail(formatCost(sumCost(levelUpActive), ctx.lang))}
         >
           <p className="mt-1 max-w-[64ch] text-[0.95rem] text-ink-soft">
             <button type="button" onClick={onLevelUp} className="font-semibold text-ink underline underline-offset-2">
@@ -975,7 +974,7 @@ function ShoppingList({
             <span className="font-semibold">{t.allBought}</span>
           ) : (
             <>
-              <span className="font-semibold">{t.toBuy(toBuy)}</span> {t.roughly(formatCost(sumCost(need)))}
+              <span className="font-semibold">{t.toBuy(toBuy)}</span> {t.roughly(formatCost(sumCost(need), lang))}
             </>
           )}
         </p>
@@ -990,7 +989,7 @@ function ShoppingList({
             <h3 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
               {shops[shop]}
               <span className="text-[0.95rem] font-semibold text-ink-soft">
-                {formatCost(sumCost(lists.flat().filter((e) => st(e) === "need")))}
+                {formatCost(sumCost(lists.flat().filter((e) => st(e) === "need")), lang)}
               </span>
             </h3>
             <ul className="divide-y divide-line">
@@ -1032,7 +1031,7 @@ function ShoppingRow({ list, have, onChange }: { list: ListEntry[]; have: boolea
           <label htmlFor={id} className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"}`}>
             {list[0].item.name}
           </label>
-          <span className="text-[0.95rem] text-ink-soft">{formatCost(sumCost(list))}</span>
+          <span className="text-[0.95rem] text-ink-soft">{formatCost(sumCost(list), lang)}</span>
         </div>
         <div className="mt-0.5 text-[0.9rem] text-ink-soft">
           {list.map((e) => (
@@ -1080,7 +1079,7 @@ function Plan({
               <h3 className="text-2xl font-extrabold tracking-tight">{stageMeta[stage].name}</h3>
               <p className="mt-1 text-ink-soft">{stageMeta[stage].desc}</p>
               <p className="mt-2 text-[0.95rem] font-semibold">
-                {need.length === 0 ? t.allDone : t.toGo(need.length, formatCost(sumCost(need)))}
+                {need.length === 0 ? t.allDone : t.toGo(need.length, formatCost(sumCost(need), lang))}
               </p>
             </div>
             <div className="grid gap-8">

@@ -644,7 +644,7 @@ function LevelChoice({ a, update, t, lang }: { a: Answers; update: Update; t: W;
         (e) => (level === "advanced" || e.level === "basics") && !(e.item.haveKey && a.have.includes(e.item.haveKey)),
       );
       const things = entries.filter((e) => e.container !== "home");
-      return { things: things.length, tasks: entries.length - things.length, cost: formatCost(sumCost(entries)) };
+      return { things: things.length, tasks: entries.length - things.length, cost: formatCost(sumCost(entries), lang) };
     };
     const extraSteps = stepsFor({ ...a, level: "advanced" }).length - stepsFor({ ...a, level: "basics" }).length;
     return { basics: calc("basics"), advanced: calc("advanced"), extraSteps };

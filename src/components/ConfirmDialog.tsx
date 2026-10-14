@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "./controls";
+import { useT } from "@/i18n/useLang";
 
 /**
  * Asks before doing something that can't be undone. Cancel has focus first,
@@ -11,7 +12,7 @@ export function ConfirmDialog({
   title,
   children,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   onConfirm,
   onCancel,
 }: {
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -41,7 +43,7 @@ export function ConfirmDialog({
         <div className="mt-2 grid gap-2 text-ink-soft">{children}</div>
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Button type="button" variant="secondary" autoFocus onClick={() => ref.current?.close()}>
-            {cancelLabel}
+            {cancelLabel ?? t.list.clear.cancel}
           </Button>
           <Button type="button" onClick={onConfirm}>
             {confirmLabel}

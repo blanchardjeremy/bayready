@@ -111,7 +111,7 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
             return i === fits && rest.length > 0 ? [line, item] : [item];
           })}
         </ul>
-        {rest.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.rest(formatCost(sumCost(rest)))}</p>}
+        {rest.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.rest(formatCost(sumCost(rest), lang))}</p>}
       </>
     );
   }
@@ -135,7 +135,7 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
   return (
     <>
       <ByKit entries={entries} row={row} />
-      {need.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.stillToGet(formatCost(sumCost(need)))}</p>}
+      {need.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.stillToGet(formatCost(sumCost(need), lang))}</p>}
     </>
   );
 }

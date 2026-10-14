@@ -5,6 +5,7 @@ import { CONTAINER_ORDER, formatCost, sumCost } from "@/lib/buildList";
 import type { Budget, ItemState, ListEntry } from "@/lib/types";
 import { CONTAINER_META } from "@/data/meta";
 import { ItemRow } from "./ItemRow";
+import { Reveal } from "./Reveal";
 import { FREE_WAYS, budgetDollars, budgetPlan, freeFirst } from "./essentialsPlan";
 
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
@@ -73,10 +74,9 @@ export function Essentials({
             Keep it all together somewhere you can reach after a quake, like a closet near the door, not the back of
             the garage. Then work through the rest of your list a bit at a time.
           </p>
-          <details className="mt-3">
-            <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold">See the essentials</summary>
+          <Reveal quiet className="mt-2" label="See the essentials">
             <ByKit entries={active} row={plainRow} />
-          </details>
+          </Reveal>
         </div>
       ) : (
         <Body entries={active} st={st} row={plainRow} budget={budget} />

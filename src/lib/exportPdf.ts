@@ -305,14 +305,23 @@ function categoryGroups(entries: ListEntry[]) {
   );
 }
 
+/** A kit's items: the essentials first, then everything else by category. */
 function itemGroup(p: Pages, entries: ListEntry[], input: ExportInput) {
-  for (const [cat, list] of categoryGroups(entries)) {
-    p.room(40); // keep a category label with its first item
+  const essentials = entries.filter(isEssential);
+  const groups: [string, ListEntry[], boolean][] = [
+    // No tag inside the Essentials group: every row there is one.
+    ...(essentials.length ? [["ESSENTIALS", essentials, false] as [string, ListEntry[], boolean]] : []),
+    ...categoryGroups(entries.filter((e) => !isEssential(e))).map(
+      ([cat, list]) => [CATEGORY_META[cat].toUpperCase(), list, true] as [string, ListEntry[], boolean],
+    ),
+  ];
+  for (const [label, list, tag] of groups) {
+    p.room(40); // keep a group label with its first item
     p.y += 6;
     p.font(8, true, SOFT);
-    p.text(CATEGORY_META[cat].toUpperCase(), M, p.y + 7, { charSpace: 0.6 });
+    p.text(label, M, p.y + 7, { charSpace: 0.6 });
     p.y += 12;
-    list.forEach((e) => itemRow(p, e, input, true));
+    list.forEach((e) => itemRow(p, e, input, tag));
   }
 }
 

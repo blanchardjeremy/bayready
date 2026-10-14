@@ -38,3 +38,6 @@ export const ESSENTIAL_KEYS = new Set([
 ]);
 
 export const isEssential = (e: ListEntry) => ESSENTIAL_KEYS.has(e.key);
+
+/** The same entries with the essentials moved to the front, otherwise in their usual order. */
+export const essentialsFirst = (entries: ListEntry[]) => [...entries.filter(isEssential), ...entries.filter((e) => !isEssential(e))];

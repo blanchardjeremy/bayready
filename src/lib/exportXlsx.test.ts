@@ -388,10 +388,25 @@ describe("spreadsheet export", () => {
     // Every row between the section heading and Advanced extras is Basics, and after it, Advanced
     const basicsNames = new Set(entries.filter((e) => e.container === "stay" && e.level === "basics").map((e) => e.item.name));
     const advancedNames = new Set(entries.filter((e) => e.container === "stay" && e.level === "advanced").map((e) => e.item.name));
-    for (let r = stay + 1; r < extras; r++) expect(basicsNames.has(ws.getCell(`B${r}`).text), ws.getCell(`B${r}`).text).toBe(true);
+    for (let r = stay + 1; r < extras; r++) {
+      if (/^(Essentials|Everything else)/.test(ws.getCell(`A${r}`).text)) continue; // group headings
+      expect(basicsNames.has(ws.getCell(`B${r}`).text), ws.getCell(`B${r}`).text).toBe(true);
+    }
     const firstExtra = ws.getCell(`B${extras + 1}`);
     expect(advancedNames.has(firstExtra.text)).toBe(true);
     expect((firstExtra.fill as ExcelJS.FillPattern).fgColor?.argb).toBe("FFF4F1FB");
+  });
+
+  it("lists the stay-at-home bin's essentials first, under their own heading", async () => {
+    const wb = await roundTrip();
+    const ws = wb.getWorksheet("Supplies")!;
+    const heading = findRowA(ws, "Essentials");
+    const rest = findRowA(ws, "Everything else");
+    expect(heading).toBe(findRowA(ws, "Stay-at-home bin") + 1);
+    expect(rest).toBeGreaterThan(heading + 1);
+    const names = Array.from({ length: rest - heading - 1 }, (_, i) => ws.getCell(`B${heading + 1 + i}`).text);
+    expect(names).toContain("Drinking water");
+    expect(names).not.toContain("Wet wipes");
   });
 
   it("colors the item name by its status on Supplies and To-dos", async () => {

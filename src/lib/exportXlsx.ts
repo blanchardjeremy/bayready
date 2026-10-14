@@ -3,6 +3,7 @@ import type { Answers, Container, Context, ItemState, ListEntry, Stage } from ".
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
 import { MAX_PEOPLE, peopleNames } from "./answers";
 import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
+import { essentialsFirst, isEssential } from "@/data/essentials";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { expiringSections } from "@/data/expiring";
 import { EMPTY_HOME, factFields, homeFacts, type HomeInfo } from "@/data/homeFacts";
@@ -643,10 +644,19 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
           }
         }
         row++;
-        row = writeWithExtras(ws, row, group, cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
+        row = writeWithExtras(ws, row, essentialsFirst(group), cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
       }
     } else {
-      row = writeWithExtras(ws, row, items, cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
+      // The essentials first under their own heading, then everything else.
+      const essentials = items.filter(isEssential);
+      const rest = items.filter((e) => !isEssential(e));
+      const write = (r: number, e: ListEntry) => writeSupplyRow(ws, r, e, input, idx, bags);
+      if (essentials.length && rest.length) {
+        subSectionRow(ws, row++, "Essentials", "Get these first", cols.length);
+        for (const e of essentials) write(row++, e);
+        subSectionRow(ws, row++, "Everything else", "When you can", cols.length);
+        row = writeWithExtras(ws, row, rest, cols.length, write);
+      } else row = writeWithExtras(ws, row, items, cols.length, write);
     }
   }
   const last = row - 1;

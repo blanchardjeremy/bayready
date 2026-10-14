@@ -15,6 +15,7 @@ import {
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
 import { firstStepDate, twiceYearlyChecks } from "@/lib/ics";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { Reveal } from "./Reveal";
 import { MenuButton, type MenuItem } from "@/components/MenuButton";
 import { downloadPdf, printPdf, type PdfPart } from "@/lib/exportPdf";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -25,7 +26,7 @@ import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } 
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { ITEMS } from "@/data/items";
-import { isEssential } from "@/data/essentials";
+import { essentialsFirst, isEssential } from "@/data/essentials";
 import { firstHourCard } from "@/data/firstHour";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
 import { Button, CheckBox, buttonClass } from "@/components/controls";
@@ -766,6 +767,20 @@ function sortByCategory(entries: ListEntry[]) {
   return [...entries].sort((a, b) => CATEGORY_ORDER.indexOf(a.item.category) - CATEGORY_ORDER.indexOf(b.item.category));
 }
 
+/** Whether a shopping line (one item, maybe in more than one kit) is an essential anywhere. */
+const l0e = (lines: ListEntry[]) => lines.some(isEssential);
+
+/** A kit's groups: the essentials first, then everything else by category. */
+function kitGroups(entries: ListEntry[]): [string, string, ListEntry[]][] {
+  const essentials = entries.filter(isEssential);
+  return [
+    ...(essentials.length ? [["essentials", "Essentials", essentials] as [string, string, ListEntry[]]] : []),
+    ...groupByCategory(entries.filter((e) => !isEssential(e))).map(
+      ([cat, list]) => [cat, CATEGORY_META[cat], list] as [string, string, ListEntry[]],
+    ),
+  ];
+}
+
 function groupByCategory(entries: ListEntry[]) {
   return CATEGORY_ORDER.map((cat) => [cat, entries.filter((e) => e.item.category === cat)] as const).filter(
     ([, list]) => list.length > 0,
@@ -847,7 +862,7 @@ function KitSection({
               ["One for the group", "You need just one of these. Decide whose bag each goes in.", false],
             ] as const
           ).map(([heading, desc, perPerson]) => {
-            const list = sortByCategory(active.filter((e) => !!e.item.perPerson === perPerson));
+            const list = essentialsFirst(sortByCategory(active.filter((e) => !!e.item.perPerson === perPerson)));
             if (list.length === 0) return null;
             return (
               <div key={heading}>
@@ -864,12 +879,13 @@ function KitSection({
         </div>
       ) : (
         <div className="mt-6 grid gap-x-12 lg:grid-cols-2">
-          {groupByCategory(active).map(([cat, list]) => (
-            <div key={cat} className="print-break-avoid mb-6">
-              <h4 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{CATEGORY_META[cat]}</h4>
+          {kitGroups(active).map(([key, heading, list]) => (
+            <div key={key} className="print-break-avoid mb-6">
+              <h4 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{heading}</h4>
               <ul className="divide-y divide-line">
                 {list.map((e) => (
-                  <ItemRow key={e.key} {...row(e)} />
+                  // In the Essentials group, every row is one, so the tag would just repeat.
+                  <ItemRow key={e.key} {...row(e)} {...(key === "essentials" ? { essential: false } : {})} />
                 ))}
               </ul>
             </div>
@@ -878,13 +894,12 @@ function KitSection({
       )}
 
       {levelUpActive.length > 0 && (
-        <details className="no-print mt-2 rounded-lg bg-paper-2 px-5 py-4">
-          <summary className="cursor-pointer font-semibold">
-            When you&apos;re ready: {levelUpActive.length} more
-            <span className="font-normal text-ink-soft"> (roughly {formatCost(sumCost(levelUpActive))})</span>
-          </summary>
-          <p className="mt-2 max-w-[64ch] text-[0.95rem] text-ink-soft">
-            These go beyond the basics: more days of supplies, backups, and extra gear.{" "}
+        <Reveal
+          className="mt-2"
+          label={`${levelUpActive.length} more for when you're ready`}
+          detail={`More days of supplies, backups, and extra gear. Roughly ${formatCost(sumCost(levelUpActive))}.`}
+        >
+          <p className="mt-1 max-w-[64ch] text-[0.95rem] text-ink-soft">
             <button type="button" onClick={onLevelUp} className="font-semibold text-ink underline underline-offset-2">
               Switch to Advanced
             </button>{" "}
@@ -895,19 +910,18 @@ function KitSection({
               <ItemRow key={e.key} {...row(e)} />
             ))}
           </ul>
-        </details>
+        </Reveal>
       )}
 
       {skipped.length > 0 && (
-        <details className="no-print mt-3 px-1">
-          <summary className="cursor-pointer text-ink-soft hover:text-ink">Skipped ({skipped.length})</summary>
-          <p className="mt-1 text-[0.95rem] text-ink-soft">Tucked away here. Bring any back whenever you like.</p>
+        <Reveal quiet className="mt-3" label={`Show ${skipped.length} skipped`}>
+          <p className="text-[0.95rem] text-ink-soft">Tucked away here. Bring any back whenever you like.</p>
           <ul className="divide-y divide-line">
             {skipped.map((e) => (
               <ItemRow key={e.key} {...row(e)} />
             ))}
           </ul>
-        </details>
+        </Reveal>
       )}
     </section>
   );
@@ -936,7 +950,14 @@ function ShoppingList({
   // One line per item, even when it goes in more than one kit.
   const byItem = new Map<string, ListEntry[]>();
   for (const e of shown) byItem.set(e.item.id, [...(byItem.get(e.item.id) ?? []), e]);
-  const groups = SHOP_ORDER.map((shop) => [shop, [...byItem.values()].filter((l) => l[0].item.shop === shop)] as const).filter(
+  const groups = SHOP_ORDER.map(
+    (shop) =>
+      [
+        shop,
+        // Essentials first in each store, so a short trip still gets the important things.
+        [...byItem.values()].filter((l) => l[0].item.shop === shop).sort((a, b) => Number(l0e(b)) - Number(l0e(a))),
+      ] as const,
+  ).filter(
     ([, l]) => l.length > 0,
   );
   const toBuy = new Set(need.map((e) => e.item.id)).size;
@@ -1051,7 +1072,7 @@ function Plan({
 }) {
   // Number only the stages that have something in them, so the steps don't skip.
   const stages = (["weekend", "month", "later"] as Stage[])
-    .map((stage) => [stage, entries.filter((e) => planStage(e, firstKeys, answers) === stage && st(e) !== "skip")] as const)
+    .map((stage) => [stage, essentialsFirst(entries.filter((e) => planStage(e, firstKeys, answers) === stage && st(e) !== "skip"))] as const)
     .filter(([, list]) => list.length > 0);
 
   return (

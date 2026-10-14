@@ -282,7 +282,8 @@ export const list: Translation<typeof en> = {
     bringBack: "Recuperar",
     bringBackLabel: (item) => `Recuperar ${item}`,
     skip: "Omitir",
-    skipLabel: (item) => `Omitir ${item}`,
+    skipTooltip: "Omitir por ahora",
+    skipLabel: (item) => `Omitir ${item} por ahora`,
     waterNote: "Dijo que tiene algo de agua. Revise que tenga la cantidad completa.",
   },
 

@@ -287,7 +287,8 @@ export const list = {
     bringBack: "Bring back",
     bringBackLabel: (item: string) => `Bring back ${item}`,
     skip: "Skip",
-    skipLabel: (item: string) => `Skip ${item}`,
+    skipTooltip: "Skip for now",
+    skipLabel: (item: string) => `Skip ${item} for now`,
     waterNote: "You said you have some. Check you have the full amount.",
   },
 

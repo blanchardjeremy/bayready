@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
+import { Tooltip } from "@/components/Tooltip";
 import { formatCost } from "@/lib/buildList";
 import type { Context, ItemState, ListEntry } from "@/lib/types";
 import { hazardFor } from "@/data/hazards";
@@ -186,17 +187,18 @@ export function ItemRow({
             {t.bringBack}
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => onChange("skip")}
-            title={t.skip}
-            aria-label={t.skipLabel(item.name)}
-            className="no-print -my-2 -mr-2 grid size-10 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper hover:text-ink"
-          >
-            <svg viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-              <path d="m4.5 4.5 7 7M11.5 4.5l-7 7" strokeLinecap="round" />
-            </svg>
-          </button>
+          <Tooltip label={t.skipTooltip}>
+            <button
+              type="button"
+              onClick={() => onChange("skip")}
+              aria-label={t.skipLabel(item.name)}
+              className="no-print -my-2 -mr-2 grid size-10 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper hover:text-ink"
+            >
+              <svg viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                <path d="m4.5 4.5 7 7M11.5 4.5l-7 7" strokeLinecap="round" />
+              </svg>
+            </button>
+          </Tooltip>
         ))}
     </li>
   );

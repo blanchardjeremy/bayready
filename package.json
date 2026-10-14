@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.2.16",
     "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
     "next": "16.4.0",

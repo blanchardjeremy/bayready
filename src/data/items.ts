@@ -65,7 +65,7 @@ function foodPart(o: {
   };
 }
 
-const isEastBay = (ctx: Context) => ctx.answers.county === "alameda" || ctx.answers.county === "contra-costa";
+const isEastBay = (ctx: Context) => ctx.ebmud;
 
 const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
 const notApartment = (ctx: Context) => ctx.home !== "apartment-low" && ctx.home !== "apartment-high";

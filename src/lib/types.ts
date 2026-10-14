@@ -17,7 +17,20 @@ export type CountyId =
 export type BuildChoice = "stay" | "go" | "both" | "unsure";
 export type Level = "basics" | "advanced";
 
-export type NeedId = "meds" | "cold-meds" | "power-device" | "mobility" | "vision-hearing" | "diet" | "oxygen";
+export type NeedId =
+  | "meds"
+  | "cold-meds"
+  | "power-device"
+  | "mobility"
+  | "vision-hearing"
+  | "diet"
+  | "oxygen"
+  | "communication"
+  | "cognitive"
+  | "caregiver"
+  | "dialysis"
+  | "pregnancy"
+  | "service-animal";
 
 export type HomeType = "house" | "apartment-low" | "apartment-high" | "other";
 export type CarAccess = "yes" | "no" | "sometimes";
@@ -105,6 +118,10 @@ export interface Context {
   otherPets: number;
   pets: number;
   needs: Set<NeedId>;
+  /** Picked "Prefer not to say" for health needs. Gets general health items instead of none. */
+  needsPrivate: boolean;
+  /** Served by EBMUD, which asks for 2 gallons per person per day. */
+  ebmud: boolean;
   /** days of supplies for the stay-at-home bin */
   stayDays: number;
   /** days of supplies for the go bag */

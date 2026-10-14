@@ -100,6 +100,8 @@ export function deriveContext(a: Answers): Context {
     otherPets: h.otherPets,
     pets: h.dogs + h.cats + h.otherPets,
     needs,
+    needsPrivate: a.needs === "private",
+    ebmud: a.county === "alameda" || a.county === "contra-costa",
     stayDays: a.level === "advanced" ? (a.days ?? DEFAULT_ADVANCED_STAY_DAYS) : BASICS_STAY_DAYS,
     goDays: GO_DAYS,
     home: a.home,
@@ -116,7 +118,10 @@ export const COUNTY_IDS = [
   "santa-clara", "santa-cruz", "solano", "sonoma", "other", "private",
 ] as const;
 export const HAZARD_IDS = ["earthquake", "outage", "smoke", "wildfire", "heat", "flood", "tsunami", "chemical"] as const;
-export const NEED_IDS = ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet", "oxygen"] as const;
+export const NEED_IDS = [
+  "meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet", "oxygen",
+  "communication", "cognitive", "caregiver", "dialysis", "pregnancy", "service-animal",
+] as const;
 export const STARTS = ["weekend", "weeks", "month", "unsure"] as const;
 export const BUDGETS = ["0", "50", "150", "more", "unsure"] as const;
 export const HOMES = ["house", "apartment-low", "apartment-high", "other"] as const;

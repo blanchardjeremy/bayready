@@ -349,7 +349,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
       return {
         optional: true,
         hint: "Pick any that apply.",
-        why: "So your list includes the right backups, like spare glasses or a battery for a CPAP. This stays on your device.",
+        why: "So your list includes the right backups, like spare glasses or a battery for a CPAP. It's saved on this device, and only goes elsewhere if you share your list.",
         body: (
           <CheckList
             legend="Does anyone rely on any of these?"
@@ -367,7 +367,8 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
               { value: "vision-hearing", label: "Glasses, contacts, or hearing aids" },
               { value: "meds", label: "Daily prescription medicine" },
               { value: "cold-meds", label: "Medicine that has to stay cold", desc: "Like insulin" },
-              { value: "power-device", label: "A medical device that needs power", desc: "CPAP, oxygen, or a power wheelchair" },
+              { value: "power-device", label: "A medical device that needs power", desc: "CPAP, a power wheelchair, or a pump" },
+              { value: "oxygen", label: "Home oxygen", desc: "A concentrator or tanks" },
               { value: "mobility", label: "A mobility aid, or trouble with stairs" },
               { value: "diet", label: "A special diet, food allergy, or baby formula" },
               { value: "none", label: "None of these" },
@@ -375,7 +376,7 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
             ]}
           />
         ),
-        tip: a.needs !== null && a.needs !== "private" && a.needs.includes("power-device") ? (
+        tip: a.needs !== null && a.needs !== "private" && (a.needs.includes("power-device") || a.needs.includes("oxygen")) ? (
           <GoodToKnow>
             If you rely on powered medical equipment, ask PG&amp;E about its{" "}
             <a href="https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html" target="_blank" rel="noopener noreferrer">

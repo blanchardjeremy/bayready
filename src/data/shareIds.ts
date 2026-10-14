@@ -26,4 +26,5 @@ export const SHARE_IDS: readonly string[] = [
   "whistle", "cash-go", "docs-copies", "clothes-go", "hygiene-go", "map", "multitool", "cord", "zip-bags",
   "goggles", "radio-go", "bivvy", "car-water", "car-snacks", "car-basics", "car-blanket", "car-charger",
   "car-first-aid", "car-shoes", "car-jumper", "road-flares", "car-n95",
+  "oxygen-safety", "evac-help", "diabetes-go", "oxygen-backup", "device-go",
 ];

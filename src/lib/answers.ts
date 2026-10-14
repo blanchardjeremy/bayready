@@ -80,6 +80,8 @@ export function deriveContext(a: Answers): Context {
   const adults = Math.max(0, h.adults);
   const people = Math.max(1, adults + h.kids + h.babies);
   const needs = new Set<NeedId>(Array.isArray(a.needs) ? a.needs : []);
+  // Home oxygen runs on power too, so it gets everything a powered device does, plus its own fire and backup steps.
+  if (needs.has("oxygen")) needs.add("power-device");
   const hazards = new Set<HazardId>(a.hazards.length ? a.hazards : BASE_HAZARDS);
 
   return {
@@ -114,7 +116,7 @@ export const COUNTY_IDS = [
   "santa-clara", "santa-cruz", "solano", "sonoma", "other", "private",
 ] as const;
 export const HAZARD_IDS = ["earthquake", "outage", "smoke", "wildfire", "heat", "flood", "tsunami", "chemical"] as const;
-export const NEED_IDS = ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet"] as const;
+export const NEED_IDS = ["meds", "cold-meds", "power-device", "mobility", "vision-hearing", "diet", "oxygen"] as const;
 export const STARTS = ["weekend", "weeks", "month", "unsure"] as const;
 export const BUDGETS = ["0", "50", "150", "more", "unsure"] as const;
 export const HOMES = ["house", "apartment-low", "apartment-high", "other"] as const;

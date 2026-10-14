@@ -17,7 +17,7 @@ export type CountyId =
 export type BuildChoice = "stay" | "go" | "both" | "unsure";
 export type Level = "basics" | "advanced";
 
-export type NeedId = "meds" | "cold-meds" | "power-device" | "mobility" | "vision-hearing" | "diet";
+export type NeedId = "meds" | "cold-meds" | "power-device" | "mobility" | "vision-hearing" | "diet" | "oxygen";
 
 export type HomeType = "house" | "apartment-low" | "apartment-high" | "other";
 export type CarAccess = "yes" | "no" | "sometimes";

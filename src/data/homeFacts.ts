@@ -14,8 +14,10 @@ export type HomeFactId =
   | "water"
   | "breaker"
   | "contact"
+  | "localContact"
   | "meetOutside"
   | "meetNearby"
+  | "phones"
   | "stayBin"
   | "goBags"
   | "spareKey"
@@ -39,8 +41,10 @@ export const HOME_FACTS: HomeFact[] = [
   { id: "water", label: "Water shutoff", hint: "Close it if pipes break after a quake.", task: "shutoffs", show: () => true },
   { id: "breaker", label: "Breaker box", hint: "Where it is, and which switch is the main.", task: "shutoffs", show: () => true },
   { id: "contact", label: "Out-of-area contact", hint: "Name and number everyone texts after a disaster.", task: "contact", show: () => true },
+  { id: "localContact", label: "Local backup contact", hint: "Someone close by who can help if you can't get home. Name and number.", task: "contact", show: () => true },
   { id: "meetOutside", label: "Meeting spot outside", hint: "Right outside, if you have to leave the house fast.", task: "contact", show: () => true },
   { id: "meetNearby", label: "Meeting spot nearby", hint: "Outside the neighborhood, if you can't get home.", task: "contact", show: () => true },
+  { id: "phones", label: "Cell numbers", hint: "On paper, in case a phone dies.", task: "contact", show: () => true },
   { id: "stayBin", label: "Stay-at-home bin is", hint: "Somewhere you can reach after a quake.", task: "bin", show: (ctx) => ctx.kits.includes("stay") },
   { id: "goBags", label: "Go bags are", hint: "By the door you'd use.", task: "backpack", show: (ctx) => ctx.kits.includes("go") },
   { id: "spareKey", label: "Spare key is with", hint: "A neighbor, friend, or lockbox.", task: "neighbor", show: () => true },
@@ -58,64 +62,89 @@ export interface HomeInfo {
   facts: Partial<Record<HomeFactId, string>>;
   /** Where each person's go bag is, in the same order as their names. */
   bags: string[];
+  /** Each person's cell number, in the same order as their names. Older saves don't have it. */
+  phones?: string[];
   notes: string;
 }
 
 export const HOME_KEY = "bayready:home:v1";
-export const EMPTY_HOME: HomeInfo = { facts: {}, bags: [], notes: "" };
+export const EMPTY_HOME: HomeInfo = { facts: {}, bags: [], phones: [], notes: "" };
 
-/** One box to fill in. Most facts are one box; "Go bags are" is one per person. */
+/** Facts with a box for each person, and where in HomeInfo those answers live. */
+const PER_PERSON = { goBags: "bags", phones: "phones" } as const;
+type PerPersonId = keyof typeof PER_PERSON;
+const isPerPerson = (id: HomeFactId): id is PerPersonId => id in PER_PERSON;
+
+/** One box to fill in. Most facts are one box; go bags and cell numbers are one per person. */
 export interface FactField {
   key: string;
   fact: HomeFact;
   label: string;
   value: string;
-  /** Whose go bag, for the per-person go bag boxes. */
+  /** Whose box, for facts with one box per person: an index into peopleNames. */
+  person?: number;
+  /** Whose go bag. The same as `person`, but only set on go bag boxes. */
   bag?: number;
+}
+
+/** Who gets a box: everyone who carries a go bag, or everyone for cell numbers. */
+function peopleFor(id: PerPersonId, ctx: Context): string[] {
+  const names = peopleNames(ctx);
+  return id === "goBags" ? names.slice(0, ctx.carriers) : names;
+}
+
+function personLabel(id: PerPersonId, name: string, solo: boolean): string {
+  if (id === "goBags") return solo ? "Go bag is" : name === "Me" ? "My go bag is" : `${name}'s go bag is`;
+  return name === "Me" ? "My cell" : `${name}'s cell`;
 }
 
 export function factFields(facts: HomeFact[], ctx: Context, home: HomeInfo): FactField[] {
   return facts.flatMap((fact): FactField[] => {
-    if (fact.id === "goBags") {
-      const names = peopleNames(ctx).slice(0, ctx.carriers);
-      if (names.length === 1) return [{ key: "bag-0", fact, label: "Go bag is", value: home.bags[0] ?? "", bag: 0 }];
-      return names.map((name, i) => ({
-        key: `bag-${i}`,
-        fact,
-        label: name === "Me" ? "My go bag is" : `${name}'s go bag is`,
-        value: home.bags[i] ?? "",
-        bag: i,
-      }));
-    }
-    return [{ key: fact.id, fact, label: fact.label, value: home.facts[fact.id] ?? "" }];
+    const id = fact.id;
+    if (!isPerPerson(id)) return [{ key: id, fact, label: fact.label, value: home.facts[id] ?? "" }];
+    const names = peopleFor(id, ctx);
+    const values = home[PER_PERSON[id]] ?? [];
+    return names.map((name, i) => ({
+      key: `${id === "goBags" ? "bag" : "phone"}-${i}`,
+      fact,
+      label: personLabel(id, name, names.length === 1),
+      value: values[i] ?? "",
+      person: i,
+      ...(id === "goBags" ? { bag: i } : {}),
+    }));
   });
 }
 
 /** Saves one box's new value. */
 export function setField(home: HomeInfo, field: FactField, value: string): HomeInfo {
-  if (field.bag === undefined) return { ...home, facts: { ...home.facts, [field.fact.id]: value } };
-  const bags = [...home.bags];
-  while (bags.length < field.bag) bags.push("");
-  bags[field.bag] = value;
-  return { ...home, bags };
+  const id = field.fact.id;
+  if (!isPerPerson(id) || field.person === undefined) return { ...home, facts: { ...home.facts, [id]: value } };
+  const list = [...(home[PER_PERSON[id]] ?? [])];
+  while (list.length < field.person) list.push("");
+  list[field.person] = value;
+  return { ...home, [PER_PERSON[id]]: list };
 }
 
 export function hasHomeInfo(home: HomeInfo) {
-  return [home.notes, ...home.bags, ...Object.values(home.facts)].some((v) => v?.trim());
+  return [home.notes, ...home.bags, ...(home.phones ?? []), ...Object.values(home.facts)].some((v) => v?.trim());
 }
 
 /** Clean up whatever is in storage, so an old or odd value can't break the page. */
 export function normalizeHome(input: unknown): HomeInfo {
-  const out: HomeInfo = { facts: {}, bags: [], notes: "" };
+  const out: HomeInfo = { facts: {}, bags: [], phones: [], notes: "" };
   if (!input || typeof input !== "object") return out;
   const i = input as Record<string, unknown>;
   if (i.facts && typeof i.facts === "object") {
     for (const f of HOME_FACTS) {
+      if (isPerPerson(f.id) && f.id !== "goBags") continue;
       const v = (i.facts as Record<string, unknown>)[f.id];
       if (typeof v === "string") out.facts[f.id] = v.slice(0, 200);
     }
   }
-  if (Array.isArray(i.bags)) out.bags = i.bags.slice(0, MAX_PEOPLE).map((b) => (typeof b === "string" ? b.slice(0, 200) : ""));
+  const perPerson = (v: unknown) =>
+    Array.isArray(v) ? v.slice(0, MAX_PEOPLE).map((s) => (typeof s === "string" ? s.slice(0, 200) : "")) : [];
+  out.bags = perPerson(i.bags);
+  out.phones = perPerson(i.phones);
   // Before go bags had a box per person, there was one shared box.
   if (out.facts.goBags && !out.bags.some(Boolean)) out.bags = [out.facts.goBags];
   delete out.facts.goBags;

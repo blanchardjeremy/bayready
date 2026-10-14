@@ -2,14 +2,16 @@ import type ExcelJSNamespace from "exceljs";
 import type { Answers, Container, Context, ItemState, ListEntry, Stage } from "./types";
 import { CONTAINER_ORDER, firstSteps, planStage } from "./buildList";
 import { MAX_PEOPLE, peopleNames } from "./answers";
-import { CATEGORY_ORDER, CONTAINER_META, STAGE_META } from "@/data/meta";
+import { CATEGORY_ORDER, CONTAINER_META, metaFor } from "@/data/meta";
 import { essentialsFirst, isEssential } from "@/data/essentials";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { expiringSections } from "@/data/expiring";
 import { EMPTY_HOME, factFields, homeFacts, type HomeInfo } from "@/data/homeFacts";
 import { firstHourCard } from "@/data/firstHour";
-import { BAY_READY_URL, CREDIT } from "./urls";
+import { BAY_READY_URL } from "./urls";
 import { listSummary } from "./summary";
+import { messagesFor } from "@/i18n/messages";
+import type { Lang } from "@/i18n/lang";
 
 type ExcelJS = typeof ExcelJSNamespace;
 type Workbook = ExcelJSNamespace.Workbook;
@@ -65,64 +67,95 @@ const font = (f: Font = {}): Font => ({ name: BODY, size: 11, color: { argb: C.i
 const fill = (argb: string): ExcelJSNamespace.Fill => ({ type: "pattern", pattern: "solid", fgColor: { argb } });
 const hairline = { style: "thin" as const, color: { argb: C.line } };
 
-const DATE_FMT = "mmm d, yyyy";
 const MONEY_FMT = '"$"#,##0';
-
 
 // The "Your people" names on the Overview tab feed every Who dropdown and
 // name the per-person columns.
 const NAMES_FIRST_ROW = 17;
 const NAMES_COUNT = MAX_PEOPLE;
-const WHO_RANGE = `Overview!$B$${NAMES_FIRST_ROW}:$B$${NAMES_FIRST_ROW + NAMES_COUNT - 1}`;
 // "Days at home" on the Overview tab. Stay-at-home bin amounts that scale with days read it.
 const DAYS_ROW = 14;
-const DAYS = `Overview!$C$${DAYS_ROW}`;
 
-const STATUS = { supplies: ["Need", "Have", "Skip"], todos: ["To do", "Done", "Skip"] };
+/** A tab name as a formula writes it: quoted unless it's plain letters and digits. */
+const sheetRef = (name: string) => (/^[A-Za-z0-9_]+$/.test(name) ? name : `'${name.replace(/'/g, "''")}'`);
+
+/**
+ * The words for one workbook, in the list's language (src/i18n/<lang>/exports.ts).
+ * Dropdown values, the formulas that count them, the colors keyed off them, and
+ * formulas that point at other tabs all read from here, so they always agree.
+ */
+function wordsFor(lang: Lang) {
+  const t = messagesFor(lang).exports;
+  const x = t.xlsx;
+  const overview = sheetRef(x.sheets.overview);
+  return {
+    t,
+    x,
+    meta: metaFor(lang),
+    /** Tab names, ready to use in a formula. */
+    ref: {
+      overview,
+      todos: sheetRef(x.sheets.todos),
+      supplies: sheetRef(x.sheets.supplies),
+      expiring: sheetRef(x.sheets.expiring),
+    },
+    /** The Overview's people list, which feeds every Who dropdown. */
+    whoRange: `${overview}!$B$${NAMES_FIRST_ROW}:$B$${NAMES_FIRST_ROW + NAMES_COUNT - 1}`,
+    /** Days at home on the Overview. */
+    days: `${overview}!$C$${DAYS_ROW}`,
+    status: {
+      supplies: [x.status.need, x.status.have, x.status.skip],
+      todos: [x.status.todo, x.status.done, x.status.skip],
+    },
+  };
+}
+type Words = ReturnType<typeof wordsFor>;
 
 // ---------------------------------------------------------------------------
 
 export function buildWorkbook(Excel: ExcelJS, input: ExportInput): Workbook {
+  const w = wordsFor(input.ctx.lang);
+  const { sheets } = w.x;
   const wb = new Excel.Workbook();
   wb.creator = "Bay Ready";
   wb.created = input.today ?? new Date();
   wb.calcProperties.fullCalcOnLoad = true;
 
-  const overview = wb.addWorksheet("Overview", sheetOpts());
-  const todos = wb.addWorksheet("To-dos", sheetOpts());
-  const supplies = wb.addWorksheet("Supplies", sheetOpts());
-  const expiring = wb.addWorksheet(EXPIRING_SHEET, sheetOpts());
-  const neighbors = wb.addWorksheet(NEIGHBORS_SHEET, sheetOpts());
+  const overview = wb.addWorksheet(sheets.overview, sheetOpts());
+  const todos = wb.addWorksheet(sheets.todos, sheetOpts());
+  const supplies = wb.addWorksheet(sheets.supplies, sheetOpts());
+  const expiring = wb.addWorksheet(sheets.expiring, sheetOpts());
+  const neighbors = wb.addWorksheet(sheets.neighbors, sheetOpts());
   const card = firstHourCard(input.ctx);
-  const whenItHappens = card.length ? wb.addWorksheet(CARD_SHEET, { ...sheetOpts(), pageSetup: { ...sheetOpts().pageSetup, orientation: "portrait" } }) : null;
+  const whenItHappens = card.length ? wb.addWorksheet(sheets.card, { ...sheetOpts(), pageSetup: { ...sheetOpts().pageSetup, orientation: "portrait" } }) : null;
 
   const active = input.entries.filter((e) => input.stateOf(e) !== "skip");
   const firstKeys = new Set(firstSteps(input.entries, input.stateOf, input.answers).map((e) => e.key));
 
-  buildTodos(todos, active.filter((e) => e.container === "home"), input, firstKeys);
-  const layout = buildSupplies(supplies, active.filter((e) => e.container !== "home"), input);
-  buildExpiring(expiring, input.ctx);
-  buildNeighbors(neighbors);
-  if (whenItHappens) buildCard(whenItHappens, card);
-  buildOverview(overview, input, layout);
+  buildTodos(todos, active.filter((e) => e.container === "home"), input, firstKeys, w);
+  const layout = buildSupplies(supplies, active.filter((e) => e.container !== "home"), input, w);
+  buildExpiring(expiring, input.ctx, w);
+  buildNeighbors(neighbors, w);
+  if (whenItHappens) buildCard(whenItHappens, card, w);
+  buildOverview(overview, input, layout, w);
 
-  wb.title = "Our emergency kit";
-  wb.description = CREDIT;
-  for (const ws of [overview, todos, supplies, expiring, neighbors, whenItHappens]) if (ws) addCredit(ws);
+  wb.title = w.x.title;
+  wb.description = `${w.t.credit}: ${BAY_READY_URL}`;
+  for (const ws of [overview, todos, supplies, expiring, neighbors, whenItHappens]) if (ws) addCredit(ws, w, ws === overview);
 
   return wb;
 }
 
 /** A "Made with Bay Ready" link under the last row, and in the printed footer. */
-function addCredit(ws: Worksheet) {
+function addCredit(ws: Worksheet, w: Words, isOverview: boolean) {
   // The Overview has a narrow spacer column A; the other tabs start in A.
-  const col = ws.name === "Overview" ? "B" : "A";
+  const col = isOverview ? "B" : "A";
   const row = (ws.lastRow?.number ?? 0) + 2;
   const cell = ws.getCell(`${col}${row}`);
-  cell.value = { text: "Made with Bay Ready, a free emergency kit planner for the Bay Area", hyperlink: BAY_READY_URL };
+  cell.value = { text: w.t.credit, hyperlink: BAY_READY_URL };
   cell.font = font({ size: 10, color: { argb: C.soft }, underline: true });
   cell.alignment = { vertical: "middle", indent: col === "A" ? 1 : 0 };
-  ws.headerFooter.oddFooter = `&L&8Made with Bay Ready: ${BAY_READY_URL}&R&8Page &P of &N`;
+  ws.headerFooter.oddFooter = w.x.creditFooter(BAY_READY_URL);
 }
 
 function sheetOpts(): Partial<ExcelJSNamespace.AddWorksheetOptions> {
@@ -183,6 +216,11 @@ function bodyCell(cell: ExcelJSNamespace.Cell, f: Font = {}, indent = 1) {
   cell.border = { bottom: hairline };
 }
 
+/** Wide enough for the longest status and its dropdown arrow. */
+function statusWidth(options: readonly string[], min: number) {
+  return Math.max(min, ...options.map((s) => s.length + 4));
+}
+
 function statusCell(cell: ExcelJSNamespace.Cell, value: string, options: string[]) {
   cell.value = value;
   // Quiet by default. Conditional formats make finished rows stand out in green.
@@ -192,12 +230,12 @@ function statusCell(cell: ExcelJSNamespace.Cell, value: string, options: string[
   cell.dataValidation = { type: "list", allowBlank: false, formulae: [`"${options.join(",")}"`] };
 }
 
-function whoCell(cell: ExcelJSNamespace.Cell) {
+function whoCell(cell: ExcelJSNamespace.Cell, w: Words) {
   bodyCell(cell);
   cell.dataValidation = {
     type: "list",
     allowBlank: true,
-    formulae: [WHO_RANGE],
+    formulae: [w.whoRange],
     // Allow typing a name that isn't on the Overview list.
     showErrorMessage: false,
   };
@@ -216,7 +254,7 @@ function linkCell(cell: ExcelJSNamespace.Cell, link: { label: string; url: strin
  * still needs doing, green when done, grey (and struck through on the name)
  * when skipped. Same colors as the per-person Not done / Done cells.
  */
-function statusFormats(ws: Worksheet, first: number, last: number, done: string, notDone: string[], itemCols: string) {
+function statusFormats(ws: Worksheet, first: number, last: number, done: string, notDone: string[], skip: string, itemCols: string) {
   if (last < first) return;
   ws.addConditionalFormatting({
     ref: `A${first}:A${last}`,
@@ -233,7 +271,7 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
         formulae: [`OR(${notDone.map((w) => `$A${first}="${w}"`).join(",")})`],
         style: { font: { color: { argb: C.yellow } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.yellowWash } } },
       },
-      { type: "expression", priority: 3, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted } } } },
+      { type: "expression", priority: 3, formulae: [`$A${first}="${skip}"`], style: { font: { color: { argb: C.muted } } } },
     ],
   });
   ws.addConditionalFormatting({
@@ -251,7 +289,7 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
         formulae: [`OR(${notDone.map((w) => `$A${first}="${w}"`).join(",")})`],
         style: { font: { color: { argb: C.yellow } }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.yellowWash } } },
       },
-      { type: "expression", priority: 5, formulae: [`$A${first}="Skip"`], style: { font: { color: { argb: C.muted }, strike: true } } },
+      { type: "expression", priority: 5, formulae: [`$A${first}="${skip}"`], style: { font: { color: { argb: C.muted }, strike: true } } },
     ],
   });
 }
@@ -261,12 +299,12 @@ function statusFormats(ws: Worksheet, first: number, last: number, done: string,
 // ---------------------------------------------------------------------------
 
 /** Name cells for the person columns, from the Overview tab, so renaming someone there renames their column. */
-function personHeaders(ws: Worksheet, headerRow: number, startCol: number, count: number, ctx: Context) {
+function personHeaders(ws: Worksheet, headerRow: number, startCol: number, count: number, ctx: Context, w: Words) {
   const names = peopleNames(ctx);
   for (let i = 0; i < count; i++) {
     const cell = ws.getRow(headerRow).getCell(startCol + i);
-    const ref = `Overview!$B$${NAMES_FIRST_ROW + i}`;
-    const fallback = `Person ${i + 1}`;
+    const ref = `${w.ref.overview}!$B$${NAMES_FIRST_ROW + i}`;
+    const fallback = w.t.person(i + 1);
     cell.value = { formula: `IF(${ref}="","${fallback}",${ref})`, result: names[i] ?? fallback };
     cell.alignment = { vertical: "middle", horizontal: "center" };
   }
@@ -276,8 +314,7 @@ function personHeaders(ws: Worksheet, headerRow: number, startCol: number, count
 const PERSON_COL_WIDTH = 15;
 
 // Plain text values with a dropdown work the same in Google Sheets, Excel, and Numbers.
-const DONE = "Done";
-const NOT_DONE = "Not done";
+// The values are w.x.person.done and notDone ("Done" and "Not done" in English).
 
 /**
  * A Done / Not done dropdown per person, or plain empty cells when the row is done once for everyone.
@@ -288,8 +325,10 @@ function personCells(
   startCol: number,
   count: number,
   done: ((i: number) => boolean) | null,
+  w: Words,
   active = count,
 ) {
+  const { done: DONE, notDone: NOT_DONE } = w.x.person;
   for (let i = 0; i < count; i++) {
     const cell = r.getCell(startCol + i);
     cell.border = { bottom: hairline };
@@ -309,7 +348,9 @@ function personStatus(
   count: number,
   [done, partly, none]: [string, string, string],
   allDone: boolean,
+  w: Words,
 ) {
+  const DONE = w.x.person.done;
   const range = `${colLetter(startCol)}${row}:${colLetter(startCol + count - 1)}${row}`;
   cell.value = {
     formula: `IF(COUNTIF(${range},"${DONE}")=${count},"${done}",IF(COUNTIF(${range},"${DONE}")>0,"${partly}","${none}"))`,
@@ -320,8 +361,9 @@ function personStatus(
   cell.border = { bottom: hairline };
 }
 
-function personFormats(ws: Worksheet, first: number, last: number, startCol: number, count: number) {
+function personFormats(ws: Worksheet, first: number, last: number, startCol: number, count: number, w: Words) {
   if (!count || last < first) return;
+  const { done: DONE, notDone: NOT_DONE } = w.x.person;
   const a = colLetter(startCol);
   ws.addConditionalFormatting({
     ref: `${a}${first}:${colLetter(startCol + count - 1)}${last}`,
@@ -342,7 +384,9 @@ function personFormats(ws: Worksheet, first: number, last: number, startCol: num
   });
   ws.addConditionalFormatting({
     ref: `A${first}:A${last}`,
-    rules: [{ type: "expression", priority: 22, formulae: [`$A${first}="Partly"`], style: { font: { color: { argb: C.amber }, bold: true } } }],
+    rules: [
+      { type: "expression", priority: 22, formulae: [`$A${first}="${w.x.status.partly}"`], style: { font: { color: { argb: C.amber }, bold: true } } },
+    ],
   });
 }
 
@@ -362,7 +406,7 @@ function subSectionRow(ws: Worksheet, row: number, name: string, desc: string, c
 }
 
 /** Heading for the Advanced items at the bottom of a section. */
-function extrasRow(ws: Worksheet, row: number, cols: number) {
+function extrasRow(ws: Worksheet, row: number, cols: number, w: Words) {
   const r = ws.getRow(row);
   r.height = 26;
   for (let i = 1; i <= cols; i++) {
@@ -372,8 +416,8 @@ function extrasRow(ws: Worksheet, row: number, cols: number) {
   const cell = r.getCell(1);
   cell.value = {
     richText: [
-      { text: "Advanced extras", font: { name: DISPLAY, size: 10, bold: true, color: { argb: C.extra } } },
-      { text: "    Nice to have. Skip these if you're just getting started", font: { name: BODY, size: 10, color: { argb: C.extra } } },
+      { text: w.x.extras, font: { name: DISPLAY, size: 10, bold: true, color: { argb: C.extra } } },
+      { text: `    ${w.x.extrasDesc}`, font: { name: BODY, size: 10, color: { argb: C.extra } } },
     ],
   };
   cell.alignment = { vertical: "bottom", indent: 1 };
@@ -390,13 +434,14 @@ function writeWithExtras(
   startRow: number,
   list: ListEntry[],
   cols: number,
+  w: Words,
   write: (row: number, e: ListEntry) => void,
 ): number {
   let row = startRow;
   for (const e of list.filter((e) => e.level === "basics")) write(row++, e);
   const extras = list.filter((e) => e.level === "advanced");
   if (extras.length) {
-    extrasRow(ws, row++, cols);
+    extrasRow(ws, row++, cols, w);
     for (const e of extras) {
       write(row, e);
       markExtra(ws, row++, cols);
@@ -409,24 +454,20 @@ function sortByCategory(list: ListEntry[]) {
   return [...list].sort((a, b) => CATEGORY_ORDER.indexOf(a.item.category) - CATEGORY_ORDER.indexOf(b.item.category));
 }
 
-// Short enough to fit beside the section name without being cut off.
-const TODO_STAGE_BLURB: Record<Stage, string> = {
-  weekend: "Free quick wins, about an hour",
-  month: "The rest of the plan, plus a few small buys",
-  later: "Extra steps for when you're ready",
-};
 
 // ---------------------------------------------------------------------------
 // To-dos
 // ---------------------------------------------------------------------------
 
-function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstKeys: Set<string>) {
+function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstKeys: Set<string>, w: Words) {
+  const tx = w.x.todos;
+  const { status } = w.x;
   // Per-adult tasks (alerts, phone setup) get a Done column for each adult.
   const people = Math.max(0, ...list.map((e) => e.slots.length));
   const P = 3; // first person column
   const [WHO, LINK, WHY] = [P + people, P + people + 1, P + people + 2];
   ws.columns = [
-    { width: 11 }, // Status
+    { width: statusWidth(w.status.todos, 11) }, // Status
     { width: 50 }, // Task
     ...Array.from({ length: people }, () => ({ width: PERSON_COL_WIDTH })),
     { width: 16 }, // Who
@@ -434,22 +475,11 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
     { width: 90 }, // Why
   ].map((c) => ({ ...c, style: { font: font() } }));
 
-  title(
-    ws,
-    "To-dos",
-    people
-      ? "Most of these are free and quick. Start with This weekend. Some are for each adult, so mark your own column Done."
-      : "Most of these are free and quick. Start with This weekend, and set Status to Done as you go.",
-    colLetter(WHY),
-  );
+  title(ws, tx.title, people ? tx.subPeople : tx.sub, colLetter(WHY));
   const HEADER = 4;
-  headerRow(
-    ws,
-    HEADER,
-    ["Status", "Task", ...Array.from({ length: people }, () => ""), "Who", "Link", "Why it matters"],
-    { [WHO]: "Who's doing it. Pick a name from the list on the Overview tab, or type one." },
-  );
-  personHeaders(ws, HEADER, P, people, input.ctx);
+  const h = tx.headers;
+  headerRow(ws, HEADER, [h.status, h.task, ...Array.from({ length: people }, () => ""), h.who, h.link, h.why], { [WHO]: tx.whoNote });
+  personHeaders(ws, HEADER, P, people, input.ctx, w);
   ws.getRow(3).height = 8;
 
   // Tasks each adult does go together at the top, so the household tasks below
@@ -458,10 +488,11 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
   const stages = ["weekend", "month", "later"] as Stage[];
   const byStage = (e: ListEntry) => stages.indexOf(planStage(e, firstKeys, input.answers));
   const sections: [string, string, ListEntry[]][] = [
-    ["Each adult", "Everyone does these on their own phone or accounts", list.filter(perPerson).sort((a, b) => byStage(a) - byStage(b))],
+    [tx.eachAdult, tx.eachAdultDesc, list.filter(perPerson).sort((a, b) => byStage(a) - byStage(b))],
     ...stages.map((stage): [string, string, ListEntry[]] => [
-      STAGE_META[stage].name,
-      TODO_STAGE_BLURB[stage],
+      w.meta.stage[stage].name,
+      // Short enough to fit beside the section name without being cut off.
+      tx.stageBlurb[stage],
       sortByCategory(list.filter((e) => !perPerson(e) && planStage(e, firstKeys, input.answers) === stage)),
     ]),
   ];
@@ -471,23 +502,23 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
   for (const [name, desc, items] of sections) {
     if (items.length === 0) continue;
     sectionRow(ws, row++, name, desc, WHY);
-    row = writeWithExtras(ws, row, items, WHY, (row, e) => {
+    row = writeWithExtras(ws, row, items, WHY, w, (row, e) => {
       const r = ws.getRow(row);
       r.height = 24;
       const each = perPerson(e);
       if (each) {
-        personStatus(r.getCell(1), row, P, people, ["Done", "Partly", "To do"], input.stateOf(e) === "have");
+        personStatus(r.getCell(1), row, P, people, [status.done, status.partly, status.todo], input.stateOf(e) === "have", w);
       } else {
-        statusCell(r.getCell(1), input.stateOf(e) === "have" ? "Done" : "To do", STATUS.todos);
+        statusCell(r.getCell(1), input.stateOf(e) === "have" ? status.done : status.todo, w.status.todos);
       }
       r.getCell(2).value = e.item.name;
       bodyCell(r.getCell(2));
-      personCells(r, P, people, each ? (i) => input.slotDone(e, i) : null);
+      personCells(r, P, people, each ? (i) => input.slotDone(e, i) : null, w);
       if (each) {
-        r.getCell(WHO).value = "Each adult";
+        r.getCell(WHO).value = tx.eachAdult;
         bodyCell(r.getCell(WHO), { size: 10, color: { argb: C.soft } });
       } else {
-        whoCell(r.getCell(WHO));
+        whoCell(r.getCell(WHO), w);
       }
       linkCell(r.getCell(LINK), e.item.link?.(input.ctx));
       r.getCell(WHY).value = e.item.why;
@@ -495,8 +526,9 @@ function buildTodos(ws: Worksheet, list: ListEntry[], input: ExportInput, firstK
     });
   }
   const last = row - 1;
-  statusFormats(ws, first, last, "Done", ["To do", "Partly"], "B{f}:B{l}");
-  personFormats(ws, first, last, P, people);
+  statusFormats(ws, first, last, status.done, [status.todo, status.partly], status.skip, "B{f}:B{l}");
+  personFormats(ws, first, last, P, people, w);
+
   ws.autoFilter = { from: { row: HEADER, column: 1 }, to: { row: Math.max(last, HEADER), column: WHY } };
   ws.views = [{ state: "frozen", ySplit: HEADER, xSplit: 2, showGridLines: false }];
 }
@@ -521,11 +553,6 @@ interface Col {
   auto?: boolean;
 }
 
-// The "bags" and "notes" columns have no group label on purpose (see buildSupplies).
-const GROUP_LABEL: Record<Exclude<Group, "bags" | "notes">, string> = {
-  what: "What to get",
-  buy: "Buying",
-};
 
 // Enough precision that the sheet's rounded-up counts match the app's.
 const round2 = (n: number) => Math.round(n * 10000) / 10000;
@@ -541,46 +568,33 @@ function bagCount(ctx: Context): number {
   return ctx.kits.includes("go") && ctx.carriers > 1 ? Math.min(ctx.carriers, MAX_PEOPLE) : 0;
 }
 
-function supplyColumns(bags: number): Col[] {
+function supplyColumns(bags: number, w: Words): Col[] {
+  const sx = w.x.supplies;
+  const h = sx.headers;
   return [
-    { key: "status", label: "Status", width: 10, group: "what" },
-    { key: "item", label: "Item", width: 42, group: "what" },
-    { key: "amount", label: "Amount", width: 20, group: "what" },
-    ...Array.from({ length: bags }, (_, i): Col => ({ key: `bag${i}`, label: defaultLabel(i), width: PERSON_COL_WIDTH, group: "bags" })),
-    { key: "who", label: "Who's buying", width: 14, group: "buy", note: "Who's getting it. Pick a name from the Overview tab, or type one." },
-    { key: "cost", label: "Est. cost", width: 11, group: "buy", note: "A rough estimate for the whole amount." },
-    { key: "example", label: "Example", width: 22, group: "buy" },
-    {
-      key: "notes",
-      label: "Notes",
-      width: 44,
-      group: "notes",
-      note: "Anything worth remembering. For example, the radio is in Sam's go bag, so you have one even though it's listed under the stay-at-home bin.",
-    },
-  ];
+    { key: "status", label: h.status, width: statusWidth(w.status.supplies, 10), group: "what" },
+    { key: "item", label: h.item, width: 42, group: "what" },
+    { key: "amount", label: h.amount, width: 20, group: "what" },
+    ...Array.from({ length: bags }, (_, i): Col => ({ key: `bag${i}`, label: sx.bag(i + 1), width: PERSON_COL_WIDTH, group: "bags" })),
+    { key: "who", label: h.who, width: 14, group: "buy", note: sx.whoNote },
+    { key: "cost", label: h.cost, width: 11, group: "buy", note: sx.costNote },
+    { key: "example", label: h.example, width: 22, group: "buy" },
+    { key: "notes", label: h.notes, width: 44, group: "notes", note: sx.notesNote },
+  ].map((c) => ({ ...c, width: Math.max(c.width, c.label.length + 2) }) as Col);
 }
 
-function defaultLabel(i: number) {
-  return `Bag ${i + 1}`;
-}
-
-function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): SupplyLayout {
+function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput, w: Words): SupplyLayout {
+  const sx = w.x.supplies;
+  const { status } = w.x;
   const bags = bagCount(input.ctx);
-  const cols = supplyColumns(bags);
+  const cols = supplyColumns(bags, w);
   const idx = Object.fromEntries(cols.map((c, i) => [c.key, i + 1])) as Record<string, number>;
   const L = (key: string) => colLetter(idx[key]);
   const lastCol = colLetter(cols.length);
 
   ws.columns = cols.map((c) => ({ width: c.width, style: { font: font() } }));
 
-  title(
-    ws,
-    "Supplies",
-    bags
-      ? "Mark each person Done as you pack their go bag. For everything else, set Status to Have when you get it."
-      : "Set Status to Have when you get something. Track what expires on the Expiration dates tab.",
-    lastCol,
-  );
+  title(ws, sx.title, bags ? sx.subBags : sx.sub, lastCol);
 
   // Group labels above the header, so the parts of the table read at a glance.
   const GROUP = 4;
@@ -595,7 +609,8 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
     const b = colLetter(members[members.length - 1]);
     if (a !== b) ws.mergeCells(`${a}${GROUP}:${b}${GROUP}`);
     const g = ws.getCell(`${a}${GROUP}`);
-    g.value = GROUP_LABEL[group];
+    // The "bags" and "notes" columns have no group label on purpose.
+    g.value = sx.groups[group];
     g.font = { name: DISPLAY, size: 10, bold: true, color: { argb: C.soft } };
     g.alignment = { vertical: "bottom", indent: 1 };
   }
@@ -620,43 +635,41 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   for (const kit of kits) {
     const items = sortByCategory(list.filter((e) => e.container === kit));
     if (items.length === 0) continue;
-    sectionRow(ws, row++, CONTAINER_META[kit].name, kitBlurb(kit, input.ctx), cols.length);
+    sectionRow(ws, row++, w.meta.container[kit].name, kitBlurb(kit, input.ctx, w), cols.length);
     if (kit === "go" && bags) {
       // What goes in every bag, then what the group needs just one of.
       const groups: [string, string, ListEntry[]][] = [
         [
-          "In every bag",
-          items.some((e) => e.slots.length > 0 && e.slots.length < bags)
-            ? "Mark Done as you pack each bag. Some are adults only"
-            : "Mark each person Done as you pack their bag",
+          sx.everyBag,
+          items.some((e) => e.slots.length > 0 && e.slots.length < bags) ? sx.everyBagAdults : sx.everyBagDesc,
           items.filter((e) => e.slots.length > 0),
         ],
-        ["One for the group", "Just one of these. Decide whose bag it goes in", items.filter((e) => e.slots.length === 0)],
+        [sx.groupBag, sx.groupBagDesc, items.filter((e) => e.slots.length === 0)],
       ];
       for (const [name, desc, group] of groups) {
         if (group.length === 0) continue;
         subSectionRow(ws, row, name, desc, cols.length);
         if (group[0]?.slots.length) {
-          personHeaders(ws, row, idx.bag0, bags, input.ctx);
+          personHeaders(ws, row, idx.bag0, bags, input.ctx, w);
           for (let i = 0; i < bags; i++) {
             ws.getRow(row).getCell(idx.bag0 + i).font = { name: DISPLAY, size: 10, bold: true, color: { argb: C.ink } };
             ws.getRow(row).getCell(idx.bag0 + i).alignment = { vertical: "bottom", horizontal: "center" };
           }
         }
         row++;
-        row = writeWithExtras(ws, row, essentialsFirst(group), cols.length, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags));
+        row = writeWithExtras(ws, row, essentialsFirst(group), cols.length, w, (r, e) => writeSupplyRow(ws, r, e, input, idx, bags, w));
       }
     } else {
       // The essentials first under their own heading, then everything else.
       const essentials = items.filter(isEssential);
       const rest = items.filter((e) => !isEssential(e));
-      const write = (r: number, e: ListEntry) => writeSupplyRow(ws, r, e, input, idx, bags);
+      const write = (r: number, e: ListEntry) => writeSupplyRow(ws, r, e, input, idx, bags, w);
       if (essentials.length && rest.length) {
-        subSectionRow(ws, row++, "Essentials", "Get these first", cols.length);
+        subSectionRow(ws, row++, sx.essentials, sx.essentialsDesc, cols.length);
         for (const e of essentials) write(row++, e);
-        subSectionRow(ws, row++, "Everything else", "When you can", cols.length);
-        row = writeWithExtras(ws, row, rest, cols.length, write);
-      } else row = writeWithExtras(ws, row, items, cols.length, write);
+        subSectionRow(ws, row++, sx.rest, sx.restDesc, cols.length);
+        row = writeWithExtras(ws, row, rest, cols.length, w, write);
+      } else row = writeWithExtras(ws, row, items, cols.length, w, write);
     }
   }
   const last = row - 1;
@@ -665,21 +678,23 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   row++;
   const total = ws.getRow(row);
   total.height = 28;
-  total.getCell(idx.item).value = "Still to buy (rough estimate)";
+  total.getCell(idx.item).value = sx.total;
   total.getCell(idx.item).font = font({ bold: true });
   total.getCell(idx.item).alignment = { vertical: "middle", indent: 1 };
   const costRange = `${L("cost")}${first}:${L("cost")}${last}`;
   const statusRange = `A${first}:A${last}`;
   const totalCell = total.getCell(idx.cost);
-  totalCell.value = { formula: `SUMIF(${statusRange},"Need",${costRange})+SUMIF(${statusRange},"Partly",${costRange})` };
+  totalCell.value = {
+    formula: `SUMIF(${statusRange},"${status.need}",${costRange})+SUMIF(${statusRange},"${status.partly}",${costRange})`,
+  };
   totalCell.numFmt = MONEY_FMT;
   totalCell.font = font({ bold: true });
   totalCell.alignment = { vertical: "middle", horizontal: "right", indent: 1 };
   for (let i = 1; i <= cols.length; i++) total.getCell(i).border = { top: { style: "thin", color: { argb: C.ink } } };
 
   if (last >= first) {
-    statusFormats(ws, first, last, "Have", ["Need", "Partly"], "B{f}:B{l}");
-    if (bags) personFormats(ws, first, last, idx.bag0, bags);
+    statusFormats(ws, first, last, status.have, [status.need, status.partly], status.skip, "B{f}:B{l}");
+    if (bags) personFormats(ws, first, last, idx.bag0, bags, w);
   }
 
   ws.autoFilter = { from: { row: HEADER, column: 1 }, to: { row: Math.max(last, HEADER), column: cols.length } };
@@ -688,13 +703,24 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
   return { cost: L("cost"), bags };
 }
 
-function kitBlurb(kit: Container, ctx: Context): string {
-  if (kit === "stay") return "Amounts follow Days at home on the Overview tab";
-  if (kit === "go") return bagCount(ctx) ? `${ctx.carriers} bags, one for each person who can carry one` : "Ready to grab in minutes";
-  return "Kept in the trunk";
+function kitBlurb(kit: Container, ctx: Context, w: Words): string {
+  const b = w.x.supplies.blurb;
+  if (kit === "stay") return b.stay;
+  if (kit === "go") return bagCount(ctx) ? b.bags(ctx.carriers) : b.go;
+  return b.car;
 }
 
-function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportInput, idx: Record<string, number>, bags: number) {
+function writeSupplyRow(
+  ws: Worksheet,
+  row: number,
+  e: ListEntry,
+  input: ExportInput,
+  idx: Record<string, number>,
+  bags: number,
+  w: Words,
+) {
+  const { status } = w.x;
+  const DAYS = w.days;
   const r = ws.getRow(row);
   const cell = (key: string) => r.getCell(idx[key]);
   r.height = 24;
@@ -704,9 +730,9 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
   // Adults-only items (N95s, power banks) have fewer slots than bags. Adults come first, so
   // their slots line up with the first bag columns and the kids' columns stay empty.
   const slots = Math.min(e.slots.length, bags);
-  if (perBag) personStatus(cell("status"), row, idx.bag0, slots, ["Have", "Partly", "Need"], have);
-  else statusCell(cell("status"), have ? "Have" : "Need", STATUS.supplies);
-  if (bags) personCells(r, idx.bag0, bags, perBag ? (i) => input.slotDone(e, i) : null, slots);
+  if (perBag) personStatus(cell("status"), row, idx.bag0, slots, [status.have, status.partly, status.need], have, w);
+  else statusCell(cell("status"), have ? status.have : status.need, w.status.supplies);
+  if (bags) personCells(r, idx.bag0, bags, perBag ? (i) => input.slotDone(e, i) : null, w, slots);
 
   const item = cell("item");
   item.value = e.item.name;
@@ -727,14 +753,14 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
         : { formula: `${n}&" ${scale.unit ?? ""}"`, result: `${count} ${scale.unit ?? ""}` };
     } else {
       const suffix = scale.suffix?.(input.ctx) ?? "";
-      amount.value = { formula: `${DAYS}&" days${suffix}"`, result: `${days} days${suffix}` };
+      amount.value = { formula: `${DAYS}&" ${w.x.days}${suffix}"`, result: `${days} ${w.x.days}${suffix}` };
     }
   } else {
     amount.value = e.qty?.text ?? "";
   }
   bodyCell(amount, { size: 10, color: { argb: C.soft } });
 
-  whoCell(cell("who"));
+  whoCell(cell("who"), w);
 
   const cost = Math.round((e.cost[0] + e.cost[1]) / 2);
   const costCell = cell("cost");
@@ -768,12 +794,14 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
 // Expiration dates: things that expire or need a regular check, food first
 // ---------------------------------------------------------------------------
 
-const EXPIRING_SHEET = "Expiration dates";
 const EXPIRING_HEADS_COL = "G";
-const DUE_NOW = "Due now";
-const DUE_SOON = "Due soon";
 
-function buildExpiring(ws: Worksheet, ctx: Context) {
+/** The kits in the order the Kit dropdown lists them. */
+const EXPIRING_KITS: Container[] = ["stay", "go", "car", "home"];
+
+function buildExpiring(ws: Worksheet, ctx: Context, w: Words) {
+  const ex = w.x.expiring;
+  const { now: DUE_NOW, soon: DUE_SOON, good: GOOD } = w.x.heads;
   ws.columns = [
     { width: 38 }, // A Item
     { width: 18 }, // B Kit
@@ -785,61 +813,61 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
     { width: 58 }, // H Notes
   ].map((c) => ({ ...c, style: { font: font() } }));
 
-  title(
-    ws,
-    EXPIRING_SHEET,
-    "Add the date you packed each thing, or the date printed on it. Due by and Heads-up fill in on their own.",
-    "H",
-  );
+  title(ws, w.x.sheets.expiring, ex.sub, "H");
   ws.getRow(3).height = 8;
   const HEADER = 4;
-  headerRow(ws, HEADER, ["Item", "Kit", "Replace every", "Packed on", "Date on package", "Due by", "Heads-up", "Notes"], {
-    2: "Where it's kept.",
-    3: "A default you can change. Used with Packed on when there's no date on the package.",
-    4: "The day you bought or packed it.",
-    5: "The expiration date printed on it, if there is one. This wins over Replace every.",
-    6: "Fills in on its own: the date on the package, or Packed on plus Replace every.",
-    7: `Fills in on its own.\n${DUE_NOW}: past due.\n${DUE_SOON}: due before your next check-up (6 months).\nGood: nothing to do.`,
+  headerRow(ws, HEADER, [...ex.headers], {
+    2: ex.notes.kit,
+    3: ex.notes.every,
+    4: ex.notes.packed,
+    5: ex.notes.date,
+    6: ex.notes.due,
+    7: ex.notes.heads(DUE_NOW, DUE_SOON, GOOD),
   });
   // headerRow centers the first column; this one holds text.
   ws.getRow(HEADER).getCell(1).alignment = { vertical: "middle", horizontal: "left", indent: 1 };
   for (const col of [6, 7]) ws.getRow(HEADER).getCell(col).fill = fill(C.soft);
 
-  const kits = ["Stay-at-home bin", "Go bag", "Car kit", "Around the house"];
+  const kits = EXPIRING_KITS.map((c) => w.meta.container[c].name);
+  // Rows name their kit in English ("Go bag"); the dropdown shows the list's language.
+  const kitName = (name: string) => {
+    const c = EXPIRING_KITS.find((c) => CONTAINER_META[c].name === name || c === name);
+    return c ? w.meta.container[c].name : name;
+  };
   const writeRow = (row: number, item?: { item: string; kit: string; every?: number; note: string }) => {
     const r = ws.getRow(row);
     r.height = 24;
     r.getCell(1).value = item?.item ?? null;
     bodyCell(r.getCell(1));
     const kit = r.getCell(2);
-    kit.value = item?.kit ?? null;
+    kit.value = item ? kitName(item.kit) : null;
     bodyCell(kit, { size: 10, color: { argb: C.soft } });
     kit.dataValidation = { type: "list", allowBlank: true, formulae: [`"${kits.join(",")}"`], showErrorMessage: false };
     const every = r.getCell(3);
     if (item?.every) every.value = item.every;
-    every.numFmt = '0" months"';
+    every.numFmt = w.x.monthsFormat;
     bodyCell(every, { color: { argb: C.soft } });
     every.dataValidation = {
       type: "whole",
       operator: "between",
       allowBlank: true,
       showErrorMessage: true,
-      errorTitle: "Replace every",
-      error: "Type a number of months, like 6.",
+      errorTitle: ex.headers[2],
+      error: ex.everyError,
       formulae: [1, 120],
     };
     for (const col of [4, 5]) {
       const c = r.getCell(col);
       bodyCell(c);
-      c.numFmt = DATE_FMT;
+      c.numFmt = w.x.dateFormat;
       c.fill = fill(C.input);
       c.dataValidation = {
         type: "date",
         operator: "greaterThan",
         allowBlank: true,
         showErrorMessage: true,
-        errorTitle: "That doesn't look like a date",
-        error: "Try something like 3/1/2027.",
+        errorTitle: ex.dateErrorTitle,
+        error: ex.dateError,
         formulae: [new Date(Date.UTC(2000, 0, 1))],
       };
     }
@@ -847,12 +875,12 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
     // Works in Google Sheets and Excel. Apple Numbers mistranslates date functions on cells
     // that were empty when the file was opened, so there only "Date on package" calculates.
     due.value = { formula: `IF(E${row}<>"",E${row},IF(AND(D${row}<>"",C${row}<>""),EDATE(D${row},C${row}),""))` };
-    due.numFmt = DATE_FMT;
+    due.numFmt = w.x.dateFormat;
     bodyCell(due, { color: { argb: C.soft } });
     due.fill = fill(C.auto);
     const heads = r.getCell(7);
     heads.value = {
-      formula: `IF(F${row}="","",IF(F${row}<=TODAY(),"${DUE_NOW}",IF(F${row}<=EDATE(TODAY(),6),"${DUE_SOON}","Good")))`,
+      formula: `IF(F${row}="","",IF(F${row}<=TODAY(),"${DUE_NOW}",IF(F${row}<=EDATE(TODAY(),6),"${DUE_SOON}","${GOOD}")))`,
     };
     bodyCell(heads, { size: 10, color: { argb: C.soft } });
     heads.fill = fill(C.auto);
@@ -884,7 +912,7 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
         formulae: [`$G${first}="${DUE_SOON}"`],
         style: { font: { color: { argb: C.amber }, bold: true }, fill: { type: "pattern", pattern: "solid", bgColor: { argb: C.amberWash } } },
       },
-      { type: "expression", priority: 3, formulae: [`$G${first}="Good"`], style: { font: { color: { argb: C.green } } } },
+      { type: "expression", priority: 3, formulae: [`$G${first}="${GOOD}"`], style: { font: { color: { argb: C.green } } } },
     ],
   });
   // The rest of the row gets the same tint, so due items stand out while scrolling.
@@ -907,7 +935,7 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
   });
 
   const tip = ws.getCell(`A${last + 2}`);
-  tip.value = "Eat the oldest food first and replace it on your next shop. Need more rows? Copy a row down so the formulas come with it.";
+  tip.value = ex.tip;
   tip.font = font({ size: 10, color: { argb: C.soft } });
   tip.alignment = { indent: 1 };
 
@@ -919,30 +947,15 @@ function buildExpiring(ws: Worksheet, ctx: Context) {
 // Neighbors: a blank sheet. Neighbors' details never go into the app or a share link.
 // ---------------------------------------------------------------------------
 
-const NEIGHBORS_SHEET = "Neighbors";
-
-function buildNeighbors(ws: Worksheet) {
-  const cols = [
-    ["Name", 24],
-    ["How to reach them", 24],
-    ["Where (unit or street)", 20],
-    ["Skills or tools to share", 30],
-    ["Anything they'd like us to know", 34],
-    ["OK to share with the block?", 28],
-  ] as const;
+function buildNeighbors(ws: Worksheet, w: Words) {
+  const nx = w.x.neighbors;
+  const widths = [24, 24, 20, 30, 34, 28];
+  const cols = nx.headers.map((label, i) => [label, Math.max(widths[i], label.length + 2)] as const);
   ws.columns = cols.map(([, width]) => ({ width, style: { font: font() } }));
-  title(
-    ws,
-    "Neighbors",
-    "People nearby you've swapped numbers with. Only write down what people say they're OK sharing.",
-    "F",
-  );
+  title(ws, w.x.sheets.neighbors, nx.sub, "F");
   ws.getRow(3).height = 8;
   const HEADER = 4;
-  headerRow(ws, HEADER, cols.map(([label]) => label), {
-    4: "First aid training, a ladder, a power station, a car, a language they speak.",
-    5: "For example, if they'd like a check-in after a quake or in a heat wave.",
-  });
+  headerRow(ws, HEADER, cols.map(([label]) => label), { 4: nx.skillsNote, 5: nx.knowNote });
   ws.getRow(HEADER).getCell(1).alignment = { vertical: "middle", horizontal: "left", indent: 1 };
   for (let row = HEADER + 1; row <= HEADER + 12; row++) {
     const r = ws.getRow(row);
@@ -951,10 +964,10 @@ function buildNeighbors(ws: Worksheet) {
       bodyCell(r.getCell(c));
       r.getCell(c).fill = fill(C.input);
     }
-    r.getCell(6).dataValidation = { type: "list", allowBlank: true, formulae: ['"Yes,No"'], showErrorMessage: false };
+    r.getCell(6).dataValidation = { type: "list", allowBlank: true, formulae: [`"${w.x.yesNo.join(",")}"`], showErrorMessage: false };
   }
   const spot = ws.getCell(`A${HEADER + 14}`);
-  spot.value = "Our meeting spot:";
+  spot.value = nx.meetingSpot;
   spot.font = font({ bold: true });
   spot.alignment = { indent: 1 };
   ws.mergeCells(`B${HEADER + 14}:D${HEADER + 14}`);
@@ -966,11 +979,10 @@ function buildNeighbors(ws: Worksheet) {
 // When it happens: the first-hour card, sized to print on one page.
 // ---------------------------------------------------------------------------
 
-const CARD_SHEET = "When it happens";
-
-function buildCard(ws: Worksheet, sections: ReturnType<typeof firstHourCard>) {
+function buildCard(ws: Worksheet, sections: ReturnType<typeof firstHourCard>, w: Words) {
   ws.columns = [{ width: 5 }, { width: 92 }].map((c) => ({ ...c, style: { font: font() } }));
-  title(ws, "When it happens", "Print this and tape it inside the lid of your bin.", "B");
+  title(ws, w.x.sheets.card, w.x.card.sub, "B");
+
   let row = 4;
   for (const s of sections) {
     ws.getRow(row).height = 28;
@@ -998,8 +1010,12 @@ function buildCard(ws: Worksheet, sections: ReturnType<typeof firstHourCard>) {
 // Overview
 // ---------------------------------------------------------------------------
 
-function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) {
+function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout, w: Words) {
   const { answers, ctx } = input;
+  const o = w.x.overview;
+  const { status, sheets } = w.x;
+  const { now: DUE_NOW, soon: DUE_SOON } = w.x.heads;
+  const { todos: TODOS, supplies: SUPPLIES } = w.ref;
   ws.columns = [{ width: 3 }, { width: 30 }, { width: 20 }, { width: 62 }].map((c) => ({ ...c, style: { font: font() } }));
 
   // Title block
@@ -1007,7 +1023,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   ws.getRow(2).height = 40;
   ws.mergeCells("B2:D2");
   const t = ws.getCell("B2");
-  t.value = "Our emergency kit";
+  t.value = w.x.title;
   t.font = { name: DISPLAY, size: 24, bold: true, color: { argb: C.ink } };
   t.alignment = { vertical: "bottom" };
 
@@ -1021,37 +1037,38 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   ws.mergeCells("B4:D4");
   const link = ws.getCell("B4");
   const url = input.shareUrl.length < 2000 ? input.shareUrl : input.shareUrl.split("#")[0];
-  link.value = { text: "Open this list in Bay Ready", hyperlink: url };
+  link.value = { text: o.openLink, hyperlink: url };
   link.font = font({ size: 10, color: { argb: C.ink }, underline: true });
 
   // Where things stand
   const { cost } = layout;
-  const heads = `'${EXPIRING_SHEET}'!$${EXPIRING_HEADS_COL}:$${EXPIRING_HEADS_COL}`;
+  const heads = `${w.ref.expiring}!$${EXPIRING_HEADS_COL}:$${EXPIRING_HEADS_COL}`;
+  // "3 of 12": how many are done, of the ones not skipped.
+  const countOf = (sheet: string, done: string, open: string[]) => {
+    const n = (v: string) => `COUNTIF(${sheet}!$A:$A,"${v}")`;
+    return `${n(done)}&"${o.of}"&(${[done, ...open].map(n).join("+")})`;
+  };
   let row = 6;
-  overviewSection(ws, row++, "Where things stand");
+  overviewSection(ws, row++, o.whereThingsStand);
   const stats: [string, ExcelJSNamespace.CellValue, string, string?][] = [
+    [o.todosDone, { formula: countOf(TODOS, status.done, [status.todo, status.partly]) }, o.todosHint],
     [
-      "To-dos done",
-      {
-        formula: `COUNTIF('To-dos'!$A:$A,"Done")&" of "&(COUNTIF('To-dos'!$A:$A,"Done")+COUNTIF('To-dos'!$A:$A,"To do")+COUNTIF('To-dos'!$A:$A,"Partly"))`,
-      },
-      "Start with This weekend on the To-dos tab.",
+      o.suppliesReady,
+      { formula: countOf(SUPPLIES, status.have, [status.need, status.partly]) },
+      layout.bags ? o.suppliesHintBags : o.suppliesHint,
     ],
     [
-      "Supplies ready",
+      o.stillToBuy,
       {
-        formula: `COUNTIF(Supplies!$A:$A,"Have")&" of "&(COUNTIF(Supplies!$A:$A,"Have")+COUNTIF(Supplies!$A:$A,"Need")+COUNTIF(Supplies!$A:$A,"Partly"))`,
+        formula: [status.need, status.partly]
+          .map((v) => `SUMIF(${SUPPLIES}!$A:$A,"${v}",${SUPPLIES}!$${cost}:$${cost})`)
+          .join("+"),
       },
-      layout.bags ? "Go bag items count once every bag has one." : "Set Status to Have on the Supplies tab as you get things.",
-    ],
-    [
-      "Still to buy",
-      { formula: `SUMIF(Supplies!$A:$A,"Need",Supplies!$${cost}:$${cost})+SUMIF(Supplies!$A:$A,"Partly",Supplies!$${cost}:$${cost})` },
-      "A rough estimate. Most people spread it over a few months.",
+      o.stillToBuyHint,
       MONEY_FMT,
     ],
-    [DUE_NOW, { formula: `COUNTIF(${heads},"${DUE_NOW}")` }, `Past its date or overdue for a check. See the ${EXPIRING_SHEET} tab.`, "0"],
-    ["Due in the next 6 months", { formula: `COUNTIF(${heads},"${DUE_SOON}")` }, "Swap or check these at your next check-up.", "0"],
+    [DUE_NOW, { formula: `COUNTIF(${heads},"${DUE_NOW}")` }, o.dueNowHint(sheets.expiring), "0"],
+    [o.dueSoon, { formula: `COUNTIF(${heads},"${DUE_SOON}")` }, o.dueSoonHint, "0"],
   ];
   const statRows: number[] = [];
   for (const [label, value, hint, fmt] of stats) {
@@ -1068,21 +1085,14 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   row++;
   const check = new Date(input.today ?? new Date());
   const next = new Date(Date.UTC(check.getFullYear(), check.getMonth() + 6, check.getDate()));
-  statRow(ws, row, "Next check-up", next, "Check your kits when the clocks change in spring and fall.", DATE_FMT);
+  statRow(ws, row, o.nextCheck, next, o.nextCheckHint, w.x.dateFormat);
   inputStyle(ws.getCell(`C${row}`));
   row++;
 
   // Days at home: change it and the stay-at-home bin's water, food, and costs recalculate.
   if (row !== DAYS_ROW) throw new Error(`Overview layout moved: days at row ${row}, expected ${DAYS_ROW}`);
-  statRow(
-    ws,
-    row,
-    "Days at home",
-    ctx.stayDays,
-    "Stay-at-home bin amounts and costs follow this. Aim for at least 7.",
-    // A plain number: some apps carry a "days" format into the formulas that read it.
-    "0",
-  );
+  // A plain number: some apps carry a "days" format into the formulas that read it.
+  statRow(ws, row, o.days, ctx.stayDays, o.daysHint, "0");
   const days = ws.getCell(`C${row}`);
   inputStyle(days);
   // A plain number rather than a dropdown: some apps (Numbers) reset dropdowns to the first choice on import.
@@ -1091,15 +1101,15 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     operator: "between",
     allowBlank: false,
     showErrorMessage: true,
-    errorTitle: "Days at home",
-    error: "Type a number of days, like 7 or 14.",
+    errorTitle: o.days,
+    error: o.daysError,
     formulae: [1, 90],
   };
-  days.note = "Type any number of days, like 7 or 14.";
+  days.note = o.daysNote;
   row += 2;
 
-  // Your people: feeds the Who dropdowns (WHO_RANGE) and names the go bag columns.
-  overviewSection(ws, row++, "Your people");
+  // Your people: feeds the Who dropdowns (w.whoRange) and names the go bag columns.
+  overviewSection(ws, row++, o.people);
   if (row !== NAMES_FIRST_ROW) throw new Error(`Overview layout moved: names start at row ${row}, expected ${NAMES_FIRST_ROW}`);
   const names = peopleNames(ctx);
   for (let i = 0; i < NAMES_COUNT; i++) {
@@ -1113,15 +1123,13 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     ws.getRow(r).height = 22;
   }
   const hint = ws.getCell(`D${row}`);
-  hint.value = layout.bags
-    ? "Change these to real names. They label the person columns and fill the Who dropdowns."
-    : "Add names here. They show up in the Who dropdowns on the other tabs.";
+  hint.value = layout.bags ? o.peopleHintBags : o.peopleHint;
   hint.font = font({ size: 10, color: { argb: C.soft } });
   hint.alignment = { vertical: "middle" };
   row += NAMES_COUNT + 1;
 
   // Know your home: blanks for the things the to-dos ask people to find out.
-  overviewSection(ws, row++, "Know your home");
+  overviewSection(ws, row++, o.knowYourHome);
   for (const { label, value, fact, person } of factFields(homeFacts(ctx), ctx, input.home ?? EMPTY_HOME)) {
     ws.getRow(row).height = 24;
     const l = ws.getCell(`B${row}`);
@@ -1141,7 +1149,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   }
   row++;
 
-  overviewSection(ws, row++, "Notes and reminders");
+  overviewSection(ws, row++, o.notes);
   // One line of notes per row; anything past the last row goes in the last one.
   const NOTE_ROWS = 8;
   const lines = (input.home?.notes ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -1160,24 +1168,23 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   row++;
 
   // How to use
-  overviewSection(ws, row++, "How to use this");
+  overviewSection(ws, row++, o.howTo);
   const steps = [
-    "Pick who's doing each thing in the Who column.",
-    layout.bags
-      ? "Packing a go bag? Set that person's column to Done. For everything else, set Status to Have. Finished a task? Set it to Done."
-      : "When you get something, set Status to Have. Finished a task? Set it to Done.",
-    `On the ${EXPIRING_SHEET} tab, add the date you packed things or the date printed on them. Heads-up shows what's due.`,
-    `At each check-up, swap or check anything marked ${DUE_NOW} or ${DUE_SOON}.`,
-    `Use the ${NEIGHBORS_SHEET} tab for numbers you swap with people nearby.` +
-      (firstHourCard(ctx).length ? ` Print the ${CARD_SHEET} tab and tape it inside your bin lid.` : ""),
+    o.steps.who,
+    layout.bags ? o.steps.statusBags : o.steps.status,
+    o.steps.expiring(sheets.expiring),
+    o.steps.checkUp(DUE_NOW, DUE_SOON),
+    o.steps.neighbors(sheets.neighbors) + (firstHourCard(ctx).length ? o.steps.card(sheets.card) : ""),
   ];
   steps.forEach((s, i) => {
     ws.mergeCells(`B${row}:D${row}`);
     const c = ws.getCell(`B${row}`);
-    c.value = `${i + 1}.  ${s}`;
+    const text = `${i + 1}.  ${s}`;
+    c.value = text;
     c.font = font();
-    c.alignment = { vertical: "middle", indent: 1 };
-    ws.getRow(row).height = 22;
+    // A merged cell doesn't spill over, so long steps wrap onto a second line.
+    c.alignment = { vertical: "middle", indent: 1, wrapText: true };
+    ws.getRow(row).height = text.length > STEP_LINE ? 38 : 22;
     row++;
   });
 
@@ -1185,16 +1192,19 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
   if (county) {
     row++;
     const label = ws.getCell(`B${row}`);
-    label.value = "Emergency alerts";
+    label.value = o.alerts;
     label.font = font({ color: { argb: C.soft } });
     label.alignment = { indent: 1 };
     const c = ws.getCell(`C${row}`);
-    c.value = { text: `Sign up for ${county.alert.name}`, hyperlink: county.alert.url };
+    c.value = { text: o.signUp(county.alert.name), hyperlink: county.alert.url };
     c.font = font({ underline: true });
   }
 
   ws.views = [{ showGridLines: false }];
 }
+
+/** About how many characters fit on one line across the Overview's B:D. */
+const STEP_LINE = 105;
 
 /** Overview cells people are meant to change: a soft fill and a bold value. */
 function inputStyle(cell: ExcelJSNamespace.Cell) {
@@ -1240,7 +1250,8 @@ export async function toXlsx(Excel: ExcelJS, input: ExportInput): Promise<Uint8A
 // Browser download
 // ---------------------------------------------------------------------------
 
-export async function downloadWorkbook(input: ExportInput, filename = "emergency-kit.xlsx") {
+export async function downloadWorkbook(input: ExportInput, filename = messagesFor(input.ctx.lang).exports.xlsx.file) {
+
   const mod = await import("exceljs");
   const Excel = (mod.default ?? mod) as ExcelJS;
   const buffer = await toXlsx(Excel, input);

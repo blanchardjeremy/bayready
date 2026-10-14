@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import { useT } from "@/i18n/useLang";
 
 /**
  * A group of choices, one of which can be picked. The question is a hidden legend,
@@ -170,6 +171,7 @@ export function CheckBox({ checked, tone = "ink" }: { checked: boolean; tone?: "
 }
 
 export function Stepper({
+  id: idProp,
   label,
   hint,
   value,
@@ -177,6 +179,8 @@ export function Stepper({
   max = 20,
   onChange,
 }: {
+  /** A stable id for the input, so it doesn't change with the language. */
+  id?: string;
   label: string;
   hint?: string;
   value: number;
@@ -184,7 +188,9 @@ export function Stepper({
   max?: number;
   onChange: (n: number) => void;
 }) {
-  const id = `stepper-${label.replace(/\W+/g, "-").toLowerCase()}`;
+  const t = useT().wizard.controls;
+  const autoId = useId();
+  const id = idProp ? `stepper-${idProp}` : autoId;
   // What the +/- buttons just did, read out by screen readers.
   const [said, setSaid] = useState("");
   const step = (n: number) => {
@@ -206,7 +212,7 @@ export function Stepper({
         <button
           type="button"
           className={btn}
-          aria-label={`Remove one: ${label}`}
+          aria-label={t.removeOne(label)}
           aria-disabled={value <= min}
           onClick={() => step(value - 1)}
         >
@@ -228,7 +234,7 @@ export function Stepper({
         <button
           type="button"
           className={btn}
-          aria-label={`Add one: ${label}`}
+          aria-label={t.addOne(label)}
           aria-disabled={value >= max}
           onClick={() => step(value + 1)}
         >
@@ -244,18 +250,20 @@ export function Stepper({
 
 /** A link that opens in a new tab, and says so to screen readers. */
 export function ExternalLink({ href, children, className }: { href: string; children: ReactNode; className?: string }) {
+  const t = useT().wizard.controls;
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
       {children}
-      <span className="sr-only"> (opens in a new tab)</span>
+      <span className="sr-only"> {t.opensInNewTab}</span>
     </a>
   );
 }
 
 export function GoodToKnow({ children }: { children: ReactNode }) {
+  const t = useT().wizard.controls;
   return (
     <aside className="border-l-4 border-orange bg-paper/60 py-3 pl-4 pr-3 text-[0.98rem]">
-      <p className="font-semibold">Good to know</p>
+      <p className="font-semibold">{t.goodToKnow}</p>
       <div className="mt-1 text-ink-soft [&_a]:font-semibold [&_a]:text-ink [&_a]:underline [&_a]:underline-offset-2">
         {children}
       </div>

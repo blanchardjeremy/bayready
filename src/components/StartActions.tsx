@@ -6,9 +6,11 @@ import { ANSWERS_KEY, EMPTY_ANSWERS, STARTER_ANSWERS, normalizeAnswers } from "@
 import { useStored } from "@/lib/storage";
 import type { Answers } from "@/lib/types";
 import { buttonClass } from "./controls";
+import { useT } from "@/i18n/useLang";
 
 export function StartActions() {
   const router = useRouter();
+  const t = useT().pages.home.actions;
   const [answers, setAnswers] = useStored<Answers>(ANSWERS_KEY, EMPTY_ANSWERS, normalizeAnswers);
   const started = answers && answers.build !== null;
 
@@ -17,22 +19,22 @@ export function StartActions() {
       {started ? (
         <>
           <Link href="/list" className={buttonClass.primary}>
-            Open my list
+            {t.openList}
           </Link>
           <Link href="/build" className={buttonClass.secondary}>
-            Change my answers
+            {t.changeAnswers}
           </Link>
           <Link
             href="/list#first-hour"
             className="inline-flex min-h-11 basis-full items-center text-[0.95rem] font-semibold text-ink underline underline-offset-2"
           >
-            Happening now? See what to do first
+            {t.happeningNow}
           </Link>
         </>
       ) : (
         <>
           <Link href="/build" className={buttonClass.primary}>
-            Start
+            {t.start}
           </Link>
           <button
             type="button"
@@ -42,7 +44,7 @@ export function StartActions() {
               router.push("/list");
             }}
           >
-            Skip the questions and show a starter list
+            {t.starter}
           </button>
         </>
       )}

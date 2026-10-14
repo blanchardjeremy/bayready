@@ -5,6 +5,7 @@ import { ZIP_PATTERN } from "@/lib/answers";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { lookupZip } from "@/data/zips";
 import type { CountyId } from "@/lib/types";
+import { useT } from "@/i18n/useLang";
 
 /**
  * Optional ZIP code on the county step. A ZIP code we know picks the county for
@@ -21,6 +22,7 @@ export function ZipField({
   onChange: (zip: string | null) => void;
 }) {
   const id = useId();
+  const t = useT().wizard;
   const [draft, setDraft] = useState<string | null>(null);
   const value = draft ?? zip ?? "";
   const done = ZIP_PATTERN.test(value);
@@ -29,10 +31,10 @@ export function ZipField({
   return (
     <div className="rounded-lg bg-paper px-4 py-4">
       <label htmlFor={`${id}-zip`} className="block font-semibold">
-        Your ZIP code <span className="font-normal text-ink-soft">(optional)</span>
+        {t.zip.label} <span className="font-normal text-ink-soft">{t.optional}</span>
       </label>
       <p id={`${id}-why`} className="mt-0.5 text-[0.95rem] text-ink-soft">
-        It helps us tell who supplies your water and whether you&apos;re near a tsunami zone. It stays on this device.
+        {t.zip.why}
       </p>
       <input
         id={`${id}-zip`}
@@ -56,9 +58,9 @@ export function ZipField({
       />
       <p id={`${id}-status`} aria-live="polite" className="text-[0.95rem] [&:not(:empty)]:mt-2">
         {known
-          ? `That's in ${COUNTY_BY_ID[known.county]?.name} County${known.county === county ? ", so we've picked it below" : ""}.`
+          ? t.zip.inCounty(COUNTY_BY_ID[known.county]?.name ?? "", known.county === county)
           : done
-            ? "We don't have that ZIP code in our Bay Area list. That's OK. Just pick your county below."
+            ? t.zip.unknown
             : ""}
       </p>
     </div>

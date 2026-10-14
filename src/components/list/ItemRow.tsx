@@ -3,9 +3,10 @@
 import { useId, type ReactNode } from "react";
 import { formatCost } from "@/lib/buildList";
 import type { Context, ItemState, ListEntry } from "@/lib/types";
-import { HAZARD_BY_ID } from "@/data/hazards";
-import { CONTAINER_META } from "@/data/meta";
+import { hazardFor } from "@/data/hazards";
+import { metaFor } from "@/data/meta";
 import { CheckBox } from "@/components/controls";
+import { messagesFor } from "@/i18n/messages";
 
 export function ItemRow({
   entry,
@@ -40,6 +41,8 @@ export function ItemRow({
   note?: ReactNode;
 }) {
   const id = useId();
+  // The list is built in ctx's language, so the row's own words follow it too.
+  const t = messagesFor(ctx.lang).list.row;
   const { item, qty, cost, hazardTags } = entry;
   const have = state === "have";
   const skipped = state === "skip";
@@ -60,7 +63,7 @@ export function ItemRow({
       />
       <label htmlFor={id} className="mt-0.5 cursor-pointer rounded peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">
         <CheckBox checked={have} tone="eucalyptus" />
-        <span className="sr-only">{isTask ? "Done" : "Have it"}</span>
+        <span className="sr-only">{isTask ? t.done : t.haveIt}</span>
       </label>
       <div className="min-w-0 flex-1">
         <label
@@ -71,7 +74,7 @@ export function ItemRow({
         </label>
         {essential && !skipped && (
           <span className="ml-2 inline-block rounded bg-orange-wash px-1.5 align-[0.1em] text-[0.75rem] font-semibold leading-5 text-orange">
-            Essential
+            {t.essential}
           </span>
         )}
         {note && !skipped && <p className="mt-1 max-w-[62ch] text-[0.88rem] text-ink">{note}</p>}
@@ -79,8 +82,9 @@ export function ItemRow({
           // One quiet line of context: which kit, which hazards, and a link if there is one.
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.82rem] text-ink-soft">
             {[
-              showContainer && CONTAINER_META[entry.container].name,
-              hazardTags.length > 0 && `For ${hazardTags.map((h) => HAZARD_BY_ID[h].short.toLowerCase()).join(", ")}`,
+              showContainer && metaFor(ctx.lang).container[entry.container].name,
+              hazardTags.length > 0 &&
+                t.forHazards(hazardTags.map((h) => hazardFor(h, ctx.lang).short.toLowerCase()).join(", ")),
             ]
               .filter(Boolean)
               .join(" · ")}
@@ -93,7 +97,7 @@ export function ItemRow({
         )}
         {!have && qty?.buy && <p className="mt-1 max-w-[62ch] text-[0.9rem] leading-snug text-ink-soft">{qty.buy}</p>}
         {!have && !skipped && entry.slots.length > 0 && slotDone && (
-          <div role="group" aria-label={`Who's done: ${item.name}`} className="group/names mt-2 flex flex-wrap items-center gap-1.5">
+          <div role="group" aria-label={t.whoDone(item.name)} className="group/names mt-2 flex flex-wrap items-center gap-1.5">
             {entry.slots.map((name, i) => {
               const done = slotDone(i);
               return (
@@ -124,7 +128,7 @@ export function ItemRow({
                 onClick={onEditNames}
                 className="no-print inline-flex min-h-8 items-center px-2 text-[0.85rem] text-ink-soft underline underline-offset-2 opacity-0 transition-opacity hover:text-ink group-hover/names:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
               >
-                Edit names
+                {t.editNames}
               </button>
             )}
           </div>
@@ -137,14 +141,14 @@ export function ItemRow({
                 <circle cx="8" cy="8" r="6.25" />
                 <path d="M8 7.25v4M8 4.75v.5" strokeLinecap="round" />
               </svg>
-              <span className="underline-offset-2 group-open/why:underline">Why this</span>
+              <span className="underline-offset-2 group-open/why:underline">{t.why}</span>
             </summary>
             <div className="text-[0.93rem]">
               <p className="mt-1 max-w-[62ch]">{item.why}</p>
               {item.tip && <p className="mt-1 max-w-[62ch] text-ink-soft">{item.tip}</p>}
               {item.examples && (
                 <p className="mt-1 max-w-[62ch] text-ink-soft">
-                  Examples:{" "}
+                  {t.examples}{" "}
                   {item.examples.map((ex, i) => (
                     <span key={ex.url}>
                       {i > 0 && ", "}
@@ -153,7 +157,7 @@ export function ItemRow({
                       </a>
                     </span>
                   ))}
-                  . These are examples, not endorsements.
+                  {t.notEndorsements}
                 </p>
               )}
             </div>
@@ -177,16 +181,16 @@ export function ItemRow({
             type="button"
             onClick={() => onChange("need")}
             className="no-print -my-2.5 min-h-11 shrink-0 rounded px-2 text-[0.88rem] text-ink-soft underline underline-offset-2 hover:text-ink"
-            aria-label={`Bring back ${item.name}`}
+            aria-label={t.bringBackLabel(item.name)}
           >
-            Bring back
+            {t.bringBack}
           </button>
         ) : (
           <button
             type="button"
             onClick={() => onChange("skip")}
-            title="Skip"
-            aria-label={`Skip ${item.name}`}
+            title={t.skip}
+            aria-label={t.skipLabel(item.name)}
             className="no-print -my-2 -mr-2 grid size-10 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper hover:text-ink"
           >
             <svg viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">

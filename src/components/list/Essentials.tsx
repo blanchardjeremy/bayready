@@ -3,10 +3,11 @@
 import type { ComponentProps } from "react";
 import { CONTAINER_ORDER, formatCost, sumCost } from "@/lib/buildList";
 import type { Budget, ItemState, ListEntry } from "@/lib/types";
-import { CONTAINER_META } from "@/data/meta";
+import { metaFor } from "@/data/meta";
+import { useLang, useT } from "@/i18n/useLang";
 import { ItemRow } from "./ItemRow";
 import { Reveal } from "./Reveal";
-import { FREE_WAYS, budgetDollars, budgetPlan, freeFirst } from "./essentialsPlan";
+import { budgetDollars, budgetPlan, freeFirst, freeWays } from "./essentialsPlan";
 
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
 
@@ -28,6 +29,7 @@ export function Essentials({
   row: RowProps;
   budget: Budget | null;
 }) {
+  const t = useT().list.essentials;
   const active = entries.filter((e) => st(e) !== "skip");
   if (active.length === 0) return null;
   // Every row here is an essential, so the tag the full list uses would only repeat itself.
@@ -41,25 +43,20 @@ export function Essentials({
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
           <h2 id="essentials-title" className="text-2xl font-extrabold tracking-tight">
-            {allDone ? "You have the essentials" : "The essentials"}
+            {allDone ? t.doneTitle : t.title}
           </h2>
-          {!allDone && (
-            <p className="mt-1 max-w-[64ch] text-ink-soft">
-              Get these first and keep them together. They matter most in the first days after a quake, when stores
-              are closed and the water may be off.
-            </p>
-          )}
+          {!allDone && <p className="mt-1 max-w-[64ch] text-ink-soft">{t.intro}</p>}
         </div>
         <p className="font-semibold tabular-nums">
-          {done} of {active.length}
-          <span className="font-normal text-ink-soft"> {allDone ? "done" : "so far"}</span>
+          {t.count(done, active.length)}
+          <span className="font-normal text-ink-soft"> {allDone ? t.done : t.soFar}</span>
         </p>
       </div>
       <div
         className="mt-3 h-2 overflow-hidden rounded-full bg-line"
         role="progressbar"
-        aria-label="Essentials"
-        aria-valuetext={`${done} of ${active.length}`}
+        aria-label={t.progressLabel}
+        aria-valuetext={t.count(done, active.length)}
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -69,12 +66,9 @@ export function Essentials({
 
       {allDone ? (
         <div className="mt-5 rounded-xl border-2 border-eucalyptus bg-eucalyptus-wash p-5">
-          <p className="text-lg font-extrabold">Nice work. That&apos;s the most important part done.</p>
-          <p className="mt-1 max-w-[64ch]">
-            Keep it all together somewhere you can reach after a quake, like a closet near the door, not the back of
-            the garage. Then work through the rest of your list a bit at a time.
-          </p>
-          <Reveal quiet className="mt-2" label="See the essentials">
+          <p className="text-lg font-extrabold">{t.doneHeadline}</p>
+          <p className="mt-1 max-w-[64ch]">{t.doneBody}</p>
+          <Reveal quiet className="mt-2" label={t.seeThem}>
             <ByKit entries={active} row={plainRow} />
           </Reveal>
         </div>
@@ -86,6 +80,9 @@ export function Essentials({
 }
 
 function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: ListEntry) => ItemState; row: RowProps; budget: Budget | null }) {
+  const lang = useLang();
+  const t = useT().list.essentials;
+  const ways = freeWays(lang);
   const need = entries.filter((e) => st(e) === "need");
   const dollars = budgetDollars(budget);
 
@@ -96,9 +93,7 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
       <li key="budget-line" className="py-3">
         <p className="flex items-center gap-3 text-[0.95rem] font-semibold text-orange">
           <span aria-hidden="true" className="h-0.5 w-6 shrink-0 bg-orange" />
-          {fits === 0
-            ? `Each of these is more than about $${dollars}. Start with what you have and add these as you can.`
-            : `Your $${dollars} runs out about here. That's around $${Math.round(spent)} so far. Some below have free ways to start.`}
+          {fits === 0 ? t.overBudget(dollars) : t.runsOut(dollars, Math.round(spent))}
           <span aria-hidden="true" className="h-0.5 min-w-6 flex-1 bg-orange" />
         </p>
       </li>
@@ -106,24 +101,17 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
     return (
       <>
         <p className="mt-4 max-w-[64ch]">
-          You said about ${dollars} to start, so here they are in the order we&apos;d get them.{" "}
-          {rest.length === 0
-            ? `About $${dollars} should cover all of these.`
-            : `About $${dollars} covers the ones above the line.`}
+          {t.budgetIntro(dollars)} {rest.length === 0 ? t.coversAll(dollars) : t.coversAbove(dollars)}
         </p>
         <ul className="mt-2 max-w-3xl divide-y divide-line">
           {order.flatMap((e, i) => {
             // Below the line, point out a free way to start, like filling jugs from the tap.
-            const free = i >= fits && st(e) === "need" ? FREE_WAYS[e.item.id] : undefined;
+            const free = i >= fits && st(e) === "need" ? ways[e.item.id] : undefined;
             const item = <ItemRow key={e.key} {...(free ? { ...row(e), note: free } : row(e))} showContainer />;
             return i === fits && rest.length > 0 ? [line, item] : [item];
           })}
         </ul>
-        {rest.length > 0 && (
-          <p className="mt-2 text-[0.95rem] text-ink-soft">
-            The rest of the essentials: roughly {formatCost(sumCost(rest))} more, when you can.
-          </p>
-        )}
+        {rest.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.rest(formatCost(sumCost(rest)))}</p>}
       </>
     );
   }
@@ -131,15 +119,12 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
   if (budget === "0") {
     return (
       <>
-        <p className="mt-4 max-w-[64ch]">
-          You said you&apos;d rather not spend anything yet. That&apos;s fine. Start with what&apos;s free or already
-          in your home. Free ways to cover some of these are marked.
-        </p>
+        <p className="mt-4 max-w-[64ch]">{t.zeroIntro}</p>
         <ByKit
           entries={freeFirst(entries, st)}
           row={(e) => {
             const props = row(e);
-            const free = st(e) === "need" ? FREE_WAYS[e.item.id] : undefined;
+            const free = st(e) === "need" ? ways[e.item.id] : undefined;
             return free ? { ...props, note: free } : props;
           }}
         />
@@ -150,21 +135,20 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
   return (
     <>
       <ByKit entries={entries} row={row} />
-      {need.length > 0 && (
-        <p className="mt-2 text-[0.95rem] text-ink-soft">Still to get: roughly {formatCost(sumCost(need))}.</p>
-      )}
+      {need.length > 0 && <p className="mt-2 text-[0.95rem] text-ink-soft">{t.stillToGet(formatCost(sumCost(need)))}</p>}
     </>
   );
 }
 
 function ByKit({ entries, row }: { entries: ListEntry[]; row: RowProps }) {
+  const meta = metaFor(useLang());
   const kits = CONTAINER_ORDER.filter((c) => entries.some((e) => e.container === c));
   return (
     <div className="mt-4 grid gap-x-12 gap-y-6 lg:grid-cols-2">
       {kits.map((c) => (
         <div key={c}>
           {kits.length > 1 && (
-            <h3 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{CONTAINER_META[c].name}</h3>
+            <h3 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{meta.container[c].name}</h3>
           )}
           <ul className="divide-y divide-line">
             {entries

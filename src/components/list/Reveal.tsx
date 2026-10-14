@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useT } from "@/i18n/useLang";
 
 /**
  * A section people can open to see more. It's built on <details>, so it works
@@ -22,6 +25,7 @@ export function Reveal({
   quiet?: boolean;
   className?: string;
 }) {
+  const t = useT().list.reveal;
   const chevron = (
     <span
       aria-hidden="true"
@@ -51,8 +55,8 @@ export function Reveal({
         </span>
         {!quiet && (
           <span className="shrink-0 text-[0.9rem] font-semibold underline underline-offset-2">
-            <span className="group-open:hidden">Show</span>
-            <span className="hidden group-open:inline">Hide</span>
+            <span className="group-open:hidden">{t.show}</span>
+            <span className="hidden group-open:inline">{t.hide}</span>
           </span>
         )}
       </summary>

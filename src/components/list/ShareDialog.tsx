@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/controls";
+import { useT } from "@/i18n/useLang";
 
 /**
  * Opens after "Copy share link" when there's something worth knowing about
@@ -27,6 +28,7 @@ export function ShareDialog({
   leftOut: boolean;
   onClose: () => void;
 }) {
+  const t = useT().list.shareDialog;
   const ref = useRef<HTMLDialogElement>(null);
   const [which, setWhich] = useState<"full" | "private">("full");
   const [copiedNow, setCopiedNow] = useState(copied);
@@ -52,37 +54,28 @@ export function ShareDialog({
     >
       <form method="dialog" className="p-5 sm:p-6">
         <h2 id="share-title" className="text-2xl font-extrabold tracking-tight" aria-live="polite">
-          {!copiedNow ? "Copy this link" : which === "private" ? "Copied, without names or health info" : "Link copied"}
+          {!copiedNow ? t.copyThis : which === "private" ? t.copiedPrivate : t.copied}
         </h2>
         <p className="mt-2 text-ink-soft">
-          {!copiedNow && "Your browser didn't let us copy it, so copy it from here. "}
-          {which === "private"
-            ? "Anyone with this link can see the list and what's checked off. Names and health needs aren't in it."
-            : personal
-              ? "Anyone with the link can see this list and what's checked off, including the names and health needs you entered."
-              : "Anyone with the link can see this list and what's checked off."}
+          {!copiedNow && `${t.failedNote} `}
+          {which === "private" ? t.privateBody : personal ? t.personalBody : t.plainBody}
         </p>
         <input
           readOnly
           value={shown}
-          aria-label="Share link"
+          aria-label={t.inputLabel}
           onFocus={(e) => e.currentTarget.select()}
           className="mt-3 min-h-11 w-full rounded-md border border-field-line bg-paper px-3 text-[0.9rem] text-ink-soft"
         />
-        {leftOut && (
-          <p className="mt-3 text-[0.95rem] text-ink-soft">
-            Know your home info and notes stay on this device. To share them, print them or download the PDF or
-            spreadsheet.
-          </p>
-        )}
+        {leftOut && <p className="mt-3 text-[0.95rem] text-ink-soft">{t.leftOut}</p>}
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
           {personal && which === "full" && (
             <Button type="button" variant="secondary" onClick={copyPrivate}>
-              Copy without names or health info
+              {t.copyPrivate}
             </Button>
           )}
           <Button type="submit" autoFocus>
-            Done
+            {t.done}
           </Button>
         </div>
       </form>

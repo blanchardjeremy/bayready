@@ -8,13 +8,19 @@ import { buildPdf, buildRefreshPdf, type PdfFonts, type PdfOptions } from "./exp
 import { ITEMS } from "@/data/items";
 import type { ItemState } from "./types";
 import type { HomeInfo } from "@/data/homeFacts";
+import type { Lang } from "@/i18n/lang";
 
 const FONTS: PdfFonts = {
   regular: readFileSync(join(process.cwd(), "public/fonts/NotoSans-Regular.ttf")),
   bold: readFileSync(join(process.cwd(), "public/fonts/NotoSans-Bold.ttf")),
 };
 
-function makeInput(home?: HomeInfo, names = { adults: ["Sam", "José"], kids: ["Bea 🐝"] }, household = { adults: 2, kids: 1, dogs: 1 }) {
+function makeInput(
+  home?: HomeInfo,
+  names = { adults: ["Sam", "José"], kids: ["Bea 🐝"] },
+  household = { adults: 2, kids: 1, dogs: 1 },
+  lang: Lang = "en",
+) {
   const answers = normalizeAnswers({
     build: "both",
     county: "alameda",
@@ -23,7 +29,7 @@ function makeInput(home?: HomeInfo, names = { adults: ["Sam", "José"], kids: ["
     names,
     have: ["flashlight"],
   });
-  const ctx = deriveContext(answers);
+  const ctx = deriveContext(answers, lang);
   const entries = buildList(ctx, ITEMS).filter((e) => e.level === "basics");
   const states: Record<string, ItemState> = { "home:shutoffs": "have", "go:water-go@1": "have", "stay:radio": "skip" };
   return {
@@ -220,5 +226,73 @@ describe("PDF export", () => {
     expect(text).not.toContain("[Example]");
     expect(text).not.toContain("Add your food here");
     expect(doc.internal.pageSize.getWidth()).toBeGreaterThan(doc.internal.pageSize.getHeight());
+  });
+});
+
+describe("PDF export in Spanish", () => {
+  const es = (home?: HomeInfo) => makeInput(home, undefined, undefined, "es");
+
+  it("writes its own words, title, and language in Spanish", () => {
+    const doc = render(es(HOME), { fonts: FONTS }, "-es");
+    const raw = doc.output();
+    expect(raw).toContain("/Lang (es)");
+    const text = pdfText(doc);
+    const at = (s: string) => {
+      const i = text.indexOf(s);
+      expect(i, s).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(at("Mi lista de emergencia")).toBeLessThan(at("Conozca su casa"));
+    expect(at("Conozca su casa")).toBeLessThan(at("Cuando ocurra"));
+    expect(at("Cuando ocurra")).toBeLessThan(at("Tarjetas para la cartera"));
+    expect(at("Tarjetas para la cartera")).toBeLessThan(at("Caja para quedarse en casa"));
+    expect(at("Caja para quedarse en casa")).toBeLessThan(at("Manténgalo al día"));
+    expect(text).toContain("Hecha el 11 de octubre de 2026.");
+    expect(text).toContain("Ver esta lista en línea");
+    expect(text).toContain("Tenga una copia en el refrigerador, dentro de la tapa de su caja y en cada mochila de emergencia.");
+    expect(text.split("\n").filter((l) => l === "SI NOS SEPARAMOS")).toHaveLength(3);
+    expect(text).toContain("NUESTROS CELULARES");
+    expect(text).toContain("Mande mensajes de texto, no llame.");
+    expect(text).toContain("Alertas: AC Alert");
+    expect(text).toContain("En cada mochila");
+    expect(text).toContain("Uno para todo el grupo");
+    expect(text).toContain("ESENCIAL");
+    expect(text).toContain("Página 1 de");
+    expect(text).toContain("Hecho con Bay Ready");
+    expect(text).not.toContain(MISSING);
+    for (const en of ["Wallet cards", "IF WE GET SEPARATED", "Page 1 of", "In every bag", "Made with Bay Ready", "Keep it fresh"]) {
+      expect(text, en).not.toContain(en);
+    }
+    // The fallback name, for a box with no name.
+    expect(pdfText(render(makeInput(HOME, { adults: ["", ""], kids: [""] }, undefined, "es")))).not.toContain("Person ");
+  });
+
+  it("makes a Spanish short version", () => {
+    const doc = render(es(HOME), { fonts: FONTS, short: true }, "-es-short");
+    expect(doc.output()).toContain("/Title (Mi lista de emergencia: versi");
+    const text = pdfText(doc);
+    for (const s of ["BAY READY  |  VERSIÓN CORTA", "Empiece aquí", "Lo esencial", "Su lista completa tiene todo lo demás"]) {
+      expect(text).toContain(s);
+    }
+    expect(text).not.toContain("ESENCIAL");
+  });
+
+  it("prints the Spanish refresh log with its own column words", () => {
+    const doc = buildRefreshPdf(jsPDF, es(), { fonts: FONTS });
+    if (process.env.PDF_OUT) writeFileSync(process.env.PDF_OUT.replace(/\.pdf$/, "-es-refresh.pdf"), Buffer.from(doc.output("arraybuffer")));
+    const text = pdfText(doc);
+    for (const s of ["Manténgalo al día", "ARTÍCULO", "CAMBIAR", "CADA REVISIÓN", "Fecha", "Próxima", "Cada 24 meses", "Según la"]) {
+      expect(text).toContain(s);
+    }
+    expect(text).not.toMatch(/\[(Example|Ejemplo)\]/);
+  });
+
+  it("keeps Spanish accents in the Helvetica fallback", () => {
+    const raw = render(es(HOME), {}).output();
+    expect(raw).not.toContain("/FontFile2");
+    expect(raw).toContain("(Conozca su casa) Tj");
+    // Latin-1 letters are in Helvetica's set, so nothing is dropped.
+    expect(raw).toMatch(/\(P.gina 1 de \d+\) Tj/);
+    expect(raw).toMatch(/\(Mant.ngalo al d.a\) Tj/);
   });
 });

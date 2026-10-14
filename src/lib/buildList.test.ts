@@ -115,6 +115,16 @@ describe("buildList", () => {
     expect(list(two).find((e) => e.key === "home:training")?.slots).toEqual([]);
   });
 
+  it("puts meeting the neighbors in Basics, after the first weekend", () => {
+    const block = list(answers()).find((e) => e.key === "home:block")!;
+    expect(block.level).toBe("basics");
+    expect(stageOf(block, answers())).toBe("month");
+    expect(block.item.why).toMatch(/walk the block/);
+    const link = (county: Answers["county"]) => block.item.link!(deriveContext(answers({ county })))?.url;
+    expect(link("san-francisco")).toContain("map-your-neighborhood");
+    for (const county of ["marin", "alameda", null] as const) expect(link(county)).toContain("listoscalifornia.org/blockparty");
+  });
+
   it("links CERT and neighborhood programs for the county, with fallbacks", () => {
     const sf = list(answers({ level: "advanced", county: "san-francisco" }));
     expect(sf.find((e) => e.key === "home:training")!.item.link!(deriveContext(answers({ county: "san-francisco" })))?.url).toContain("sf-fire.org/nert");

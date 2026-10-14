@@ -539,7 +539,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: ["earthquake"],
     why: "After a big quake, a sign in the window tells your neighbors who needs help first, so whoever walks the block can skip homes that are fine.",
-    tip: "Keep it by the front door with some tape. Put up HELP even if you can't get to the door.",
+    tip: "Keep it by the front door with some tape, and tell the neighbors you've met to look for it. Put up HELP even if you can't get to the door.",
     // A full URL in the browser, so the link also works from the spreadsheet.
     link: () => ({ label: "Print the sign", url: typeof window === "undefined" ? sitePath("/sign") : siteUrl("/sign") }),
     stage: "month",
@@ -679,18 +679,19 @@ export const ITEMS: Item[] = [
   },
   {
     id: "block",
-    name: "Get your block or building together",
+    name: "Meet three neighbors and agree who walks the block",
     category: "community",
     containers: ["home"],
-    level: "advanced",
+    level: "basics",
     hazards: "all",
-    why: "One short meeting with neighbors: swap numbers, pick a spot to meet, and note who has useful skills or tools, like first aid, a ladder, or a power station.",
-    tip: "Snacks help. Let people share only what they want to, and let them say if they'd like a check-in. The spreadsheet has a Neighbors tab for notes.",
+    why: "Meet three neighbors on your floor or block, and agree one of you will walk the block after a quake to see who needs help. It takes one knock on a few doors.",
+    tip: "Show them the OK / HELP sign so everyone knows to look for it. When you're ready, a short block meeting goes further: pick a spot to meet, and note who has useful skills or tools, like first aid or a ladder. Let people share only what they want to. The spreadsheet has a Neighbors tab for notes.",
+    // San Francisco has Map Your Neighborhood. Everyone else gets the Listos block party kit.
     link: (ctx) => {
       const c = ctx.answers.county ? COUNTY_BY_ID[ctx.answers.county] : undefined;
       return c?.block ?? { label: "Listos California block party kit", url: "https://www.listoscalifornia.org/blockparty/" };
     },
-    stage: "later",
+    stage: "month",
     shop: "free",
   },
   {

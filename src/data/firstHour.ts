@@ -42,7 +42,7 @@ export function firstHourCard(ctx: Context): CardSection[] {
           : "If the building looks badly damaged, grab shoes, your phone, medicine, and ID, and leave. Leave a note saying where you went.",
         "Text, don't call. Send one \"We're OK\" to your out-of-area contact, then save your battery.",
         "Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.",
-        "Put your OK or HELP sign in the window, and check in with your neighbors.",
+        "Put your OK or HELP sign in the window. Once your home is safe, check on your neighbors, and walk the block if that's what you agreed.",
         "Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.",
       ],
     });

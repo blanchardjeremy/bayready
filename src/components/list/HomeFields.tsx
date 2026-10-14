@@ -27,7 +27,7 @@ export function FactInput({ field, onChange }: { field: FactField; onChange: (va
         value={field.value}
         aria-describedby={hint ? `${id}-hint` : undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 min-h-10 w-full rounded-md border border-line bg-paper px-3 text-[0.95rem] text-ink focus:border-ink focus:outline-none"
+        className="mt-1 min-h-10 w-full rounded-md border border-field-line bg-paper px-3 text-[0.95rem] text-ink focus:border-ink"
       />
       {hint && (
         <p id={`${id}-hint`} className="mt-1 text-[0.8rem] leading-snug text-ink-soft">
@@ -147,7 +147,7 @@ export function KnowYourHome({
             value={home.notes}
             onChange={(e) => onNotes(e.target.value)}
             placeholder="Anything else worth remembering, like the radio is in Sam's go bag, or which neighbor has a generator."
-            className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[0.95rem] text-ink placeholder:text-ink-soft/60 focus:border-ink focus:outline-none"
+            className="mt-1 w-full rounded-md border border-field-line bg-paper px-3 py-2 text-[0.95rem] text-ink placeholder:text-ink-soft focus:border-ink"
           />
         </div>
       </div>

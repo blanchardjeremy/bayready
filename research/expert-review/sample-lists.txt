@@ -1,0 +1,846 @@
+
+
+==================================================
+PERSONA A. Solo renter, SF high-rise apartment, Basics, 'not sure' which kit, no special needs, budget $50, starting 'this weekend'
+Summary line: A stay-at-home bin for 1 adult. Ready for earthquake, power outage, wildfire smoke. Basics list.
+Items on list: 45 (+27 more shown as "level up to Advanced")
+
+--- "START HERE THIS WEEKEND" (free steps) ---
+  [ ] Sign up for your county's emergency alerts
+  [ ] Make a household plan
+  [ ] Keep shoes, a flashlight, and a whistle by every bed
+  [ ] Practice Drop, Cover, and Hold On
+  [ ] Swap numbers with a neighbor
+  [ ] Photograph your IDs, insurance, and prescriptions
+
+--- AROUND THE HOUSE --- (One-time tasks and plans. Most are free and take under an hour. ) Still to get: $45–150
+  Make a plan
+    [ ] Make a household plan {level:basics, plan:weekend}
+        why: Pick an out-of-area contact everyone can text, plus two meeting spots: one right outside, and one outside your neighborhood in case you can't get home. | tip: Decide who picks up kids and pets if you can't get home. After a big quake, local calls often fail but texts and long-distance calls can get through. Write the plan on paper, put a copy in every bag, and go over it once a year.
+    [ ] Practice Drop, Cover, and Hold On {level:basics, plan:weekend, for: earthquake}
+        why: Drop to your hands and knees, cover your head and neck under a sturdy table, and hold on until the shaking stops. Don't run outside. | tip: In bed? Stay there and cover your head with a pillow. In a wheelchair? Lock the wheels and cover your head and neck. Practice once with everyone at home. The Great ShakeOut drill is the third Thursday in October, a good day to invite the neighbors.
+    [ ] Learn your building's emergency plan and stairwells {level:basics, plan:month}
+        why: Elevators stop after quakes and in outages. Keep your go bag by the door and know where you'd meet outside. | tip: If anyone can't do stairs, work out a plan with them and a few neighbors ahead of time.
+  Neighbors and community
+    [ ] Swap numbers with a neighbor {level:basics, plan:weekend}
+        why: After a big disaster, most help comes from people nearby. Swap numbers and agree to text each other after a quake, fire, or long outage. | tip: Ask what would help them, and say what would help you, like a spare key, a pet, or a ride. If someone nearby lives alone, ask if they'd like a check-in.
+    [ ] Print an OK / HELP sign for your window {level:basics, plan:month, for: earthquake}
+        why: After a big quake, a sign in the window tells neighbors and crews who needs help first, so they can skip homes that are fine. | tip: Keep it by the front door with some tape. Put up HELP even if you can't get to the door.
+  Sign-ups and paperwork
+    [ ] Sign up for your county's emergency alerts {level:basics, plan:weekend}
+        why: Free texts and calls about evacuations, fires, and other emergencies near you. Most are opt-in, and few people sign up. | tip: Sign up with your home address, plus work or school if they're in a different county.
+    [ ] Photograph your IDs, insurance, and prescriptions {level:basics, plan:weekend}
+        why: If you lose your wallet or have to leave fast, a secure copy makes it much easier to get help, refill medicine, and file claims. | tip: Save them somewhere password-protected that you can reach from any device.
+    [ ] Sign up for PG&E outage alerts for your address {level:basics, plan:month, for: outage}
+        why: PG&E warns people before planned power shutoffs, usually a day or two ahead. You don't need a PG&E account, so renters can sign up too. | tip: You can add more than one address, like work, school, or a parent's place.
+    [ ] Review your insurance {level:basics, plan:month, for: earthquake}
+        why: Standard home and renters policies don't cover earthquake or flood damage. California Earthquake Authority renters policies start around $35 a year and help pay for a place to stay. | tip: Renters: your landlord's policy doesn't cover your things. Check if you're in a flood zone at msc.fema.gov. Flood insurance usually takes 30 days to start, so buy it before the rainy season.
+    [ ] Set up your phone for emergencies {level:basics, plan:month}
+        why: Turn on emergency alerts in Settings, add Emergency SOS contacts and a Medical ID, download an offline map of the Bay Area, and install MyShake for earthquake warnings. | tip: Each takes a couple of minutes. Android phones have quake alerts built in, but MyShake is a good backup. Newer iPhones and some Android phones can text 911 by satellite with no signal. Try the demo in Settings.
+  Make your home safer
+    [ ] Keep shoes, a flashlight, and a whistle by every bed {level:basics, plan:weekend, for: earthquake}
+        why: Night-time quakes break glass, and the power goes out instantly. A whistle helps rescuers find you if you're stuck. | tip: Put them in a small bag tied to the bed leg so it doesn't slide away. Add spare glasses if you wear them.
+    [ ] Find your gas, water, and power shutoffs {level:basics, plan:month, for: earthquake}
+        why: Only turn off the gas if you smell gas or hear hissing. Once it's off, only PG&E can turn it back on, which can take days. | tip: In a house, keep a wrench by the gas meter, about $15. In an apartment, ask your building manager where these are and who handles them. If pipes break after a quake, close the water main to keep the clean water in your pipes and water heater.
+    [ ] Test smoke alarms and add a carbon monoxide alarm — $0–40 {level:basics, plan:month}
+        why: Fires are common after quakes and during outages. Generators, grills, and gas heaters used during outages cause carbon monoxide poisoning. | tip: Press the test button monthly. Replace smoke alarms at 10 years and CO alarms at 5 to 7. Put a CO alarm with battery backup near where people sleep. Plan two ways out of every room.
+    [ ] Strap tall furniture and move heavy things down low — $20–60 {level:basics, plan:month, for: earthquake}
+        why: Falling bookcases, TVs, and heavy objects over beds and couches cause many quake injuries at home, especially to kids. | tip: Latch kitchen cabinets and put museum putty under breakables. Renters can usually use straps with small screw holes. Ask your landlord first.
+    [ ] Fire extinguisher — $25–50 {level:basics, plan:month}
+        why: A small fire can be put out before it spreads. Keep it in the kitchen and learn how to use it: pull, aim, squeeze, sweep. | tip: Get one rated ABC, at least 2-A:10-B:C, and check the gauge once a year. A fire blanket is a good extra for the kitchen.
+  Smoke and air
+    [ ] Pick one room to be your clean-air room {level:basics, plan:month, for: smoke}
+        why: On smoky days, close windows and doors, run a filter in one room, and spend most of your time there, especially to sleep. | tip: Choose a room with few windows. Check the air with the AirNow app and close up before the smoke arrives. Set your AC or car vents to recirculate.
+
+--- STAY-AT-HOME BIN --- (Think of it as camping at home: no power, no running water, stores closed, and help may be slow to reach you. Keep it somewhere you can reach after a quake: a closet near the door, not the back of the garage.) Still to get: $240–490
+  Something to keep it in
+    [ ] Large plastic bin with a lid — 1 bin — $15–30 {level:basics, plan:month}
+        why: Keeps everything together and dry, in one place you can find in the dark. | tip: Wheels help if it gets heavy. Water can sit next to it.
+  Water
+    [x] Drinking water — 7 gallons (That's about 2 jugs of 5 gallons, or 3 cases of 24 bottles. If that's a lot, start with 3 gallons (3 days) and add more over time.) — $7–14 {level:basics, plan:month}
+        why: Plan on 1 gallon per person per day, for drinking and basic cleaning. After a big quake, tap water may be off or unsafe for days or weeks. | tip: Kids, nursing parents, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.
+    [ ] Unscented bleach — 1 bottle — $3–6 {level:basics, plan:month, for: earthquake}
+        why: To make questionable water safe to drink. EBMUD's dose: 8 drops of 6% bleach (or 6 drops of 8.25%) per gallon of clear water, then wait 30 minutes. Boiling for 1 minute also works. | tip: If the water is cloudy, let it settle and pour it through a clean cloth first, then use twice as much bleach. Use plain bleach with no scent or "splash-less" formula, and replace it every year.
+  Food
+    [ ] Canned protein: beans, tuna, chicken, or chili — 7 cans — $11–21 {level:basics, plan:month}
+        why: The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals. | tip: Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.
+    [ ] Canned fruit and vegetables — 7 cans — $7–18 {level:basics, plan:month}
+        why: About one can per person per day, for vitamins and fiber. The juice counts toward what you drink.
+    [ ] Crackers, cereal, or granola — 2 boxes — $6–10 {level:basics, plan:month}
+        why: About two servings per person per day. A box has around eight. | tip: Pick sealed boxes or sleeves. They go stale fast once opened.
+    [ ] Peanut butter or other nut butter — 1 jar — $3–6 {level:basics, plan:month}
+        why: A spoonful or two each a day. Lots of calories and protein, and no cooking. A jar has about 14 servings. | tip: Sunflower seed butter works for nut allergies.
+    [ ] Granola bars, trail mix, or dried fruit — 7 snacks — $5–11 {level:basics, plan:month}
+        why: One a day each, for energy between meals. A familiar treat helps a lot when things are stressful, especially for kids.
+    [ ] Manual can opener — 1 opener — $5–12 {level:basics, plan:month}
+        why: Electric openers won't work without power.
+  First aid and medicine
+    [ ] First aid kit — 1 kit — $25–50 {level:basics, plan:month}
+        why: Cuts, scrapes, and sprains are the most common injuries after a quake. Help may be slow to arrive. | tip: Make sure it has bandages, gauze, tape, alcohol wipes, nitrile gloves, and tweezers. A small kit is fine for the go bag. A printed guide or the Red Cross First Aid app works without internet.
+    [ ] Everyday medicines — $15–30 {level:basics, plan:month}
+        why: Pain reliever, allergy medicine, anti-diarrhea medicine, and a thermometer. Pharmacies may be closed.
+  Toilet and hygiene
+    [ ] Toilet paper — $5–12 {level:basics, plan:month}
+        why: Stores may run out, and you'll go through more than you think.
+    [ ] Hand soap — $3–8 {level:basics, plan:month}
+        why: Sanitizer doesn't work well on dirty hands. A little soap and water does.
+    [ ] Hand sanitizer — $3–8 {level:basics, plan:month}
+        why: Keeping hands clean prevents illness when there's no running water. | tip: Look for at least 60% alcohol.
+    [ ] Wet wipes — $4–10 {level:basics, plan:month}
+        why: For washing up when there's no water to spare.
+    [ ] Menstrual products — $5–12 {level:basics, plan:month}
+        why: A cycle's worth or more for anyone who uses them. Easy to forget and hard to find after a disaster. | tip: Skip this if no one in the house needs them.
+    [ ] Bucket with a lid, for an emergency toilet — 1 bucket — $8–15 {level:basics, plan:month, for: earthquake}
+        why: Don't flush after a big quake until you know the sewer lines are OK. A 5-gallon bucket lined with heavy bags, plus kitty litter or sawdust, works. | tip: Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot.
+    [ ] Heavy-duty trash bags — 30+ bags — $10–20 {level:basics, plan:month}
+        why: To line the toilet bucket, and for trash, since garbage pickup may stop. Get more than you think.
+    [ ] Kitty litter or sawdust — $5–12 {level:basics, plan:month, for: earthquake}
+        why: A scoop after each use in the toilet bucket keeps the smell down.
+  Light and power
+    [x] Flashlight or headlamp — 1 light — $8–15 {level:basics, plan:month}
+        why: One for each person. Headlamps leave your hands free. | tip: Skip candles. They're a leading cause of fires after earthquakes.
+    [ ] Extra batteries — $10–25 {level:basics, plan:month}
+        why: Enough to replace every battery in your lights and radio at least once. | tip: Check sizes before you buy. Store them out of the devices so they don't leak.
+    [ ] Phone power bank — 1 power bank — $15–35 {level:basics, plan:month}
+        why: Your phone is your flashlight, radio, and lifeline. A charged power bank keeps it going for a few days. | tip: 10,000 mAh charges most phones two or three times. Recharge it every few months.
+  Alerts and staying in touch
+    [ ] Battery or hand-crank radio — 1 radio — $25–45 {level:basics, plan:month}
+        why: If cell networks are down, local radio is how officials share news. KCBS 740 AM and KQED 88.5 FM cover the Bay Area, and NOAA Weather Radio is on 162.400 MHz. | tip: Look for one with NOAA weather bands and a USB port to charge a phone.
+    [ ] Important phone numbers on paper {level:basics, plan:month}
+        why: If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance. | tip: Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.
+  Smoke and air
+    [ ] N95 masks — 5 masks — $5–8 {level:basics, plan:month, for: smoke,earthquake}
+        why: They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't. | tip: Look for "NIOSH approved" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.
+    [ ] Box fan with a filter taped on — $40–80 {level:basics, plan:month, for: smoke}
+        why: A cheap, proven air cleaner for your clean-air room: a box fan with a furnace filter taped to the back. Look for MERV 13 on the package. | tip: Four filters taped into a cube (a Corsi-Rosenthal box) works even better. Smoke clogs filters fast, so keep a spare and swap it when it turns dark gray.
+  Clothing and warmth
+    [ ] Blankets or sleeping bags — 1 blanket {level:basics, plan:month, for: earthquake,outage}
+        why: Without heat, Bay Area nights get cold fast.
+  Tools
+    [ ] Sturdy work gloves — 1 pair — $6–12 {level:basics, plan:month, for: earthquake}
+        why: For clearing broken glass and debris without cutting your hands.
+  Documents and cash
+    [ ] Cash in small bills — $100 or more {level:basics, plan:month}
+        why: Card readers and ATMs don't work without power or internet. | tip: Keep some ones and fives. Stores may not have change.
+
+--- "LEVEL UP" (Advanced items shown collapsed under Basics) ---
+    Around the house: Take a video walk-through of your home
+    Around the house: Keep a small kit at work or school
+    Around the house: Fill empty freezer space with water bottles
+    Around the house: Fridge and freezer thermometers
+    Around the house: Take a free CERT class
+    Around the house: Get your block or building together
+    Stay-at-home bin: Large water containers or a storage drum
+    Stay-at-home bin: Water filter
+    Stay-at-home bin: Medicine dropper
+    Stay-at-home bin: Paper plates and bowls
+    Stay-at-home bin: Paper cups
+    Stay-at-home bin: Plastic utensils
+    Stay-at-home bin: Camp stove
+    Stay-at-home bin: Camp stove fuel
+    Stay-at-home bin: Lighter or waterproof matches
+    Stay-at-home bin: Cooler
+    Stay-at-home bin: Reusable ice packs
+    Stay-at-home bin: Battery lantern — 1 lantern
+    Stay-at-home bin: Portable power station
+    Stay-at-home bin: Duct tape
+    Stay-at-home bin: Tarp or tent
+    Stay-at-home bin: Pry bar
+    Stay-at-home bin: HEPA air purifier
+    Stay-at-home bin: Helmet
+    Stay-at-home bin: Plastic sheeting, cut to fit one room
+    Around the house: Fill out FEMA's financial first aid kit
+    Stay-at-home bin: Games, books, and puzzles
+
+--- "WHEN IT HAPPENS" CARD ---
+  Right after a big quake
+    1. Drop, cover, and hold on until the shaking stops. In bed, stay there and cover your head with a pillow. Expect aftershocks.
+    2. Put on shoes. Check yourself, then the people around you. Press hard on any bleeding.
+    3. Smell gas or hear hissing? Get everyone out, shut off the gas if you can, and call PG&E from outside. Otherwise leave the gas on.
+    4. Use flashlights, not candles. Never run a generator, grill, or camp stove indoors.
+    5. If the building looks badly damaged, take your go bags and leave. Leave a note saying where you went.
+    6. Text, don't call. Send one "We're OK" to your out-of-area contact, then save your battery.
+    7. Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.
+    8. Put your OK or HELP sign in the window, and check in with your neighbors.
+    9. Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.
+  Other emergencies
+    1. Power out: keep the fridge and freezer shut. A full freezer stays cold about 2 days.
+
+--- KNOW YOUR HOME FIELDS ---
+  Gas shutoff: (Where the meter and valve are, and where the wrench is. Only shut it off if you smell gas or hear hissing.)
+  Water shutoff: (Close it if pipes break after a quake.)
+  Breaker box: (Where it is, and which switch is the main.)
+  Out-of-area contact: (Name and number everyone texts after a disaster.)
+  Meeting spot outside: (Right outside, if you have to leave the house fast.)
+  Meeting spot nearby: (Outside the neighborhood, if you can't get home.)
+  Stay-at-home bin is: (Somewhere you can reach after a quake.)
+  Spare key is with: (A neighbor, friend, or lockbox.)
+
+--- REFRESH / EXPIRATION LOG SECTIONS ---
+  Everyone: [Example] Canned beans; [Example] Canned tuna or chicken; [Example] Peanut butter; [Example] Crackers; [Example] Cereal or granola; [Example] Dried fruit and nuts; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; Water you bottled from the tap; Store-bought bottled water; Unscented bleach; Everyday medicines; First aid kit; Hand sanitizer; Spare batteries; Flashlights and radio; Phone power banks; N95 masks; Smoke and carbon monoxide alarms; Household plan and phone numbers; Fire extinguisher
+
+
+==================================================
+PERSONA B. Family in the Oakland hills (Alameda): 2 adults, 2 kids, 1 baby, 1 dog, 1 cat. Both kits. Quake/outage/smoke/wildfire/heat. Glasses + daily meds. Basics. Budget $150
+Summary line: A stay-at-home bin and a go bag for 2 adults, 2 kids, 1 baby, 1 dog, 1 cat. Ready for earthquake, power outage, wildfire smoke, wildfire evacuation, extreme heat. Basics list.
+Items on list: 91 (+41 more shown as "level up to Advanced")
+
+--- "START HERE THIS WEEKEND" (free steps) ---
+  [ ] Sign up for your county's emergency alerts
+  [ ] Line up a few people who'd check on you
+  [ ] Look up your evacuation zone
+  [ ] Make a household plan
+  [ ] Keep shoes, a flashlight, and a whistle by every bed
+  [ ] Practice Drop, Cover, and Hold On
+
+--- AROUND THE HOUSE --- (One-time tasks and plans. Most are free and take under an hour. ) Still to get: $75–210
+  Make a plan
+    [ ] Make a household plan {level:basics, plan:weekend}
+        why: Pick an out-of-area contact everyone can text, plus two meeting spots: one right outside, and one outside your neighborhood in case you can't get home. | tip: Decide who picks up kids and pets if you can't get home. After a big quake, local calls often fail but texts and long-distance calls can get through. Write the plan on paper, put a copy in every bag, and go over it once a year.
+    [ ] Look up your evacuation zone {level:basics, plan:weekend, for: wildfire}
+        why: Evacuation orders are given by zone. Knowing yours means you'll know right away when an alert is for you.
+    [ ] Pick a cool place to go in a heat wave {level:basics, plan:month, for: heat}
+        why: A library, mall, or county cooling center. Above about 85°F indoors, go. Learn the signs of heat stroke: hot, red, dry skin, confusion, or a temperature above 103°F means call 911. | tip: Fans alone don't prevent heat illness in extreme heat. Some medicines raise heat risk, like water pills and some blood pressure and psychiatric drugs, so ask your pharmacist. In a heat wave, check in with neighbors who live alone, if they'd like.
+    [ ] Practice Drop, Cover, and Hold On {level:basics, plan:weekend, for: earthquake}
+        why: Drop to your hands and knees, cover your head and neck under a sturdy table, and hold on until the shaking stops. Don't run outside. | tip: In bed? Stay there and cover your head with a pillow. In a wheelchair? Lock the wheels and cover your head and neck. Practice once with everyone at home. The Great ShakeOut drill is the third Thursday in October, a good day to invite the neighbors.
+    [ ] Make a wildfire plan: two ways out and a grab list {level:basics, plan:month, for: wildfire}
+        why: Know two ways out of your neighborhood and tape a grab list inside a closet. On Red Flag Warning days (extreme fire weather), put your go bag in the car and keep the tank at least half full. | tip: CAL FIRE's six P's for the grab list: people and pets, papers, prescriptions, pictures, personal computer, and plastic (cards and cash). If you feel unsafe, leave. Don't wait for an order.
+    [ ] Learn your kids' school pickup plan {level:basics, plan:month}
+        why: Schools keep kids until an approved adult picks them up. Make sure the emergency card lists people who could get there if you're stuck across the Bay. | tip: Ask how the school will reach parents, and where kids would go if the school moves them.
+  Neighbors and community
+    [ ] Swap numbers with a neighbor {level:basics, plan:month}
+        why: After a big disaster, most help comes from people nearby. Swap numbers and agree to text each other after a quake, fire, or long outage. | tip: Ask what would help them, and say what would help you, like a spare key, a pet, or a ride. If someone nearby lives alone, ask if they'd like a check-in.
+    [ ] Print an OK / HELP sign for your window {level:basics, plan:month, for: earthquake}
+        why: After a big quake, a sign in the window tells neighbors and crews who needs help first, so they can skip homes that are fine. | tip: Keep it by the front door with some tape. Put up HELP even if you can't get to the door.
+  Sign-ups and paperwork
+    [ ] Sign up for your county's emergency alerts {level:basics, plan:weekend, per person: Me/Adult 2}
+        why: Free texts and calls about evacuations, fires, and other emergencies near you. Most are opt-in, and few people sign up. | tip: Sign up with your home address, plus work or school if they're in a different county.
+    [ ] Photograph your IDs, insurance, and prescriptions {level:basics, plan:month, per person: Me/Adult 2}
+        why: If you lose your wallet or have to leave fast, a secure copy makes it much easier to get help, refill medicine, and file claims. | tip: Save them somewhere password-protected that you can reach from any device.
+    [ ] Sign up for PG&E outage alerts for your address {level:basics, plan:month, for: outage}
+        why: PG&E warns people before planned power shutoffs, usually a day or two ahead. You don't need a PG&E account, so renters can sign up too. | tip: You can add more than one address, like work, school, or a parent's place.
+    [ ] Review your insurance {level:basics, plan:month, for: earthquake,wildfire}
+        why: Standard home and renters policies don't cover earthquake or flood damage. California Earthquake Authority renters policies start around $35 a year and help pay for a place to stay. | tip: Renters: your landlord's policy doesn't cover your things. Check if you're in a flood zone at msc.fema.gov. Flood insurance usually takes 30 days to start, so buy it before the rainy season.
+    [ ] Set up your phone for emergencies {level:basics, plan:month, per person: Me/Adult 2}
+        why: Turn on emergency alerts in Settings, add Emergency SOS contacts and a Medical ID, download an offline map of the Bay Area, and install MyShake for earthquake warnings. | tip: Each takes a couple of minutes. Android phones have quake alerts built in, but MyShake is a good backup. Newer iPhones and some Android phones can text 911 by satellite with no signal. Try the demo in Settings.
+  Make your home safer
+    [ ] Keep shoes, a flashlight, and a whistle by every bed {level:basics, plan:weekend, for: earthquake}
+        why: Night-time quakes break glass, and the power goes out instantly. A whistle helps rescuers find you if you're stuck. | tip: Put them in a small bag tied to the bed leg so it doesn't slide away. Add spare glasses if you wear them.
+    [ ] Find your gas, water, and power shutoffs {level:basics, plan:month, for: earthquake}
+        why: Only turn off the gas if you smell gas or hear hissing. Once it's off, only PG&E can turn it back on, which can take days. | tip: In a house, keep a wrench by the gas meter, about $15. In an apartment, ask your building manager where these are and who handles them. If pipes break after a quake, close the water main to keep the clean water in your pipes and water heater.
+    [ ] Test smoke alarms and add a carbon monoxide alarm — $0–40 {level:basics, plan:month}
+        why: Fires are common after quakes and during outages. Generators, grills, and gas heaters used during outages cause carbon monoxide poisoning. | tip: Press the test button monthly. Replace smoke alarms at 10 years and CO alarms at 5 to 7. Put a CO alarm with battery backup near where people sleep. Plan two ways out of every room.
+    [ ] If you have an electric garage door, learn to open it by hand {level:basics, plan:month, for: outage,wildfire,earthquake}
+        why: In a power outage, the opener won't work. People have been trapped trying to evacuate from fires.
+    [ ] Clear flammable things within 5 feet of your house {level:basics, plan:month, for: wildfire}
+        why: Embers start most home fires. Dead leaves, mulch, wood piles, and doormats next to the house are the usual culprits.
+    [ ] Strap tall furniture and move heavy things down low — $20–60 {level:basics, plan:month, for: earthquake}
+        why: Falling bookcases, TVs, and heavy objects over beds and couches cause many quake injuries at home, especially to kids. | tip: Latch kitchen cabinets and put museum putty under breakables. Renters can usually use straps with small screw holes. Ask your landlord first.
+    [ ] Fire extinguisher — $25–50 {level:basics, plan:month}
+        why: A small fire can be put out before it spreads. Keep it in the kitchen and learn how to use it: pull, aim, squeeze, sweep. | tip: Get one rated ABC, at least 2-A:10-B:C, and check the gauge once a year. A fire blanket is a good extra for the kitchen.
+    [ ] Make sure your water heater is strapped — $30–60 {level:basics, plan:month, for: earthquake}
+        why: California law requires it. A falling water heater can break the gas line and start a fire. If it stays upright, its 30 to 50 gallons can be used for flushing and cleaning. | tip: If you rent, strapping it is your landlord's job. Ask them to check. Water utilities disagree on drinking water-heater water (EBMUD says don't), so follow yours.
+  Health and access needs
+    [ ] Line up a few people who'd check on you {level:basics, plan:weekend}
+        why: Pick two or three people nearby, like a neighbor, friend, or coworker, who'd check on you after a disaster. Tell them what help you might need. | tip: Don't count on just one person, or only on paid help, since they may not be able to reach you. Show someone how your equipment works, and think about giving them a key.
+  Smoke and air
+    [ ] Pick one room to be your clean-air room {level:basics, plan:month, for: smoke}
+        why: On smoky days, close windows and doors, run a filter in one room, and spend most of your time there, especially to sleep. | tip: Choose a room with few windows. Check the air with the AirNow app and close up before the smoke arrives. Set your AC or car vents to recirculate.
+  Pets
+    [ ] Update pet ID tags and microchip info {level:basics, plan:month}
+        why: Pets often bolt during quakes and evacuations. Current contact info is the best way to get them back. | tip: Ask a neighbor to grab your pets if you're not home, and note a few pet-friendly hotels outside the area. The ASPCA sends a free window sticker that tells rescuers how many pets are inside.
+
+--- STAY-AT-HOME BIN --- (Think of it as camping at home: no power, no running water, stores closed, and help may be slow to reach you. Keep it somewhere you can reach after a quake: a closet near the door, not the back of the garage.) Still to get: $420–860
+  Something to keep it in
+    [ ] Large plastic bin with a lid — 1 bin — $15–30 {level:basics, plan:month}
+        why: Keeps everything together and dry, in one place you can find in the dark. | tip: Wheels help if it gets heavy. Water can sit next to it.
+  Water
+    [ ] Drinking water — 41 gallons (That's about 9 jugs of 5 gallons, or 13 cases of 24 bottles. If that's a lot, start with 18 gallons (3 days) and add more over time.) — $41–82 {level:basics, plan:month}
+        why: Plan on 1 gallon per person per day, for drinking and basic cleaning. After a big quake, tap water may be off or unsafe for days or weeks. | tip: Kids, nursing parents, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.
+    [ ] Unscented bleach — 1 bottle — $3–6 {level:basics, plan:month, for: earthquake}
+        why: To make questionable water safe to drink. EBMUD's dose: 8 drops of 6% bleach (or 6 drops of 8.25%) per gallon of clear water, then wait 30 minutes. Boiling for 1 minute also works. | tip: If the water is cloudy, let it settle and pour it through a clean cloth first, then use twice as much bleach. Use plain bleach with no scent or "splash-less" formula, and replace it every year.
+  Food
+    [ ] Canned protein: beans, tuna, chicken, or chili — 24 cans — $36–72 {level:basics, plan:month}
+        why: The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals. | tip: Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.
+    [ ] Canned fruit and vegetables — 24 cans — $24–60 {level:basics, plan:month}
+        why: About one can per person per day, for vitamins and fiber. The juice counts toward what you drink.
+    [ ] Crackers, cereal, or granola — 6 boxes — $18–30 {level:basics, plan:month}
+        why: About two servings per person per day. A box has around eight. | tip: Pick sealed boxes or sleeves. They go stale fast once opened.
+    [ ] Peanut butter or other nut butter — 2 jars — $6–12 {level:basics, plan:month}
+        why: A spoonful or two each a day. Lots of calories and protein, and no cooking. A jar has about 14 servings. | tip: Sunflower seed butter works for nut allergies.
+    [ ] Granola bars, trail mix, or dried fruit — 24 snacks — $18–36 {level:basics, plan:month}
+        why: One a day each, for energy between meals. A familiar treat helps a lot when things are stressful, especially for kids.
+    [ ] Manual can opener — 1 opener — $5–12 {level:basics, plan:month}
+        why: Electric openers won't work without power.
+  First aid and medicine
+    [ ] Everyday medicines — $15–30 {level:basics, plan:month}
+        why: Pain reliever, allergy medicine, anti-diarrhea medicine, and a thermometer. Pharmacies may be closed.
+  Health and access needs
+    [ ] Extra prescription medicine and medical supplies — 7 days or more {level:basics, plan:month}
+        why: Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can. | tip: Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.
+  Toilet and hygiene
+    [ ] Toilet paper — $5–12 {level:basics, plan:month}
+        why: Stores may run out, and you'll go through more than you think.
+    [ ] Hand soap — $3–8 {level:basics, plan:month}
+        why: Sanitizer doesn't work well on dirty hands. A little soap and water does.
+    [ ] Hand sanitizer — $3–8 {level:basics, plan:month}
+        why: Keeping hands clean prevents illness when there's no running water. | tip: Look for at least 60% alcohol.
+    [ ] Wet wipes — $4–10 {level:basics, plan:month}
+        why: For washing up when there's no water to spare.
+    [ ] Menstrual products — $5–12 {level:basics, plan:month}
+        why: A cycle's worth or more for anyone who uses them. Easy to forget and hard to find after a disaster. | tip: Skip this if no one in the house needs them.
+    [ ] Bucket with a lid, for an emergency toilet — 1 bucket — $8–15 {level:basics, plan:month, for: earthquake}
+        why: Don't flush after a big quake until you know the sewer lines are OK. A 5-gallon bucket lined with heavy bags, plus kitty litter or sawdust, works. | tip: Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot.
+    [ ] Heavy-duty trash bags — 30+ bags — $10–20 {level:basics, plan:month}
+        why: To line the toilet bucket, and for trash, since garbage pickup may stop. Get more than you think.
+    [ ] Kitty litter or sawdust — $5–12 {level:basics, plan:month, for: earthquake}
+        why: A scoop after each use in the toilet bucket keeps the smell down.
+  Light and power
+    [x] Extra batteries — $10–25 {level:basics, plan:month}
+        why: Enough to replace every battery in your lights and radio at least once. | tip: Check sizes before you buy. Store them out of the devices so they don't leak.
+  Alerts and staying in touch
+    [ ] Battery or hand-crank radio — 1 radio — $25–45 {level:basics, plan:month}
+        why: If cell networks are down, local radio is how officials share news. KCBS 740 AM and KQED 88.5 FM cover the Bay Area, and NOAA Weather Radio is on 162.400 MHz. | tip: Look for one with NOAA weather bands and a USB port to charge a phone.
+  Smoke and air
+    [ ] N95 masks — 20 masks — $20–30 {level:basics, plan:month, for: smoke,wildfire,earthquake}
+        why: They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't. | tip: Look for "NIOSH approved" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.
+    [ ] Box fan with a filter taped on — $40–80 {level:basics, plan:month, for: smoke}
+        why: A cheap, proven air cleaner for your clean-air room: a box fan with a furnace filter taped to the back. Look for MERV 13 on the package. | tip: Four filters taped into a cube (a Corsi-Rosenthal box) works even better. Smoke clogs filters fast, so keep a spare and swap it when it turns dark gray.
+  Clothing and warmth
+    [ ] Blankets or sleeping bags — 5 blankets {level:basics, plan:month, for: earthquake,outage}
+        why: Without heat, Bay Area nights get cold fast.
+    [ ] Battery or USB fan — $10–20 {level:basics, plan:month, for: heat}
+        why: Moving air helps you cool down when there's no AC or power. | tip: Electrolyte drink mix replaces the salt you sweat out in a long hot spell.
+    [ ] Cooling towels — 5 towels — $15–30 {level:basics, plan:month, for: heat}
+        why: Wet them and drape them on your neck. Wet skin plus a fan cools you fast.
+  Babies and kids
+    [ ] Formula — 7 days for 1 baby — $28–63 {level:basics, plan:month}
+        why: Enough for the whole time. The CDC says ready-to-feed formula is safest in emergencies, since powdered formula needs clean water. | tip: If you breastfeed, keep going: it's the safest food in an emergency. If you pump, pack a manual pump. Add vaccination records to the go bag.
+    [ ] Baby food — 7 days for 1 baby — $7–21 {level:basics, plan:month}
+        why: Pouches are easy to pack and don't need a spoon or a fridge.
+    [ ] Bottles or disposable cups for feeding — $5–15 {level:basics, plan:month}
+        why: Disposable cups are easier to keep clean than bottles when water is short.
+    [ ] Diapers — 56 diapers — $17–28 {level:basics, plan:month}
+        why: Plan on about 8 a day per baby.
+    [ ] Baby wipes — 2 packs — $6–12 {level:basics, plan:month}
+        why: For diaper changes and washing up when water is short. About one pack every few days.
+  Pets
+    [ ] Pet food — 7 days for 2 pets — $14–35 {level:basics, plan:month}
+        why: Shelters and stores may run out. Water for pets is already counted in your water. | tip: Rotate pet food like your own. Kibble goes stale after opening.
+    [ ] Cat litter — $6–12 {level:basics, plan:month}
+        why: Enough for the whole time. Pickup and stores may be out.
+
+--- GO BAG --- (Think of going to a friend's place or a shelter for a few days. One bag per person, ready to grab in minutes. Keep it by the door. You should be able to carry it comfortably, and don't pack anything you don't know how to use.) Still to get: $250–780
+  Something to keep it in
+    [ ] Backpack — 1 each (for 4 bags) — $0–140 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: One per person who can carry one. A backpack keeps your hands free. | tip: About 30 liters holds everything and still carries comfortably. Used outdoor gear stores are a cheap source. Wheels can help if carrying is hard.
+  Water
+    [ ] Water bottle — 1 liter each (for 4 bags) — $4–12 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: At least a liter each. Three days of water weighs about 25 pounds per person, so carry what you comfortably can and keep the rest in the car if you have one. | tip: Electrolyte packets and instant coffee packets weigh almost nothing and help a lot.
+    [ ] Water purification tablets or a filter bottle — $10–35 {level:basics, plan:month}
+        why: Light, and makes tap or stream water safe to drink once your bottles run out.
+  Food
+    [ ] Ready-to-eat food — 3 days each (for 4 bags) — $48–96 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Light, high-calorie food that won't crush: protein bars, nut butter packets, jerky. Dried fruit helps with low blood sugar, and a treat helps morale. | tip: Taste-test bars first and get ones you like. For a car kit, pick ration bars made to survive heat.
+  First aid and medicine
+    [x] First aid kit — 1 kit — $15–30 {level:basics, plan:month}
+        why: Cuts, scrapes, and sprains are the most common injuries after a quake. Help may be slow to arrive. | tip: Make sure it has bandages, gauze, tape, alcohol wipes, nitrile gloves, and tweezers. A small kit is fine for the go bag. A printed guide or the Red Cross First Aid app works without internet.
+  Health and access needs
+    [ ] Extra prescription medicine and medical supplies — 7 days each (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can. | tip: Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.
+    [ ] Written medical info — 1 sheet each (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: One sheet per person: conditions, medicines and doses, allergies, equipment models, doctors, pharmacy, and an emergency contact. It helps responders and shelters if someone can't explain, and keeps housemates' details private to each bag. | tip: A medication cheat sheet helps: what each pill looks like, what it's for, and the dose. Name two people who check on you and know how to use your equipment.
+    [ ] Spare glasses, contacts, or hearing aid batteries — $0–40 {level:basics, plan:month}
+        why: Glasses break or get lost in quakes. An old pair is better than none. | tip: Pen and paper help if you need to write things down or can't hear well in a noisy shelter.
+  Toilet and hygiene
+    [ ] Small hygiene kit — 1 each (for 4 bags) — $32–60 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Toothbrush, toothpaste, wipes, hand sanitizer, tissues, sunscreen, lip balm, and menstrual products for one cycle if needed. | tip: An opaque zip bag (or one covered in duct tape) is handy for personal waste. Pack contacts and solution if you wear them.
+  Light and power
+    [ ] Phone power bank — 1 each (for 4 bags) — $60–140 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Your phone is your flashlight, radio, and lifeline. A charged power bank keeps it going for a few days. | tip: 10,000 mAh charges most phones two or three times. Recharge it every few months.
+    [ ] Phone charging cable — 1 each (for 4 bags) — $20–60 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Easy to forget when you leave in a hurry, and phones don't all use the same plug.
+    [x] Headlamp — 1 each (for 4 bags) — $32–60 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Hands-free light for walking out at night.
+  Alerts and staying in touch
+    [ ] Important phone numbers on paper — 1 card each (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance. | tip: Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.
+    [ ] Whistle — 1 each (for 4 bags) — $8–20 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Carries much farther than your voice and takes less energy if you need help.
+    [ ] Paper map of your area — $0–10 {level:basics, plan:month, for: wildfire,earthquake}
+        why: Phone maps may not load. Mark two ways out of your neighborhood.
+  Smoke and air
+    [ ] N95 masks — 2 each (for 4 bags) — $8–12 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2, for: smoke,wildfire,earthquake}
+        why: They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't. | tip: Look for "NIOSH approved" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.
+  Clothing and warmth
+    [ ] Change of clothes and sturdy shoes — 1 set each (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Long sleeves, long pants, and closed shoes protect you from debris, smoke, and cold. | tip: Cotton and wool are safer than synthetics near fire. Add a warm hat, a rain layer in winter, and a sun hat in summer.
+  Tools
+    [ ] Sturdy work gloves — 1 pair — $6–12 {level:basics, plan:month, for: earthquake,wildfire}
+        why: For clearing broken glass and debris without cutting your hands.
+  Documents and cash
+    [ ] Cash in small bills — $100 or more per adult, about $20 per kid (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: For gas, food, or a motel if cards aren't working. Each person carries their own. | tip: Small bills. Kids carry a little too, in case you get separated.
+    [ ] Copies of IDs and insurance in a zip bag — 1 set each (for 4 bags) — $0–20 {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Proof of who you are and where you live helps you get back into evacuated areas and get aid. Each person carries their own. | tip: Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers.
+  Comfort and calm
+    [ ] A comfort item — 1 each (for 4 bags) {level:basics, plan:month, per person: Me/Adult 2/Kid 1/Kid 2}
+        why: Whatever helps on a really hard day: a fidget, a favorite scent, a photo, or a list of breathing exercises. For kids, a favorite toy or book. | tip: Stress makes it hard to think. Things you've already picked out help more than you'd expect.
+  Babies and kids
+    [ ] Formula — 3 days for 1 baby — $12–27 {level:basics, plan:month}
+        why: Enough for the whole time. The CDC says ready-to-feed formula is safest in emergencies, since powdered formula needs clean water. | tip: If you breastfeed, keep going: it's the safest food in an emergency. If you pump, pack a manual pump. Add vaccination records to the go bag.
+    [ ] Baby food — 3 days for 1 baby — $3–9 {level:basics, plan:month}
+        why: Pouches are easy to pack and don't need a spoon or a fridge.
+    [ ] Bottles or disposable cups for feeding — $5–15 {level:basics, plan:month}
+        why: Disposable cups are easier to keep clean than bottles when water is short.
+    [ ] Diapers — 24 diapers — $7–12 {level:basics, plan:month}
+        why: Plan on about 8 a day per baby.
+    [ ] Baby wipes — 1 pack — $3–6 {level:basics, plan:month}
+        why: For diaper changes and washing up when water is short. About one pack every few days.
+    [ ] Baby carrier or sling {level:basics, plan:month}
+        why: Keeps your hands free and works where strollers can't go.
+    [ ] Kids' fever and pain medicine — $8–15 {level:basics, plan:month}
+        why: In the right dose for their age and weight.
+  Pets
+    [ ] Pet food — 3 days for 2 pets — $6–15 {level:basics, plan:month}
+        why: Shelters and stores may run out. Water for pets is already counted in your water. | tip: Rotate pet food like your own. Kibble goes stale after opening.
+    [ ] Leash and harness, or a carrier — 2 pets {level:basics, plan:month}
+        why: Shelters that take pets require them to be leashed or in a carrier. | tip: Pack a backup leash and poop bags too.
+    [ ] Collapsible water bowl — $3–8 {level:basics, plan:month}
+        why: Folds flat in a go bag so pets can drink on the move.
+    [ ] Pet meds, vaccine records, and a recent photo {level:basics, plan:month}
+        why: Boarding and shelters ask for vaccine records. A photo helps if you get separated.
+    [ ] Cat litter — $6–12 {level:basics, plan:month}
+        why: Enough for the whole time. Pickup and stores may be out.
+    [ ] Disposable litter box — $2–6 {level:basics, plan:month}
+        why: For a shelter or a friend's place. A foil roasting pan works too.
+
+--- "LEVEL UP" (Advanced items shown collapsed under Basics) ---
+    Around the house: Take a video walk-through of your home
+    Around the house: Keep a small kit at work or school
+    Around the house: Fill empty freezer space with water bottles
+    Around the house: Fridge and freezer thermometers
+    Around the house: Take a free CERT class
+    Around the house: Get your block or building together
+    Stay-at-home bin: Extra water to reach 2 gallons a day — 35 more gallons
+    Stay-at-home bin: Large water containers or a storage drum
+    Stay-at-home bin: Water filter
+    Stay-at-home bin: Medicine dropper
+    Stay-at-home bin: Paper plates and bowls
+    Stay-at-home bin: Paper cups
+    Stay-at-home bin: Plastic utensils
+    Stay-at-home bin: Camp stove
+    Stay-at-home bin: Camp stove fuel
+    Stay-at-home bin: Lighter or waterproof matches
+    Stay-at-home bin: Cooler
+    Stay-at-home bin: Reusable ice packs
+    Stay-at-home bin: Battery lantern — 1 lantern
+    Stay-at-home bin: Portable power station
+    Stay-at-home bin: Duct tape
+    Stay-at-home bin: Tarp or tent
+    Stay-at-home bin: Pry bar
+    Stay-at-home bin: HEPA air purifier
+    Stay-at-home bin: Helmet
+    Stay-at-home bin: Plastic sheeting, cut to fit one room
+    Go bag: Bleeding control kit
+    Around the house: Fill out FEMA's financial first aid kit
+    Go bag: Earplugs — 1 pair each
+    Go bag: Eye mask — 1 each
+    Go bag: Notepad and pen
+    Go bag: Deck of cards
+    Stay-at-home bin: Games, books, and puzzles
+    Go bag: Splint
+    Go bag: Liquid bandage
+    Go bag: Multi-tool
+    Go bag: Paracord
+    Go bag: Zip-top bags
+    Go bag: Goggles — 1 each
+    Go bag: Small hand-crank radio
+    Go bag: Emergency blanket or sleeping bag — 1 each
+
+--- "WHEN IT HAPPENS" CARD ---
+  Right after a big quake
+    1. Drop, cover, and hold on until the shaking stops. In bed, stay there and cover your head with a pillow. Expect aftershocks.
+    2. Put on shoes. Check yourself, then the people around you. Press hard on any bleeding.
+    3. Smell gas or hear hissing? Get everyone out, shut off the gas if you can, and call PG&E from outside. Otherwise leave the gas on.
+    4. Use flashlights, not candles. Never run a generator, grill, or camp stove indoors.
+    5. If the building looks badly damaged, take your go bags and leave. Leave a note saying where you went.
+    6. Text, don't call. Send one "We're OK" to your out-of-area contact, then save your battery.
+    7. Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.
+    8. Put your OK or HELP sign in the window, and check in with your neighbors.
+    9. Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.
+  Other emergencies
+    1. Fire near you: if you feel unsafe, leave. Don't wait for an evacuation order.
+    2. Power out: keep the fridge and freezer shut. A full freezer stays cold about 2 days.
+
+--- KNOW YOUR HOME FIELDS ---
+  Gas shutoff: (Where the meter and valve are, and where the wrench is. Only shut it off if you smell gas or hear hissing.)
+  Water shutoff: (Close it if pipes break after a quake.)
+  Breaker box: (Where it is, and which switch is the main.)
+  Out-of-area contact: (Name and number everyone texts after a disaster.)
+  Meeting spot outside: (Right outside, if you have to leave the house fast.)
+  Meeting spot nearby: (Outside the neighborhood, if you can't get home.)
+  Stay-at-home bin is: (Somewhere you can reach after a quake.)
+  Go bags are: (By the door you'd use.)
+  Spare key is with: (A neighbor, friend, or lockbox.)
+  Evacuation zone: (Alerts name the zone, so you'll know right away when it's yours.)
+  Picks up the kids: (If you can't get to school. Make sure they're on the school's emergency card.)
+  Grabs the pets: (A neighbor who can get them if you're not home.)
+
+--- REFRESH / EXPIRATION LOG SECTIONS ---
+  Everyone: [Example] Canned beans; [Example] Canned tuna or chicken; [Example] Peanut butter; [Example] Crackers; [Example] Cereal or granola; [Example] Dried fruit and nuts; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; Formula and baby food; Pet food; Water you bottled from the tap; Store-bought bottled water; Water purification tablets; Unscented bleach; Everyday medicines; Kids' fever medicine; First aid kit; Go bag first aid kit; Pet medicine; Hand sanitizer; Spare batteries; Flashlights and radio; N95 masks; Smoke and carbon monoxide alarms; Household plan and phone numbers; Fire extinguisher; Diapers and baby clothes
+  Me: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Contacts, solution, or hearing aid batteries; Change of clothes
+  Adult 2: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Contacts, solution, or hearing aid batteries; Change of clothes
+  Kid 1: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Contacts, solution, or hearing aid batteries; Clothes and shoes
+  Kid 2: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Contacts, solution, or hearing aid batteries; Clothes and shoes
+
+
+==================================================
+PERSONA C. Older couple in Santa Cruz (house, near coast): 2 adults. CPAP/oxygen (power device), mobility aid, insulin (cold meds). Advanced, 14 days, car yes, power goals cook/charge/cold. Quake/outage/flood/tsunami/wildfire
+Summary line: A stay-at-home bin and a go bag for 2 adults. Ready for earthquake, power outage, winter storms & flooding, tsunami, wildfire evacuation, wildfire smoke. Advanced list.
+Items on list: 128 (+0 more shown as "level up to Advanced")
+
+--- "START HERE THIS WEEKEND" (free steps) ---
+  [ ] Sign up for your county's emergency alerts
+  [ ] Apply for PG&E Medical Baseline
+  [ ] Line up a few people who'd check on you
+  [ ] Look up your evacuation zone
+  [ ] Make a household plan
+  [ ] Keep shoes, a flashlight, and a whistle by every bed
+
+--- AROUND THE HOUSE --- (One-time tasks and plans. Most are free and take under an hour. ) Still to get: $120–370
+  Make a plan
+    [ ] Make a household plan {level:basics, plan:weekend}
+        why: Pick an out-of-area contact everyone can text, plus two meeting spots: one right outside, and one outside your neighborhood in case you can't get home. | tip: Decide who picks up kids and pets if you can't get home. After a big quake, local calls often fail but texts and long-distance calls can get through. Write the plan on paper, put a copy in every bag, and go over it once a year.
+    [ ] Look up your evacuation zone {level:basics, plan:weekend, for: wildfire,flood,tsunami}
+        why: Evacuation orders are given by zone. Knowing yours means you'll know right away when an alert is for you.
+    [ ] Keep a small kit at work or school — $10–30 {level:advanced, plan:later, per person: Me/Adult 2, for: earthquake}
+        why: If a quake hits while you're out, bridges and BART may close for a while. Keep walking shoes, water, snacks, a day of your medicines, and a phone charger at your desk or locker. | tip: Mark the walking route home on your paper map.
+    [ ] Practice Drop, Cover, and Hold On {level:basics, plan:month, for: earthquake}
+        why: Drop to your hands and knees, cover your head and neck under a sturdy table, and hold on until the shaking stops. Don't run outside. | tip: In bed? Stay there and cover your head with a pillow. In a wheelchair? Lock the wheels and cover your head and neck. Practice once with everyone at home. The Great ShakeOut drill is the third Thursday in October, a good day to invite the neighbors.
+    [ ] Make a wildfire plan: two ways out and a grab list {level:basics, plan:month, for: wildfire}
+        why: Know two ways out of your neighborhood and tape a grab list inside a closet. On Red Flag Warning days (extreme fire weather), put your go bag in the car and keep the tank at least half full. | tip: CAL FIRE's six P's for the grab list: people and pets, papers, prescriptions, pictures, personal computer, and plastic (cards and cash). If you feel unsafe, leave. Don't wait for an order.
+    [ ] Make a habit of keeping your gas tank at least half full {level:basics, plan:month}
+        why: Gas pumps need power, and lines get long before evacuations and after big quakes. Half a tank gets you well out of the area. | tip: Electric car? Keep it charged above half, especially before Red Flag days and big storms.
+    [ ] Check your tsunami zone and walk your route to high ground {level:basics, plan:month, for: tsunami}
+        why: Check where you live, work, and go to school. Aim for 100 feet above sea level or a mile inland, on foot, since roads jam. If you feel a long or strong quake at the coast, or see the water pull back, go right away. Don't wait for an alert.
+    [ ] Learn the warning signs of a landslide {level:advanced, plan:later, for: flood}
+        why: New cracks in the ground or pavement, tilting trees or poles, doors that suddenly stick, or creeks turning muddy. Leave early if you're on a steep slope or near a burn scar.
+  Neighbors and community
+    [ ] Swap numbers with a neighbor {level:basics, plan:month}
+        why: After a big disaster, most help comes from people nearby. Swap numbers and agree to text each other after a quake, fire, or long outage. | tip: Ask what would help them, and say what would help you, like a spare key, a pet, or a ride. If someone nearby lives alone, ask if they'd like a check-in.
+    [ ] Print an OK / HELP sign for your window {level:basics, plan:month, for: earthquake}
+        why: After a big quake, a sign in the window tells neighbors and crews who needs help first, so they can skip homes that are fine. | tip: Keep it by the front door with some tape. Put up HELP even if you can't get to the door.
+    [ ] Take a free CERT class {level:advanced, plan:later}
+        why: You'll learn first aid, how to put out small fires, and how to help neighbors safely until crews arrive. It's free in most of the Bay Area (NERT in San Francisco). | tip: Short on time? A first aid and CPR class, or a 2-hour Get Ready class, is a great start. One person in your home is plenty.
+    [ ] Get your block or building together {level:advanced, plan:later}
+        why: One short meeting with neighbors: swap numbers, pick a spot to meet, and note who has useful skills or tools, like first aid, a ladder, or a power station. | tip: Snacks help. Let people share only what they want to, and let them say if they'd like a check-in. The spreadsheet has a Neighbors tab for notes.
+    [ ] Offer a neighbor a ride out {level:advanced, plan:later, for: wildfire,tsunami,flood}
+        why: In fast fires, people without cars are often the last to get out. Let a neighbor know they can text you for a ride. | tip: Agree how you'll reach each other if phones are down. A knock on the door works.
+  Sign-ups and paperwork
+    [ ] Sign up for your county's emergency alerts {level:basics, plan:weekend, per person: Me/Adult 2}
+        why: Free texts and calls about evacuations, fires, and other emergencies near you. Most are opt-in, and few people sign up. | tip: Sign up with your home address, plus work or school if they're in a different county.
+    [ ] Photograph your IDs, insurance, and prescriptions {level:basics, plan:month, per person: Me/Adult 2}
+        why: If you lose your wallet or have to leave fast, a secure copy makes it much easier to get help, refill medicine, and file claims. | tip: Save them somewhere password-protected that you can reach from any device.
+    [ ] Sign up for PG&E outage alerts for your address {level:basics, plan:month, for: outage}
+        why: PG&E warns people before planned power shutoffs, usually a day or two ahead. You don't need a PG&E account, so renters can sign up too. | tip: You can add more than one address, like work, school, or a parent's place.
+    [ ] Review your insurance {level:basics, plan:month, for: earthquake,flood,wildfire}
+        why: Standard home and renters policies don't cover earthquake or flood damage. California Earthquake Authority renters policies start around $35 a year and help pay for a place to stay. | tip: Renters: your landlord's policy doesn't cover your things. Check if you're in a flood zone at msc.fema.gov. Flood insurance usually takes 30 days to start, so buy it before the rainy season.
+    [ ] Take a video walk-through of your home {level:advanced, plan:later, for: earthquake,wildfire,flood}
+        why: Open closets and drawers and say what things are as you film. It makes an insurance claim much easier if you lose everything. | tip: Save it somewhere off-site, like the cloud or an email to a relative. Redo it once a year.
+    [ ] Set up your phone for emergencies {level:basics, plan:month, per person: Me/Adult 2}
+        why: Turn on emergency alerts in Settings, add Emergency SOS contacts and a Medical ID, download an offline map of the Bay Area, and install MyShake for earthquake warnings. | tip: Each takes a couple of minutes. Android phones have quake alerts built in, but MyShake is a good backup. Newer iPhones and some Android phones can text 911 by satellite with no signal. Try the demo in Settings.
+    [ ] Fill out FEMA's financial first aid kit {level:advanced, plan:later}
+        why: A checklist for gathering account numbers, policies, and key papers now, so you're not hunting for them after a disaster. | tip: Keep copies of your lease or deed and insurance policies with it, in a fire-resistant bag if you can. Print backup codes for your email and password manager too. A lost phone can lock you out of everything.
+  Make your home safer
+    [ ] Keep shoes, a flashlight, and a whistle by every bed {level:basics, plan:weekend, for: earthquake}
+        why: Night-time quakes break glass, and the power goes out instantly. A whistle helps rescuers find you if you're stuck. | tip: Put them in a small bag tied to the bed leg so it doesn't slide away. Add spare glasses if you wear them.
+    [ ] Find your gas, water, and power shutoffs {level:basics, plan:month, for: earthquake,flood}
+        why: Only turn off the gas if you smell gas or hear hissing. Once it's off, only PG&E can turn it back on, which can take days. | tip: In a house, keep a wrench by the gas meter, about $15. In an apartment, ask your building manager where these are and who handles them. If pipes break after a quake, close the water main to keep the clean water in your pipes and water heater.
+    [ ] Test smoke alarms and add a carbon monoxide alarm — $0–40 {level:basics, plan:month}
+        why: Fires are common after quakes and during outages. Generators, grills, and gas heaters used during outages cause carbon monoxide poisoning. | tip: Press the test button monthly. Replace smoke alarms at 10 years and CO alarms at 5 to 7. Put a CO alarm with battery backup near where people sleep. Plan two ways out of every room.
+    [ ] If you have an electric garage door, learn to open it by hand {level:basics, plan:month, for: outage,wildfire,earthquake}
+        why: In a power outage, the opener won't work. People have been trapped trying to evacuate from fires.
+    [ ] Clear gutters and the storm drain near you {level:basics, plan:month, for: flood}
+        why: Blocked drains are a big cause of street and basement flooding during atmospheric rivers. | tip: Many cities hand out free sandbags before storms. Move valuables up off the floor. Never drive or walk through floodwater: six inches of moving water can knock you down, and a foot can float a car.
+    [ ] Clear flammable things within 5 feet of your house {level:basics, plan:month, for: wildfire}
+        why: Embers start most home fires. Dead leaves, mulch, wood piles, and doormats next to the house are the usual culprits.
+    [ ] Strap tall furniture and move heavy things down low — $20–60 {level:basics, plan:month, for: earthquake}
+        why: Falling bookcases, TVs, and heavy objects over beds and couches cause many quake injuries at home, especially to kids. | tip: Latch kitchen cabinets and put museum putty under breakables. Renters can usually use straps with small screw holes. Ask your landlord first.
+    [ ] Fire extinguisher — $25–50 {level:basics, plan:month}
+        why: A small fire can be put out before it spreads. Keep it in the kitchen and learn how to use it: pull, aim, squeeze, sweep. | tip: Get one rated ABC, at least 2-A:10-B:C, and check the gauge once a year. A fire blanket is a good extra for the kitchen.
+    [ ] Make sure your water heater is strapped — $30–60 {level:basics, plan:month, for: earthquake}
+        why: California law requires it. A falling water heater can break the gas line and start a fire. If it stays upright, its 30 to 50 gallons can be used for flushing and cleaning. | tip: If you rent, strapping it is your landlord's job. Ask them to check. Water utilities disagree on drinking water-heater water (EBMUD says don't), so follow yours.
+    [ ] Check if your house needs a seismic retrofit {level:advanced, plan:later, for: earthquake}
+        why: Older wood houses can slide off their foundations. Owners can get grants of up to $3,000 from California's Earthquake Brace + Bolt program. If you rent, ask your landlord whether it's been done. | tip: Grant sign-ups open for a few weeks most years. Sign up on the site to be told when.
+    [ ] Cover attic and crawlspace vents with fine metal mesh — $30–120 {level:advanced, plan:later, for: wildfire}
+        why: Embers getting in through vents are a main way homes catch fire. Metal mesh with 1/8-inch or smaller holes keeps them out. Regular screen and plastic mesh don't. | tip: About $5 to $15 a vent. If you rent, ask your landlord.
+  Food
+    [ ] Fill empty freezer space with water bottles {level:advanced, plan:later, for: outage,earthquake}
+        why: A full freezer stays cold longer, and the frozen bottles become drinking water as they thaw.
+    [ ] Fridge and freezer thermometers — $5–12 {level:advanced, plan:later, for: outage}
+        why: Keep the doors shut: a closed fridge stays cold about 4 hours, and a full freezer about 48. Throw out food that has been at 40°F or warmer for more than 2 hours.
+  Health and access needs
+    [ ] Apply for PG&E Medical Baseline {level:basics, plan:weekend, for: outage,earthquake}
+        why: For people who rely on powered medical devices. It lowers your rate and adds extra check-ins before planned shutoffs.
+    [ ] See if you qualify for a free backup battery {level:basics, plan:month, for: outage}
+        why: PG&E's Disability Disaster Access and Resources program can provide portable batteries, accessible transport, and hotel stays during planned shutoffs. Income isn't considered.
+    [ ] Line up a few people who'd check on you {level:basics, plan:weekend}
+        why: Pick two or three people nearby, like a neighbor, friend, or coworker, who'd check on you after a disaster. Tell them what help you might need. | tip: Don't count on just one person, or only on paid help, since they may not be able to reach you. Show someone how your equipment works, and think about giving them a key.
+  Smoke and air
+    [ ] Pick one room to be your clean-air room {level:basics, plan:month, for: smoke}
+        why: On smoky days, close windows and doors, run a filter in one room, and spend most of your time there, especially to sleep. | tip: Choose a room with few windows. Check the air with the AirNow app and close up before the smoke arrives. Set your AC or car vents to recirculate.
+
+--- STAY-AT-HOME BIN --- (Think of it as camping at home: no power, no running water, stores closed, and help may be slow to reach you. Keep it somewhere you can reach after a quake: a closet near the door, not the back of the garage.) Still to get: $1,050–2,870
+  Something to keep it in
+    [ ] Large plastic bin with a lid — 1 bin — $15–30 {level:basics, plan:month}
+        why: Keeps everything together and dry, in one place you can find in the dark. | tip: Wheels help if it gets heavy. Water can sit next to it.
+  Water
+    [ ] Drinking water — 28 gallons (That's about 6 jugs of 5 gallons, or 9 cases of 24 bottles. If that's a lot, start with 6 gallons (3 days) and add more over time.) — $28–56 {level:basics, plan:month}
+        why: Plan on 1 gallon per person per day, for drinking and basic cleaning. After a big quake, tap water may be off or unsafe for days or weeks. | tip: Kids, nursing parents, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.
+    [ ] Unscented bleach — 1 bottle — $3–6 {level:basics, plan:month, for: earthquake,flood}
+        why: To make questionable water safe to drink. EBMUD's dose: 8 drops of 6% bleach (or 6 drops of 8.25%) per gallon of clear water, then wait 30 minutes. Boiling for 1 minute also works. | tip: If the water is cloudy, let it settle and pour it through a clean cloth first, then use twice as much bleach. Use plain bleach with no scent or "splash-less" formula, and replace it every year.
+    [ ] Large water containers or a storage drum — $25–60 {level:advanced, plan:later, for: earthquake}
+        why: Food-grade containers you fill from the tap. Cheapest per gallon for long outages. Tap water needs no treatment if you swap it every 6 months. | tip: A full 55-gallon drum weighs about 460 pounds. Put it on the ground floor and get a siphon pump.
+    [ ] Water filter — $30–80 {level:advanced, plan:later, for: earthquake,flood}
+        why: Lets you drink from a creek, rain barrel, or other outdoor water if your stored water runs out. | tip: Look for one rated for bacteria and protozoa. Filters don't remove chemicals, so don't drink pool or flood water even after filtering.
+    [ ] Medicine dropper — $1–4 {level:advanced, plan:later, for: earthquake,flood}
+        why: For measuring drops of bleach into water. Label it so no one uses it for medicine afterward.
+  Food
+    [ ] Canned protein: beans, tuna, chicken, or chili — 28 cans — $42–84 {level:basics, plan:month}
+        why: The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals. | tip: Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.
+    [ ] Canned fruit and vegetables — 28 cans — $28–70 {level:basics, plan:month}
+        why: About one can per person per day, for vitamins and fiber. The juice counts toward what you drink.
+    [ ] Crackers, cereal, or granola — 7 boxes — $21–35 {level:basics, plan:month}
+        why: About two servings per person per day. A box has around eight. | tip: Pick sealed boxes or sleeves. They go stale fast once opened.
+    [ ] Peanut butter or other nut butter — 2 jars — $6–12 {level:basics, plan:month}
+        why: A spoonful or two each a day. Lots of calories and protein, and no cooking. A jar has about 14 servings. | tip: Sunflower seed butter works for nut allergies.
+    [ ] Granola bars, trail mix, or dried fruit — 28 snacks — $21–42 {level:basics, plan:month}
+        why: One a day each, for energy between meals. A familiar treat helps a lot when things are stressful, especially for kids.
+    [ ] Manual can opener — 1 opener — $5–12 {level:basics, plan:month}
+        why: Electric openers won't work without power.
+    [ ] Paper plates and bowls — $4–8 {level:advanced, plan:later, for: earthquake,outage}
+        why: Saves water you'd otherwise use for washing up.
+    [ ] Paper cups — $3–6 {level:advanced, plan:later, for: earthquake,outage}
+        why: Saves water you'd otherwise use for washing up.
+    [ ] Plastic utensils — $3–6 {level:advanced, plan:later, for: earthquake,outage}
+        why: Saves water you'd otherwise use for washing up.
+    [ ] Camp stove — $30–60 {level:basics, plan:later, for: earthquake,outage}
+        why: For hot food and boiling water during long outages. | tip: Only use it outdoors. Never use a camp stove, grill, or generator inside, even in a garage. After a quake, check for gas leaks before lighting anything.
+    [ ] Camp stove fuel — $10–25 {level:basics, plan:later, for: earthquake,outage}
+        why: Enough for a hot meal a day. Check which canister or fuel your stove takes.
+    [ ] Lighter or waterproof matches — $2–6 {level:basics, plan:later, for: earthquake,outage}
+        why: For lighting the camp stove or a grill outdoors.
+    [ ] Cooler — $25–55 {level:basics, plan:later, for: outage,earthquake}
+        why: Saves the food in your fridge during a long outage: move what matters most into a cooler. Also handy for medicine that has to stay cold. | tip: Keep the fridge closed. Food in a closed fridge stays safe for about 4 hours, and a full freezer for about 48.
+    [ ] Reusable ice packs — $8–20 {level:basics, plan:later, for: outage,earthquake}
+        why: Keep a few in the freezer so they're ready for the cooler when the power goes out.
+  First aid and medicine
+    [ ] Everyday medicines — $15–30 {level:basics, plan:month}
+        why: Pain reliever, allergy medicine, anti-diarrhea medicine, and a thermometer. Pharmacies may be closed.
+  Health and access needs
+    [ ] Extra prescription medicine and medical supplies — 14 days {level:basics, plan:month}
+        why: Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can. | tip: Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.
+    [ ] Backup battery for your medical device — $100–400 {level:basics, plan:month, for: outage,earthquake}
+        why: PG&E's planned shutoffs averaged about 55 hours in 2019, and quake outages can last longer. Aim for at least 72 hours of runtime. | tip: Ask your supplier which battery fits and how long it lasts. If you use oxygen, keep backup tanks. A DC car cord lets you run some devices from a car.
+    [ ] Spare parts for mobility aids — $10–60 {level:basics, plan:month}
+        why: A tire patch kit, spare cane, a charged spare battery for a power chair or scooter, or a manual backup chair. Elevators may be out for days.
+  Toilet and hygiene
+    [ ] Toilet paper — $5–12 {level:basics, plan:month}
+        why: Stores may run out, and you'll go through more than you think.
+    [ ] Hand soap — $3–8 {level:basics, plan:month}
+        why: Sanitizer doesn't work well on dirty hands. A little soap and water does.
+    [ ] Hand sanitizer — $3–8 {level:basics, plan:month}
+        why: Keeping hands clean prevents illness when there's no running water. | tip: Look for at least 60% alcohol.
+    [ ] Wet wipes — $4–10 {level:basics, plan:month}
+        why: For washing up when there's no water to spare.
+    [ ] Menstrual products — $5–12 {level:basics, plan:month}
+        why: A cycle's worth or more for anyone who uses them. Easy to forget and hard to find after a disaster. | tip: Skip this if no one in the house needs them.
+    [ ] Bucket with a lid, for an emergency toilet — 2 buckets — $16–30 {level:basics, plan:month, for: earthquake}
+        why: Don't flush after a big quake until you know the sewer lines are OK. A 5-gallon bucket lined with heavy bags, plus kitty litter or sawdust, works. | tip: Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot.
+    [ ] Heavy-duty trash bags — 40+ bags — $10–20 {level:basics, plan:month}
+        why: To line the toilet bucket, and for trash, since garbage pickup may stop. Get more than you think.
+    [ ] Kitty litter or sawdust — $5–12 {level:basics, plan:month, for: earthquake}
+        why: A scoop after each use in the toilet bucket keeps the smell down.
+  Light and power
+    [ ] Battery lantern — 1 lantern — $15–30 {level:advanced, plan:later, for: outage,earthquake}
+        why: Lights up a whole room so you're not juggling flashlights at dinner.
+    [ ] Extra batteries — $10–25 {level:basics, plan:month}
+        why: Enough to replace every battery in your lights and radio at least once. | tip: Check sizes before you buy. Store them out of the devices so they don't leak.
+    [ ] Portable power station — $250–700 {level:basics, plan:later, for: outage,earthquake}
+        why: A big rechargeable battery that can run a CPAP, a fan, or a small fridge for hours. Quiet and safe indoors, unlike a generator. | tip: If it's for a medical device, check the device's watts and ask your supplier how long a battery will run it. A power strip lets you charge neighbors' phones too.
+    [ ] Small solar panel — $60–200 {level:advanced, plan:later, for: outage,earthquake}
+        why: Recharges power banks or a power station when the outage lasts more than a few days.
+  Alerts and staying in touch
+    [ ] Battery or hand-crank radio — 1 radio — $25–45 {level:basics, plan:month}
+        why: If cell networks are down, local radio is how officials share news. KCBS 740 AM and KQED 88.5 FM cover the Bay Area, and NOAA Weather Radio is on 162.400 MHz. | tip: Look for one with NOAA weather bands and a USB port to charge a phone.
+  Smoke and air
+    [ ] N95 masks — 10 masks — $10–15 {level:basics, plan:month, for: smoke,wildfire,earthquake}
+        why: They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't. | tip: Look for "NIOSH approved" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.
+    [ ] Box fan with a filter taped on — $40–80 {level:basics, plan:month, for: smoke}
+        why: A cheap, proven air cleaner for your clean-air room: a box fan with a furnace filter taped to the back. Look for MERV 13 on the package. | tip: Four filters taped into a cube (a Corsi-Rosenthal box) works even better. Smoke clogs filters fast, so keep a spare and swap it when it turns dark gray.
+    [ ] HEPA air purifier — $100–250 {level:advanced, plan:later, for: smoke}
+        why: A quieter, sealed option for bedrooms. Size it for the room. | tip: Avoid purifiers that make ozone.
+  Clothing and warmth
+    [ ] Tarp or tent — $25–120 {level:advanced, plan:later, for: earthquake,flood}
+        why: If your home isn't safe to sleep in after a quake, you may want to camp in the yard or nearby.
+    [ ] Blankets or sleeping bags — 2 blankets {level:basics, plan:month, for: earthquake,outage,flood}
+        why: Without heat, Bay Area nights get cold fast.
+  Tools
+    [ ] Duct tape — $5–10 {level:advanced, plan:later}
+        why: Patches broken windows with plastic, fixes gear, and seals gaps against smoke.
+    [ ] Pry bar — $15–30 {level:advanced, plan:later, for: earthquake}
+        why: Quakes jam doors shut. A pry bar can get you, or a neighbor, out.
+    [ ] Helmet — $0–60 {level:advanced, plan:later, for: earthquake}
+        why: Protects your head from falling debris during aftershocks and cleanup. A bike helmet works fine.
+    [ ] Plastic sheeting, cut to fit one room — $10–25 {level:advanced, plan:later, for: earthquake}
+        why: Seals windows and vents to keep outside air out during a chemical release. Also covers broken windows after a quake. | tip: Pre-cut and label pieces for each window and vent. Keep damp towels ready for door gaps.
+  Comfort and calm
+    [ ] Games, books, and puzzles {level:advanced, plan:later, for: earthquake,outage,smoke}
+        why: Two weeks without internet is long. Things to share also bring neighbors together, which matters a lot after a disaster.
+
+--- GO BAG --- (Think of going to a friend's place or a shelter for a few days. One bag per person, ready to grab in minutes. Keep it by the door. You should be able to carry it comfortably, and don't pack anything you don't know how to use.) Still to get: $280–720
+  Something to keep it in
+    [ ] Backpack — 1 each (for 2 bags) — $0–70 {level:basics, plan:month, per person: Me/Adult 2}
+        why: One per person who can carry one. A backpack keeps your hands free. | tip: About 30 liters holds everything and still carries comfortably. Used outdoor gear stores are a cheap source. Wheels can help if carrying is hard.
+  Water
+    [ ] Water bottle — 1 liter each (for 2 bags) — $2–6 {level:basics, plan:month, per person: Me/Adult 2}
+        why: At least a liter each. Three days of water weighs about 25 pounds per person, so carry what you comfortably can and keep the rest in the car if you have one. | tip: Electrolyte packets and instant coffee packets weigh almost nothing and help a lot.
+    [ ] Water purification tablets or a filter bottle — $10–35 {level:basics, plan:month}
+        why: Light, and makes tap or stream water safe to drink once your bottles run out.
+  Food
+    [ ] Ready-to-eat food — 3 days each (for 2 bags) — $24–48 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Light, high-calorie food that won't crush: protein bars, nut butter packets, jerky. Dried fruit helps with low blood sugar, and a treat helps morale. | tip: Taste-test bars first and get ones you like. For a car kit, pick ration bars made to survive heat.
+  First aid and medicine
+    [ ] First aid kit — 1 kit — $15–30 {level:basics, plan:month}
+        why: Cuts, scrapes, and sprains are the most common injuries after a quake. Help may be slow to arrive. | tip: Make sure it has bandages, gauze, tape, alcohol wipes, nitrile gloves, and tweezers. A small kit is fine for the go bag. A printed guide or the Red Cross First Aid app works without internet.
+    [ ] Bleeding control kit — $30–60 {level:advanced, plan:later, for: earthquake}
+        why: Severe bleeding from glass and debris can kill in minutes. A tourniquet and pressure bandage fill the gap until help arrives. | tip: A free Stop the Bleed class teaches you to use it.
+    [ ] Splint — $12–20 {level:advanced, plan:later, for: earthquake}
+        why: For a sprain or break until you can get help, which may take a while after a big quake. | tip: Learn how to use it before you need it.
+    [ ] Liquid bandage — $5–10 {level:advanced, plan:later, for: earthquake}
+        why: Seals small cuts on hands and fingers that won't keep a bandage on. | tip: Don't store it in a hot car.
+  Health and access needs
+    [ ] Insulated pouch and cold packs for medicine — $15–35 {level:basics, plan:month}
+        why: For medicine that has to stay cold, like insulin, if you leave home. | tip: Most insulin is fine for up to 28 days at room temperature, so check the label. Don't let it freeze or sit in a hot car.
+    [ ] Extra prescription medicine and medical supplies — 7 days each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can. | tip: Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.
+    [ ] Written medical info — 1 sheet each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: One sheet per person: conditions, medicines and doses, allergies, equipment models, doctors, pharmacy, and an emergency contact. It helps responders and shelters if someone can't explain, and keeps housemates' details private to each bag. | tip: A medication cheat sheet helps: what each pill looks like, what it's for, and the dose. Name two people who check on you and know how to use your equipment.
+  Toilet and hygiene
+    [ ] Small hygiene kit — 1 each (for 2 bags) — $16–30 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Toothbrush, toothpaste, wipes, hand sanitizer, tissues, sunscreen, lip balm, and menstrual products for one cycle if needed. | tip: An opaque zip bag (or one covered in duct tape) is handy for personal waste. Pack contacts and solution if you wear them.
+  Light and power
+    [ ] Phone power bank — 1 each (for 2 bags) — $30–70 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Your phone is your flashlight, radio, and lifeline. A charged power bank keeps it going for a few days. | tip: 10,000 mAh charges most phones two or three times. Recharge it every few months.
+    [ ] Phone charging cable — 1 each (for 2 bags) — $10–30 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Easy to forget when you leave in a hurry, and phones don't all use the same plug.
+    [ ] Headlamp — 1 each (for 2 bags) — $16–30 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Hands-free light for walking out at night.
+  Alerts and staying in touch
+    [ ] Important phone numbers on paper — 1 card each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance. | tip: Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.
+    [ ] Whistle — 1 each (for 2 bags) — $4–10 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Carries much farther than your voice and takes less energy if you need help.
+    [ ] Paper map of your area — $0–10 {level:basics, plan:month, for: wildfire,tsunami,earthquake}
+        why: Phone maps may not load. Mark two ways out of your neighborhood.
+    [ ] Small hand-crank radio — $20–40 {level:advanced, plan:later}
+        why: For news on the road when your phone is low.
+  Smoke and air
+    [ ] N95 masks — 2 each (for 2 bags) — $4–6 {level:basics, plan:month, per person: Me/Adult 2, for: smoke,wildfire,earthquake}
+        why: They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't. | tip: Look for "NIOSH approved" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.
+    [ ] Goggles — 1 each (for 2 bags) — $16–30 {level:advanced, plan:later, per person: Me/Adult 2, for: wildfire,smoke,earthquake}
+        why: Keeps ash, smoke, and dust out of your eyes.
+  Clothing and warmth
+    [ ] Change of clothes and sturdy shoes — 1 set each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: Long sleeves, long pants, and closed shoes protect you from debris, smoke, and cold. | tip: Cotton and wool are safer than synthetics near fire. Add a warm hat, a rain layer in winter, and a sun hat in summer.
+    [ ] Emergency blanket or sleeping bag — 1 each (for 2 bags) — $20–50 {level:advanced, plan:later, per person: Me/Adult 2}
+        why: A foil blanket folds to pocket size. An emergency sleeping bag is a little bigger and much warmer.
+  Tools
+    [ ] Sturdy work gloves — 1 pair — $6–12 {level:basics, plan:month, for: earthquake,wildfire}
+        why: For clearing broken glass and debris without cutting your hands.
+    [ ] Multi-tool — $15–40 {level:advanced, plan:later}
+        why: Knife, pliers, and screwdriver in one.
+    [ ] Paracord — $5–10 {level:advanced, plan:later}
+        why: Ties down a tarp, hangs a light, or replaces a broken strap.
+    [ ] Zip-top bags — $3–6 {level:advanced, plan:later}
+        why: Keep phones, papers, and medicine dry.
+  Documents and cash
+    [ ] Cash in small bills — $100 or more each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: For gas, food, or a motel if cards aren't working. Each person carries their own. | tip: Small bills. Kids carry a little too, in case you get separated.
+    [ ] Copies of IDs and insurance in a zip bag — 1 set each (for 2 bags) — $0–10 {level:basics, plan:month, per person: Me/Adult 2}
+        why: Proof of who you are and where you live helps you get back into evacuated areas and get aid. Each person carries their own. | tip: Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers.
+  Comfort and calm
+    [ ] A comfort item — 1 each (for 2 bags) {level:basics, plan:month, per person: Me/Adult 2}
+        why: Whatever helps on a really hard day: a fidget, a favorite scent, a photo, or a list of breathing exercises. For kids, a favorite toy or book. | tip: Stress makes it hard to think. Things you've already picked out help more than you'd expect.
+    [ ] Earplugs — 1 pair each (for 2 bags) — $2–6 {level:advanced, plan:later, per person: Me/Adult 2}
+        why: For sleeping in a shelter or a friend's living room. Also helps with sensory overload.
+    [ ] Eye mask — 1 each (for 2 bags) — $4–10 {level:advanced, plan:later, per person: Me/Adult 2}
+        why: Shelters keep the lights on at night.
+    [ ] Notepad and pen — $0–4 {level:advanced, plan:later}
+        why: For lists, notes, and leaving messages like where you went.
+    [ ] Deck of cards — $0–4 {level:advanced, plan:later}
+        why: An easy way to pass the time and connect with people around you.
+
+--- CAR KIT --- (For getting stuck on the road or leaving by car. Keep it in the trunk, out of sight. Keep your gas tank at least half full, and don't leave copies of IDs in the car in case of a break-in.) Still to get: $70–170
+  Water
+    [ ] Water for the car — 2–6 gallons — $2–8 {level:basics, plan:month}
+        why: In case you're stuck in traffic during an evacuation, or after a quake closes roads. | tip: CAL FIRE suggests 3 gallons per person for evacuating. Swap car water every 6 months.
+  Food
+    [ ] Snacks for the car — $5–12 {level:basics, plan:month}
+        why: Enough to keep everyone going if you're stuck for hours. | tip: Pick things that survive heat, like ration bars or crackers. Chocolate melts.
+  First aid and medicine
+    [ ] Small first aid kit — $15–25 {level:basics, plan:month}
+        why: For the times you're far from your home kit.
+  Light and power
+    [ ] Flashlight for the car — $8–15 {level:basics, plan:month}
+        why: For a night in your car or a roadside stop in the dark. | tip: Add a reflective vest. Heat ruins chocolate, some medicines, and liquid bandage, so leave those out of the car.
+    [ ] Car phone charger — $8–20 {level:basics, plan:month}
+        why: Keeps phones charged while you drive out.
+  Smoke and air
+    [ ] N95 masks — 2 masks — $2–4 {level:basics, plan:month, for: smoke,wildfire}
+        why: For driving through smoke. Set vents to recirculate too.
+  Clothing and warmth
+    [ ] Blanket for the car — $0–20 {level:basics, plan:month}
+        why: Cars get cold fast at night with the engine off.
+    [ ] Walking shoes {level:basics, plan:month, for: earthquake}
+        why: If a quake hits during your commute, you might have to walk home.
+  Tools
+    [ ] Jumper cables — $20–40 {level:basics, plan:later}
+        why: Get going again if the battery dies while you're stuck.
+    [ ] Road flares or reflective triangles — $10–25 {level:basics, plan:later}
+        why: Keep you visible if you're stopped on the side of the road.
+
+--- "WHEN IT HAPPENS" CARD ---
+  Right after a big quake
+    1. Drop, cover, and hold on until the shaking stops. In bed, stay there and cover your head with a pillow. Expect aftershocks.
+    2. Put on shoes. Check yourself, then the people around you. Press hard on any bleeding.
+    3. Smell gas or hear hissing? Get everyone out, shut off the gas if you can, and call PG&E from outside. Otherwise leave the gas on.
+    4. Use flashlights, not candles. Never run a generator, grill, or camp stove indoors.
+    5. If the building looks badly damaged, take your go bags and leave. Leave a note saying where you went.
+    6. Near the coast and felt a long or strong quake? Walk to high ground now. Don't wait for an alert.
+    7. Text, don't call. Send one "We're OK" to your out-of-area contact, then save your battery.
+    8. Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.
+    9. Put your OK or HELP sign in the window, and check in with your neighbors.
+    10. Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.
+  Other emergencies
+    1. Fire near you: if you feel unsafe, leave. Don't wait for an evacuation order.
+    2. Flooding: turn around, don't drown. Six inches of moving water can knock you down.
+    3. Power out: keep the fridge and freezer shut. A full freezer stays cold about 2 days.
+
+--- KNOW YOUR HOME FIELDS ---
+  Gas shutoff: (Where the meter and valve are, and where the wrench is. Only shut it off if you smell gas or hear hissing.)
+  Water shutoff: (Close it if pipes break after a quake.)
+  Breaker box: (Where it is, and which switch is the main.)
+  Out-of-area contact: (Name and number everyone texts after a disaster.)
+  Meeting spot outside: (Right outside, if you have to leave the house fast.)
+  Meeting spot nearby: (Outside the neighborhood, if you can't get home.)
+  Stay-at-home bin is: (Somewhere you can reach after a quake.)
+  Go bags are: (By the door you'd use.)
+  Spare key is with: (A neighbor, friend, or lockbox.)
+  Evacuation zone: (Alerts name the zone, so you'll know right away when it's yours.)
+
+--- REFRESH / EXPIRATION LOG SECTIONS ---
+  Everyone: [Example] Canned beans; [Example] Canned tuna or chicken; [Example] Peanut butter; [Example] Crackers; [Example] Cereal or granola; [Example] Dried fruit and nuts; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; [Example] Add your food here; Snacks in the car; Water you bottled from the tap; Store-bought bottled water; Water in the car; Water purification tablets; Unscented bleach; Everyday medicines; First aid kit; Go bag first aid kit; Hand sanitizer; Spare batteries; Flashlights and radio; Portable power station; Medical device backup battery; N95 masks; Smoke and carbon monoxide alarms; Household plan and phone numbers; Fire extinguisher; Car kit
+  Me: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Change of clothes
+  Adult 2: Go bag food; Go bag water; Phone power bank; Phone numbers and ID copies; Prescription medicine; Change of clothes

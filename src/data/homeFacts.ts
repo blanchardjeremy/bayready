@@ -1,4 +1,5 @@
 import type { Context, HazardId } from "@/lib/types";
+import type { Lang } from "@/i18n/lang";
 import { MAX_PEOPLE, peopleNames } from "@/lib/answers";
 
 /**
@@ -53,8 +54,28 @@ export const HOME_FACTS: HomeFact[] = [
   { id: "pets", label: "Grabs the pets", hint: "A neighbor who can get them if you're not home.", task: "pet-tags", show: (ctx) => ctx.pets > 0 },
 ];
 
+/** Spanish labels and hints, by fact. */
+const HOME_FACTS_ES: Record<HomeFactId, { label: string; hint: string }> = {
+  gas: { label: "Llave de paso del gas", hint: "Dónde están el medidor y la válvula, y dónde está la llave inglesa. Ciérrelo solo si huele a gas o escucha un silbido." },
+  water: { label: "Llave de paso del agua", hint: "Ciérrela si se rompen las tuberías después de un terremoto." },
+  breaker: { label: "Caja de fusibles (breakers)", hint: "Dónde está, y cuál es el interruptor principal." },
+  contact: { label: "Contacto fuera del área", hint: "Nombre y número de la persona a quien todos le mandan mensajes después de un desastre." },
+  localContact: { label: "Contacto local de respaldo", hint: "Alguien cerca que pueda ayudar si usted no puede llegar a casa. Nombre y número." },
+  meetOutside: { label: "Punto de encuentro afuera", hint: "Justo afuera, si tienen que salir rápido de la casa." },
+  meetNearby: { label: "Punto de encuentro cercano", hint: "Fuera del vecindario, si no pueden llegar a casa." },
+  phones: { label: "Números de celular", hint: "En papel, por si un celular se queda sin batería." },
+  stayBin: { label: "La caja para quedarse en casa está en", hint: "Un lugar que pueda alcanzar después de un terremoto." },
+  goBags: { label: "Las mochilas de emergencia están en", hint: "Junto a la puerta que usarían para salir." },
+  spareKey: { label: "La llave de repuesto la tiene", hint: "Un vecino, un amigo o una caja de seguridad para llaves." },
+  evacZone: { label: "Zona de evacuación", hint: "Las alertas dicen la zona, así sabrá de inmediato cuando es la suya." },
+  kidsPickup: { label: "Recoge a los niños", hint: "Si usted no puede llegar a la escuela. Asegúrese de que esté en la tarjeta de emergencia de la escuela." },
+  pets: { label: "Saca a las mascotas", hint: "Un vecino que pueda sacarlas si usted no está." },
+};
+
+/** The facts that fit the household, in its language. */
 export function homeFacts(ctx: Context): HomeFact[] {
-  return HOME_FACTS.filter((f) => f.show(ctx));
+  const facts = HOME_FACTS.filter((f) => f.show(ctx));
+  return ctx.lang === "es" ? facts.map((f) => ({ ...f, ...HOME_FACTS_ES[f.id] })) : facts;
 }
 
 /** What people have written down. Saved on the device only. */
@@ -93,9 +114,14 @@ function peopleFor(id: PerPersonId, ctx: Context): string[] {
   return id === "goBags" ? names.slice(0, ctx.carriers) : names;
 }
 
-function personLabel(id: PerPersonId, name: string, solo: boolean): string {
-  if (id === "goBags") return solo ? "Go bag is" : name === "Me" ? "My go bag is" : `${name}'s go bag is`;
-  return name === "Me" ? "My cell" : `${name}'s cell`;
+/** "My go bag is", "Riley's cell". `me` is the first adult when they haven't given a name. */
+function personLabel(id: PerPersonId, name: string, solo: boolean, me: boolean, lang: Lang): string {
+  if (lang === "es") {
+    if (id === "goBags") return solo ? "La mochila de emergencia está en" : me ? "Mi mochila de emergencia está en" : `La mochila de ${name} está en`;
+    return me ? "Mi celular" : `Celular de ${name}`;
+  }
+  if (id === "goBags") return solo ? "Go bag is" : me ? "My go bag is" : `${name}'s go bag is`;
+  return me ? "My cell" : `${name}'s cell`;
 }
 
 export function factFields(facts: HomeFact[], ctx: Context, home: HomeInfo): FactField[] {
@@ -107,7 +133,7 @@ export function factFields(facts: HomeFact[], ctx: Context, home: HomeInfo): Fac
     return names.map((name, i) => ({
       key: `${id === "goBags" ? "bag" : "phone"}-${i}`,
       fact,
-      label: personLabel(id, name, names.length === 1),
+      label: personLabel(id, name, names.length === 1, name === "Me" || (i === 0 && !ctx.names.adults[0]?.trim()), ctx.lang),
       value: values[i] ?? "",
       person: i,
       ...(id === "goBags" ? { bag: i } : {}),

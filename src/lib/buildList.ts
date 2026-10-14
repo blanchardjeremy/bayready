@@ -1,6 +1,21 @@
 import type { Answers, Container, Context, Item, ItemState, ListEntry, Stage } from "./types";
 import { peopleNames } from "./answers";
+import type { Lang } from "@/i18n/lang";
 import { localizeItem } from "@/i18n/items";
+import { ITEMS_ES } from "@/i18n/es/items";
+import { scaleIn } from "@/data/items";
+
+/** An item in a language: its words, plus the units the spreadsheet scales and the example labels. */
+function inLang(item: Item, lang: Lang): Item {
+  const out = localizeItem(item, lang);
+  if (lang === "en") return out;
+  const labels = ITEMS_ES[item.id]?.examples;
+  return {
+    ...out,
+    ...(out.scalesWithDays ? { scalesWithDays: scaleIn(out.scalesWithDays, lang) } : {}),
+    ...(out.examples && labels ? { examples: out.examples.map((ex, i) => ({ ...ex, label: labels[i] ?? ex.label })) } : {}),
+  };
+}
 
 /**
  * Who an entry is tracked for separately: each bag in the go bag (or only the
@@ -27,7 +42,7 @@ export function buildList(ctx: Context, items: Item[]): ListEntry[] {
       if (container === "stay" && item.coveredByGo && ctx.kits.includes("go")) continue;
       out.push({
         key: `${container}:${item.id}`,
-        item: localizeItem(item, ctx.lang),
+        item: inLang(item, ctx.lang),
         container,
         level,
         qty: item.qty ? item.qty(ctx, container) : null,

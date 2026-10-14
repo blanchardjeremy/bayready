@@ -35,8 +35,11 @@ const eachBag = (amount: string) => (ctx: Context): Quantity => ({
   buy: ctx.carriers > 1 ? `for ${ctx.carriers} bags` : undefined,
 });
 
-/** People eating regular food: adults and teens count as one, kids about two-thirds. Babies have formula and baby food. */
-const eaters = (ctx: Context) => ctx.adults + ctx.kids * 0.7;
+/**
+ * People eating regular food. Kids count as a whole person: rationing guidance
+ * says not to cut back food for children. Babies have formula and baby food.
+ */
+const eaters = (ctx: Context) => ctx.adults + ctx.kids;
 
 /** One row of the stay-at-home food plan, counted in store units and scaled by days at home. */
 function foodPart(o: {
@@ -70,6 +73,9 @@ function foodPart(o: {
 }
 
 const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
+
+/** Two buckets keep pee and poop apart, which matters more as the household grows. */
+const toiletBuckets = (ctx: Context) => (ctx.level === "advanced" || ctx.people > 2 ? 2 : 1);
 const notApartment = (ctx: Context) => ctx.home !== "apartment-low" && ctx.home !== "apartment-high";
 
 // ---------------------------------------------------------------------------
@@ -769,16 +775,19 @@ export const ITEMS: Item[] = [
   },
   // A simple daily food plan: per person, a can of protein, a can of fruit or
   // vegetables, a couple of servings of crackers or cereal, a spoonful of nut
-  // butter, and a snack. About 1,200 to 1,500 calories, which Ready.gov says
-  // healthy people can live on for a while. Kids count as about two-thirds.
+  // butter, and a snack. It's less than people usually eat, so the copy steers
+  // toward filling picks (beans or chili over tuna, fruit in juice, full-fat).
+  // Lean picks can come in well under 1,000 calories. No agency gives a daily
+  // calorie number for this, so we don't quote one. Everyone counts as one
+  // person, kids included: rationing guidance excludes kids and pregnancy.
   foodPart({
     id: "food",
     name: "Canned protein: beans, tuna, chicken, or chili",
     perPersonPerDay: 1,
     unit: ["can", "cans"],
     unitCost: [1.5, 3],
-    why: "The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals.",
-    tip: "Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.",
+    why: "The base of your food plan: about one can per person per day. With the other food rows, it's enough to get by, not full meals. Don't cut back on food for kids, or for anyone pregnant or nursing.",
+    tip: "Pick filling foods: beans, chili, or chicken over tuna, fruit packed in juice, and full-fat over low-fat. On a low-salt or fluid-limited diet? Pick low-sodium cans and ask your doctor how much to drink in a heat wave. Buy what you already eat, so you can rotate it into meals. Pull-tab lids save needing the opener.",
   }),
   foodPart({
     id: "food-fruit-veg",
@@ -1305,9 +1314,9 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: ["earthquake"],
     why: "Don't flush after a big quake until you know the sewer lines are OK. A 5-gallon bucket lined with heavy bags, plus kitty litter or sawdust, works.",
-    tip: "Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot.",
-    qty: (ctx) => each(ctx.level === "advanced" ? 2 : 1, "bucket"),
-    cost: (ctx) => (ctx.level === "advanced" ? [16, 30] : [8, 15]),
+    tip: "Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot. Tie off full bags and keep them in a trash can with a lid, away from where people live, until officials say how to get rid of them. Set up a place to wash hands next to it: a jug of water, soap, and a bowl or bucket to catch the water.",
+    qty: (ctx) => each(toiletBuckets(ctx), "bucket"),
+    cost: (ctx) => range(8, 15, toiletBuckets(ctx)),
     stage: "month",
     shop: "hardware",
   },
@@ -1319,9 +1328,10 @@ export const ITEMS: Item[] = [
     containers: ["stay"],
     level: "basics",
     hazards: "all",
-    why: "To line the toilet bucket, and for trash, since garbage pickup may stop. Get more than you think.",
-    qty: (ctx) => ({ text: ctx.level === "advanced" ? "40+ bags" : "30+ bags" }),
-    cost: () => [10, 20],
+    why: "To line the toilet bucket: about one a day per person. Get extra for trash, since garbage pickup may stop.",
+    scalesWithDays: { perDay: (ctx) => ctx.people, unit: "bags", unitOne: "bag", costPerDay: (ctx) => range(0.5, 1.5, ctx.people) },
+    qty: (ctx) => each(ctx.people * ctx.stayDays, "bag"),
+    cost: (ctx) => range(0.5, 1.5, ctx.people * ctx.stayDays),
     stage: "month",
     shop: "grocery",
   },

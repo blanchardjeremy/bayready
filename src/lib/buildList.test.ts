@@ -149,6 +149,24 @@ describe("quantities", () => {
     expect(list({ ...ebmud, level: "advanced" }).some((e) => e.item.id === "water-ebmud")).toBe(false);
   });
 
+  it("counts kids as a whole person in the food plan", () => {
+    const fam = answers({ household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 2 } });
+    expect(list(fam).find((e) => e.key === "stay:food")?.qty?.text).toBe("28 cans");
+    const food = ITEMS.find((i) => i.id === "food")!;
+    expect(`${food.why} ${food.tip}`).not.toMatch(/Ready\.gov/);
+    expect(food.tip).toMatch(/low-sodium/);
+  });
+
+  it("scales the toilet to the household", () => {
+    const qty = (a: Answers, key: string) => list(a).find((e) => e.key === key)?.qty?.text;
+    expect(qty(answers(), "stay:toilet")).toBe("1 bucket");
+    expect(qty(answers(), "stay:toilet-bags")).toBe("7 bags");
+    const five = answers({ household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 2, babies: 1 } });
+    expect(qty(five, "stay:toilet")).toBe("2 buckets");
+    expect(qty(five, "stay:toilet-bags")).toBe("35 bags");
+    expect(ITEMS.find((i) => i.id === "toilet")!.tip).toMatch(/lid/);
+  });
+
   it("advanced defaults to 14 days and honors a 7-day choice", () => {
     expect(deriveContext(answers({ level: "advanced" })).stayDays).toBe(14);
     expect(deriveContext(answers({ level: "advanced", days: 7 })).stayDays).toBe(7);

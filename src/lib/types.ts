@@ -94,6 +94,7 @@ export type Category =
   | "home-safety"
   | "comfort"
   | "plan"
+  | "practice"
   | "community"
   | "signup";
 

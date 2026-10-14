@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, STARTER_ANSWERS, deriveContext, normalizeAnswers, peopleNames } from "./answers";
 import { buildList, firstSteps, slotDone, stageOf, stateOf } from "./buildList";
-import { ITEMS, stayWaterGallons } from "@/data/items";
+import { ITEMS, nextShakeOut, stayWaterGallons } from "@/data/items";
 import type { Answers } from "./types";
 
 const answers = (patch: Partial<Answers> = {}): Answers => ({ ...STARTER_ANSWERS, ...patch });
@@ -123,6 +123,38 @@ describe("buildList", () => {
     const link = (county: Answers["county"]) => block.item.link!(deriveContext(answers({ county })))?.url;
     expect(link("san-francisco")).toContain("map-your-neighborhood");
     for (const county of ["marin", "alameda", null] as const) expect(link(county)).toContain("listoscalifornia.org/blockparty");
+  });
+
+  it("splits the household plan into separate tasks", () => {
+    const solo = ids(answers());
+    expect(solo.has("home:contact")).toBe(true);
+    expect(solo.has("home:wallet-cards")).toBe(true);
+    expect(solo.has("home:group-text")).toBe(false);
+    expect(ids(answers({ household: { ...EMPTY_ANSWERS.household, adults: 2 } })).has("home:group-text")).toBe(true);
+  });
+
+  it("adds free practice drills, mostly after the first weekend", () => {
+    const practice = list(answers({ build: "both" })).filter((e) => e.item.category === "practice");
+    expect(practice.map((e) => e.item.id)).toEqual(
+      expect.arrayContaining(["drop-cover", "practice-text", "practice-meet", "practice-leave", "practice-fire"]),
+    );
+    for (const e of practice) {
+      expect(e.cost[1], e.item.id).toBe(0);
+      expect(e.level, e.item.id).toBe("basics");
+    }
+    expect(practice.filter((e) => e.item.stage === "weekend").map((e) => e.item.id)).toEqual(["drop-cover"]);
+    // Only households that might leave practice leaving
+    expect(ids(answers({ build: "stay", hazards: ["earthquake"] })).has("home:practice-leave")).toBe(false);
+    expect(ids(answers({ build: "stay", hazards: ["wildfire"] })).has("home:practice-leave")).toBe(true);
+  });
+
+  it("gives the date of the next Great ShakeOut", () => {
+    expect(nextShakeOut(new Date(2026, 9, 14)).toDateString()).toBe(new Date(2026, 9, 15).toDateString());
+    expect(nextShakeOut(new Date(2026, 9, 15)).toDateString()).toBe(new Date(2026, 9, 15).toDateString());
+    expect(nextShakeOut(new Date(2026, 9, 16)).toDateString()).toBe(new Date(2027, 9, 21).toDateString());
+    expect(nextShakeOut(new Date(2025, 0, 1)).toDateString()).toBe(new Date(2025, 9, 16).toDateString());
+    const link = ITEMS.find((i) => i.id === "drop-cover")!.link!(deriveContext(answers()));
+    expect(link?.label).toMatch(/^Great ShakeOut: Thursday, October \d+$/);
   });
 
   it("links CERT and neighborhood programs for the county, with fallbacks", () => {

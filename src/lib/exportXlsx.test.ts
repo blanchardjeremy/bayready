@@ -97,8 +97,8 @@ describe("spreadsheet export", () => {
     const wb = await roundTrip();
     const todos = wb.getWorksheet("To-dos")!;
     const supplies = wb.getWorksheet("Supplies")!;
-    expect(findRow(todos, "Make a household plan")).toBeGreaterThan(0);
-    expect(findRow(supplies, "Make a household plan")).toBe(0);
+    expect(findRow(todos, "Pick an out-of-area contact and two meeting spots")).toBeGreaterThan(0);
+    expect(findRow(supplies, "Pick an out-of-area contact and two meeting spots")).toBe(0);
     expect(findRow(supplies, "Drinking water")).toBeGreaterThan(0);
   });
 
@@ -287,7 +287,7 @@ describe("spreadsheet export", () => {
     expect((ws.getCell(`A${alerts}`).value as { formula: string }).formula).toContain('"Partly"');
     expect(ws.getCell(`E${alerts}`).value).toBe("Each adult");
 
-    const plan = findRow(ws, "Make a household plan");
+    const plan = findRow(ws, "Pick an out-of-area contact and two meeting spots");
     expect(ws.getCell(`C${plan}`).value).toBeNull();
     expect(ws.getCell(`A${plan}`).value).toBe("To do");
     expect(ws.getCell(`E${plan}`).dataValidation?.formulae).toEqual(["Overview!$B$17:$B$24"]);

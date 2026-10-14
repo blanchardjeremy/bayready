@@ -84,6 +84,19 @@ const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
 const toiletBuckets = (ctx: Context) => (ctx.level === "advanced" || ctx.people > 2 ? 2 : 1);
 const notApartment = (ctx: Context) => ctx.home !== "apartment-low" && ctx.home !== "apartment-high";
 
+/** The Great ShakeOut drill: the third Thursday in October. The next one on or after `today`. */
+export function nextShakeOut(today: Date): Date {
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  for (const year of [today.getFullYear(), today.getFullYear() + 1]) {
+    const firstThursday = 1 + ((4 - new Date(year, 9, 1).getDay() + 7) % 7);
+    const drill = new Date(year, 9, firstThursday + 14);
+    if (drill >= start) return drill;
+  }
+  throw new Error("unreachable");
+}
+
+const shakeOutLabel = (d: Date) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
 // ---------------------------------------------------------------------------
 // Items
 // ---------------------------------------------------------------------------
@@ -111,14 +124,39 @@ export const ITEMS: Item[] = [
   {
     id: "contact",
     startRank: 4,
-    name: "Make a household plan",
+    name: "Pick an out-of-area contact and two meeting spots",
     category: "plan",
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    why: "Pick an out-of-area contact everyone can text, plus two meeting spots: one right outside, and one outside your neighborhood in case you can't get home.",
-    tip: "After a big quake, local phone lines jam, but a text to someone far away often gets through, and they can pass news between you. Decide who picks up kids and pets if you can't get home. Write the plan on paper, put a copy in every bag, and go over it once a year.",
+    why: "Ask someone outside the Bay Area to be the person everyone texts. Then pick two meeting spots: one right outside, and one outside your neighborhood in case you can't get home.",
+    tip: "After a big quake, local phone lines jam, but a text to someone far away often gets through, and they can pass news between you. Decide who picks up kids and pets if you can't get home. Go over the plan once a year.",
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "group-text",
+    name: "Start a household group text and agree on a check-in message",
+    category: "plan",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.carriers > 1,
+    why: "One thread for everyone at home, plus your out-of-area contact. Agree on short messages, like \"OK, at home\" or \"OK, going to the meeting spot\", so one quick text says it all.",
+    tip: "Texts often get through when calls don't, and they save battery.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "wallet-cards",
+    name: "Make a wallet card for each person",
+    category: "plan",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "A small card with your out-of-area contact, meeting spots, and key numbers, so the plan is with you even when your phone is dead. Use the wallet cards in your PDF.",
+    tip: "Kids keep theirs in their backpack. Update the cards when a number changes.",
+    stage: "month",
     shop: "free",
   },
   {
@@ -521,14 +559,62 @@ export const ITEMS: Item[] = [
     id: "drop-cover",
     startRank: 6,
     name: "Practice Drop, Cover, and Hold On",
-    category: "plan",
+    category: "practice",
     containers: ["home"],
     level: "basics",
     hazards: ["earthquake"],
     why: "Drop to your hands and knees, cover your head and neck under a sturdy table, and hold on until the shaking stops. Don't run outside.",
     tip: "In bed? Stay there and cover your head with a pillow. In a wheelchair? Lock the wheels and cover your head and neck. Practice once with everyone at home. The Great ShakeOut drill is the third Thursday in October, a good day to invite the neighbors.",
-    link: () => ({ label: "Great ShakeOut", url: "https://www.shakeout.org/california/" }),
+    link: () => ({ label: `Great ShakeOut: ${shakeOutLabel(nextShakeOut(new Date()))}`, url: "https://www.shakeout.org/california/" }),
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "practice-text",
+    name: "Send a test text to your out-of-area contact",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Send your check-in message and ask them to text back. It takes two minutes, and you'll know the plan works before you need it.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-meet",
+    name: "Walk to your meeting spots together",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Walk to both spots once with everyone, so no one has to work out the way after a disaster. About 20 minutes.",
+    tip: "Point out landmarks to kids, and agree what to do if a spot is blocked.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-leave",
+    name: "Practice leaving in 10 minutes",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.kits.includes("go") || (["wildfire", "tsunami", "flood"] as const).some((h) => ctx.hazards.has(h)),
+    why: "Set a timer for 10 minutes. Grab the go bags, medicine, chargers, papers, and pets, and get everyone out the door or into the car. Then talk about what slowed you down.",
+    tip: "Pets hide when things get hectic, so practice getting them into carriers. June, before fire season, is a good time to do it again.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-fire",
+    name: "Do a night fire drill, with two ways out",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Once, after dark: press the smoke alarm test button and have everyone get out from their bedroom and meet outside. Then do it again using the second way out. About 10 minutes.",
+    tip: "Kids can sleep through a smoke alarm, so agree which adult goes to them. In an apartment building, use the stairs, never the elevator.",
+    stage: "later",
     shop: "free",
   },
   {
@@ -684,7 +770,7 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    why: "Meet three neighbors on your floor or block, and agree one of you will walk the block after a quake to see who needs help. It takes one knock on a few doors.",
+    why: "Meet three neighbors on your floor or block, and agree one of you will walk the block after a quake to see who needs help.",
     tip: "Show them the OK / HELP sign so everyone knows to look for it. When you're ready, a short block meeting goes further: pick a spot to meet, and note who has useful skills or tools, like first aid or a ladder. Let people share only what they want to. The spreadsheet has a Neighbors tab for notes.",
     // San Francisco has Map Your Neighborhood. Everyone else gets the Listos block party kit.
     link: (ctx) => {
@@ -1158,7 +1244,7 @@ export const ITEMS: Item[] = [
     hazards: "all",
     why: "If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance.",
     qty: (ctx, c) => (c === "go" ? eachBag("1 card")(ctx) : null),
-    tip: "Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.",
+    tip: "The wallet cards in your PDF work well for this. Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.",
     stage: "weekend",
     shop: "free",
   },

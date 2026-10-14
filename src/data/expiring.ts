@@ -67,7 +67,7 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
     ]),
 
     { item: "N95 masks", kit: "Stay-at-home bin", note: "Use the date on the box. The straps weaken over time." },
-    { item: "Smoke and carbon monoxide alarms", kit: "Around the house", every: 12, note: "Press test. Most newer alarms have sealed batteries: replace smoke alarms at 10 years, CO alarms at 5 to 7." },
+    { item: "Smoke and carbon monoxide alarms", kit: "Around the house", every: 12, note: "Press test. Most newer alarms have sealed batteries: replace smoke alarms at 10 years, and CO alarms by the date on the back, usually 7 to 10 years." },
     { item: "Household plan and phone numbers", kit: "Around the house", every: 12, note: "Go over it together. A good time is the Great ShakeOut drill, the third Thursday in October." },
     { item: "Fire extinguisher", kit: "Around the house", every: 12, note: "Check the gauge is in the green." },
     ...when(ctx.babies > 0, [{ item: "Diapers and baby clothes", kit: "Go bag" as const, every: 6, note: "Check the sizes." }]),

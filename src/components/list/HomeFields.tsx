@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useRef } from "react";
 import type { FactField, HomeInfo } from "@/data/homeFacts";
-import { BAY_READY_URL } from "@/lib/urls";
 import { Button } from "@/components/controls";
 import { PrinterIcon } from "@/components/icons";
+import { useT } from "@/i18n/useLang";
 
 /** The card's id, so tasks can send people to it and print mode can single it out. */
 export const HOME_CARD_ID = "know-your-home";
@@ -49,6 +49,7 @@ export function TaskFacts({
   /** Takes people to the card's print button. */
   onShowPrint: () => void;
 }) {
+  const t = useT().list.home;
   if (fields.length === 0) return null;
   return (
     <div className="no-print mt-3 max-w-md">
@@ -63,7 +64,7 @@ export function TaskFacts({
         className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-[0.88rem] text-ink-soft underline underline-offset-2 hover:text-ink"
       >
         <PrinterIcon className="size-3.5" />
-        Print these for your kit
+        {t.printThese}
       </button>
     </div>
   );
@@ -91,6 +92,7 @@ export function KnowYourHome({
   /** Goes up each time a task sends someone here; the print button flashes to show where it is. */
   pulse: number;
 }) {
+  const t = useT().list.home;
   const notesId = useId();
   const printRef = useRef<HTMLButtonElement>(null);
 
@@ -113,7 +115,7 @@ export function KnowYourHome({
       <div className="no-print">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 id={`${HOME_CARD_ID}-title`} className="text-2xl font-extrabold tracking-tight">
-            Know your home
+            {t.title}
           </h2>
           <Button
             ref={printRef}
@@ -123,14 +125,10 @@ export function KnowYourHome({
             onAnimationEnd={(e) => e.currentTarget.classList.remove("flash-attention")}
           >
             <PrinterIcon />
-            Print this info
+            {t.print}
           </Button>
         </div>
-        <p className="mt-2 max-w-[64ch] text-ink-soft">
-          The things you&apos;ll want to know without thinking on the day it happens. Fill them in as you do the to-dos
-          above, then print a copy for your bin and each go bag. They&apos;re saved on this device and go into your
-          spreadsheet, but never into share links.
-        </p>
+        <p className="mt-2 max-w-[64ch] text-ink-soft">{t.intro}</p>
         <div className="mt-5 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           {fields.map((f) => (
             <FactInput key={f.key} field={f} onChange={(v) => onField(f, v)} />
@@ -138,7 +136,7 @@ export function KnowYourHome({
         </div>
         <div className="mt-6 max-w-3xl">
           <label htmlFor={notesId} className="block font-semibold">
-            Notes and reminders
+            {t.notes}
           </label>
           <textarea
             id={notesId}
@@ -146,7 +144,7 @@ export function KnowYourHome({
             maxLength={4000}
             value={home.notes}
             onChange={(e) => onNotes(e.target.value)}
-            placeholder="Anything else worth remembering, like the radio is in Sam's go bag, or which neighbor has a generator."
+            placeholder={t.notesPlaceholder}
             className="mt-1 w-full rounded-md border border-field-line bg-paper px-3 py-2 text-[0.95rem] text-ink placeholder:text-ink-soft focus:border-ink"
           />
         </div>
@@ -161,10 +159,11 @@ export function KnowYourHome({
  * so a half-finished card still prints as a usable form.
  */
 function PrintedSheet({ fields, notes }: { fields: FactField[]; notes: string }) {
+  const t = useT().list.home;
   return (
     <div className="hidden print:block">
-      <h2 className="text-2xl font-extrabold">Know your home</h2>
-      <p className="mt-1 text-sm">Fill in anything that&apos;s blank. Keep a copy in your stay-at-home bin and in each go bag.</p>
+      <h2 className="text-2xl font-extrabold">{t.title}</h2>
+      <p className="mt-1 text-sm">{t.printedIntro}</p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         {fields.map((f) => (
           <div key={f.key} className="print-break-avoid min-h-[2.2cm] rounded border border-black px-2.5 py-1.5">
@@ -174,10 +173,10 @@ function PrintedSheet({ fields, notes }: { fields: FactField[]; notes: string })
         ))}
       </div>
       <div className="print-break-avoid mt-2.5 min-h-[6.5cm] rounded border border-black px-2.5 py-1.5">
-        <p className="text-[9pt] font-semibold uppercase tracking-wide">Notes and reminders</p>
+        <p className="text-[9pt] font-semibold uppercase tracking-wide">{t.notes}</p>
         <p className="mt-0.5 whitespace-pre-wrap">{notes.trim()}</p>
       </div>
-      <p className="mt-4 text-[9pt]">Made with Bay Ready: {BAY_READY_URL}</p>
+      <p className="mt-4 text-[9pt]">{t.madeWith}</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firstStepDate, googleCalendarUrl, icsText, nextNthWeekday, nthWeekday, twiceYearlyChecks } from "./ics";
+import { firstStepDate, firstStepsEvent, googleCalendarUrl, icsText, nextNthWeekday, nthWeekday, twiceYearlyChecks } from "./ics";
 
 const day = (d: Date) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
@@ -53,7 +53,7 @@ describe("reminder dates", () => {
   });
 
   it("makes two yearly events that carry the list link", () => {
-    const [spring, fall] = twiceYearlyChecks("https://x.test/list/#abc", "Made with Bay Ready", new Date(2026, 9, 14));
+    const [spring, fall] = twiceYearlyChecks("https://x.test/list/#abc", "en", new Date(2026, 9, 14));
     expect(spring.rrule).toBe("FREQ=YEARLY;BYMONTH=3;BYDAY=2SU");
     expect(fall.rrule).toBe("FREQ=YEARLY;BYMONTH=10;BYDAY=3TH");
     expect(day(spring.start)).toBe("2027-3-14");
@@ -68,5 +68,43 @@ describe("reminder dates", () => {
 
     const google = new URL(googleCalendarUrl(fall));
     expect(google.searchParams.get("recur")).toBe("RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=3TH");
+  });
+});
+
+describe("calendar text in Spanish", () => {
+  it("writes the twice-a-year checks in Spanish, with the list link and credit", () => {
+    const [spring, fall] = twiceYearlyChecks("https://x.test/list/#abc", "es", new Date(2026, 9, 14));
+    expect(spring.title).toBe("Revisión del kit de emergencia (cambio de hora)");
+    expect(spring.name).toBe("Revisión de primavera");
+    expect(fall.title).toContain("Great ShakeOut");
+    expect(fall.description).toContain("Agáchese, cúbrase y sujétese");
+    for (const e of [spring, fall]) {
+      expect(e.description).toContain("Su lista: https://x.test/list/#abc");
+      expect(e.description).toContain("Hecho con Bay Ready");
+      expect(e.filename).toBe("revisiones-kit-de-emergencia.ics");
+    }
+    // Same dates and repeat rules as in English.
+    const [enSpring, enFall] = twiceYearlyChecks("https://x.test/list/#abc", "en", new Date(2026, 9, 14));
+    expect(spring.start).toEqual(enSpring.start);
+    expect(fall.rrule).toBe(enFall.rrule);
+
+    const ics = icsText([spring, fall], new Date(2026, 9, 14));
+    expect(ics).toContain("SUMMARY:Revisión del kit de emergencia (cambio de hora)");
+    // Commas in the text are escaped for the .ics format.
+    expect(ics).toContain("Agáchese\\, cúbrase y sujétese");
+  });
+
+  it("lists the first steps in the event, in either language", () => {
+    const start = new Date(2026, 9, 17, 10);
+    const en = firstStepsEvent(["Sign up for alerts", "Pick a meeting spot"], "https://x.test/l#a", start);
+    expect(en.title).toBe("Emergency prep: first steps");
+    expect(en.description).toBe(
+      "- Sign up for alerts\n- Pick a meeting spot\n\nYour list: https://x.test/l#a\n\nMade with Bay Ready, a free emergency kit planner for the Bay Area: https://blanchardjeremy.github.io/bayready/",
+    );
+    const es = firstStepsEvent(["Inscríbase en las alertas"], "https://x.test/l#a", start, "es");
+    expect(es.title).toBe("Preparación para emergencias: primeros pasos");
+    expect(es.filename).toBe("preparacion-emergencias-primeros-pasos.ics");
+    expect(es.description).toContain("- Inscríbase en las alertas\n\nSu lista: https://x.test/l#a");
+    expect(es.start).toBe(start);
   });
 });

@@ -1,4 +1,6 @@
 import type { Budget, ItemState, ListEntry } from "@/lib/types";
+import type { Lang } from "@/i18n/lang";
+import { messagesFor } from "@/i18n/messages";
 
 /*
  * How the essentials are ordered and priced against the budget answer.
@@ -33,20 +35,16 @@ const BUDGET_ORDER = [
   "bin",
 ];
 
-/** Ways to cover an essential with what's already at home, for people starting with $0. */
-export const FREE_WAYS: Record<string, string> = {
-  water: "Free way: fill clean soda bottles with tap water. Skip milk and juice jugs.",
-  "water-go": "Free way: refill a water bottle you already have.",
-  food: "Free way: set aside cans from your cupboard and eat the oldest first.",
-  "food-go": "Free way: pack granola bars, nuts, or crackers from your cupboard.",
-  "can-opener": "Free way: check your kitchen drawer. One you already own is fine.",
-  flashlights: "Free way: gather the flashlights you already have and check the batteries.",
-  toilet: "Free way: line your own toilet with a heavy trash bag instead of a bucket.",
-  "first-aid": "Free way: gather the bandages and medicines you already have into one bag.",
-  "docs-copies": "Free way: photograph your IDs and insurance cards on your phone.",
-  backpack: "Free way: use any backpack or duffel you already own.",
-  bin: "Free way: start with a sturdy box or laundry basket.",
-};
+/**
+ * Ways to cover an essential with what's already at home, by item id, for people
+ * starting with $0. The words live in src/i18n/{en,es}/list.ts.
+ */
+export function freeWays(lang: Lang): Record<string, string> {
+  return messagesFor(lang).list.essentials.freeWays;
+}
+
+/** The English free ways. Its keys say which essentials have one. */
+export const FREE_WAYS = freeWays("en");
 
 /** The middle of a rough cost range: what "about $X" means here. */
 export const midCost = (e: ListEntry) => (e.cost[0] + e.cost[1]) / 2;

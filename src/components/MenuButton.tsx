@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { buttonClass } from "./controls";
+import { useT } from "@/i18n/useLang";
 
 export interface MenuItem {
   key: string;
@@ -33,6 +34,7 @@ export function MenuButton({
   disabled?: boolean;
   className?: string;
 }) {
+  const newTab = useT().list.calendar.newTab;
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const wrap = useRef<HTMLDivElement>(null);
@@ -103,7 +105,7 @@ export function MenuButton({
                 className={itemClass}
               >
                 {it.label}
-                <span className="sr-only"> (opens in a new tab)</span>
+                <span className="sr-only"> {newTab}</span>
               </a>
             ) : (
               <button

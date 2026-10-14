@@ -4,7 +4,7 @@ import { deriveContext, STARTER_ANSWERS } from "@/lib/answers";
 import { buildList } from "@/lib/buildList";
 import { ITEMS } from "@/data/items";
 import { isEssential } from "@/data/essentials";
-import { FREE_WAYS, budgetDollars, budgetOrder, budgetPlan, freeFirst } from "./essentialsPlan";
+import { FREE_WAYS, budgetDollars, budgetOrder, budgetPlan, freeFirst, freeWays } from "./essentialsPlan";
 
 /** Just enough of an entry for the budget math. */
 function entry(id: string, cost: [number, number], container: "stay" | "go" = "stay"): ListEntry {
@@ -101,5 +101,14 @@ describe("$0 to start", () => {
     const { ESSENTIAL_KEYS } = await import("@/data/essentials");
     const ids = new Set([...ESSENTIAL_KEYS].map((k) => k.split(":")[1]));
     for (const id of Object.keys(FREE_WAYS)) expect(ids.has(id), id).toBe(true);
+  });
+
+  it("has a Spanish free way for every English one", () => {
+    const es = freeWays("es");
+    expect(Object.keys(es).sort()).toEqual(Object.keys(FREE_WAYS).sort());
+    for (const [id, text] of Object.entries(es)) {
+      expect(text.startsWith("Forma gratis:"), id).toBe(true);
+      expect(text, id).not.toBe(FREE_WAYS[id]);
+    }
   });
 });

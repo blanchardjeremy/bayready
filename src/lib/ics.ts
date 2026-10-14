@@ -1,4 +1,6 @@
 import type { StartWhen } from "./types";
+import type { Lang } from "@/i18n/lang";
+import { messagesFor } from "@/i18n/messages";
 
 function fmt(d: Date) {
   const p = (n: number) => String(n).padStart(2, "0");
@@ -66,32 +68,40 @@ const endOf = (e: CalendarEvent) => new Date(e.start.getTime() + (e.minutes ?? 6
 const rrule = (e: CalendarEvent) =>
   e.rrule ? `RRULE:${e.rrule}` : e.repeatMonths ? `RRULE:FREQ=MONTHLY;INTERVAL=${e.repeatMonths}` : null;
 
+/** The "first steps" reminder: the free steps to do, on the day picked in the wizard, in a language. */
+export function firstStepsEvent(steps: string[], listUrl: string, start: Date, lang: Lang = "en"): CalendarEvent {
+  const t = messagesFor(lang).list;
+  return {
+    filename: t.calendar.firstSteps.filename,
+    title: t.calendar.firstSteps.title,
+    description: `${steps.map((s) => `- ${s}`).join("\n")}\n\n${t.calendar.yourList(listUrl)}\n\n${t.credit}`,
+    start,
+  };
+}
+
 /**
  * Twice a year: when the clocks change in spring (2nd Sunday of March), and on
  * the Great ShakeOut (3rd Thursday of October), each repeating every year.
  */
-export function twiceYearlyChecks(listUrl: string, credit: string, now = new Date()): CalendarEvent[] {
-  const filename = "emergency-kit-checks.ics";
-  const link = `\n\nYour list: ${listUrl}\n\n${credit}`;
+export function twiceYearlyChecks(listUrl: string, lang: Lang = "en", now = new Date()): CalendarEvent[] {
+  const t = messagesFor(lang).list;
+  const { filename, spring, shakeOut } = t.calendar.checks;
+  const link = `\n\n${t.calendar.yourList(listUrl)}\n\n${t.credit}`;
   return [
     {
       filename,
-      name: "Spring check",
-      title: "Emergency kit check (clocks changed)",
-      description:
-        "The clocks changed, so it's time for your spring kit check. Look at dates on food, water, and medicine. Swap stored tap water. Test flashlights and radios and change batteries. Update clothes for kids who've grown." +
-        link,
+      name: spring.name,
+      title: spring.title,
+      description: spring.description + link,
       start: nextNthWeekday(now, 2, 0, 2, 10),
       minutes: 45,
       rrule: "FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
     },
     {
       filename,
-      name: "ShakeOut check",
-      title: "Great ShakeOut: drill and kit check",
-      description:
-        "Today is the Great ShakeOut. Practice Drop, Cover, and Hold On with everyone at home, then check your kit: dates on food, water, and medicine, batteries, and your household plan." +
-        link,
+      name: shakeOut.name,
+      title: shakeOut.title,
+      description: shakeOut.description + link,
       start: nextNthWeekday(now, 9, 4, 3, 18),
       minutes: 45,
       rrule: "FREQ=YEARLY;BYMONTH=10;BYDAY=3TH",
@@ -141,7 +151,7 @@ export function icsText(events: CalendarEvent[], stamp = new Date()): string {
 
 /** Downloads an .ics file, for Apple Calendar, Outlook, and most others. Several events go in one file. */
 export function downloadIcs(events: CalendarEvent[]) {
-  const url = URL.createObjectURL(new Blob([icsText(events)], { type: "text/calendar" }));
+  const url = URL.createObjectURL(new Blob([icsText(events)], { type: "text/calendar;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
   a.download = events[0].filename;

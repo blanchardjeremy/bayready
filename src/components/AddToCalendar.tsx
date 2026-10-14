@@ -4,6 +4,7 @@ import { downloadIcs, googleCalendarUrl, type CalendarEvent } from "@/lib/ics";
 import type { buttonClass } from "./controls";
 import { CalendarIcon } from "./icons";
 import { MenuButton } from "./MenuButton";
+import { useT } from "@/i18n/useLang";
 
 /**
  * A button that opens a small menu: Google Calendar first (most people), then an
@@ -14,7 +15,7 @@ import { MenuButton } from "./MenuButton";
 export function AddToCalendar({
   event,
   events = event ? [event] : [],
-  label = "Add to calendar",
+  label,
   variant = "secondary",
   align = "right",
   className = "",
@@ -27,9 +28,10 @@ export function AddToCalendar({
   align?: "left" | "right";
   className?: string;
 }) {
+  const t = useT().list.calendar;
   return (
     <MenuButton
-      label={label}
+      label={label ?? t.add}
       icon={<CalendarIcon />}
       variant={variant}
       align={align}
@@ -40,7 +42,7 @@ export function AddToCalendar({
           href: googleCalendarUrl(ev),
           label: (
             <>
-              Google Calendar
+              {t.google}
               {events.length > 1 && <span className="text-ink-soft">: {ev.name ?? ev.title}</span>}
             </>
           ),
@@ -50,7 +52,7 @@ export function AddToCalendar({
           onSelect: () => downloadIcs(events),
           label: (
             <>
-              iCal file <span className="text-ink-soft">({events.length > 1 ? "both, for Apple or Outlook" : "Apple, Outlook"})</span>
+              {t.ical} <span className="text-ink-soft">{events.length > 1 ? t.icalBoth : t.icalOne}</span>
             </>
           ),
         },

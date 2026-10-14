@@ -97,8 +97,8 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
         <p className="flex items-center gap-3 text-[0.95rem] font-semibold text-orange">
           <span aria-hidden="true" className="h-0.5 w-6 shrink-0 bg-orange" />
           {fits === 0
-            ? `Even the first one is more than about $${dollars}. Start with what you have and add these as you can.`
-            : `Your $${dollars} runs out about here. That's around $${Math.round(spent)} so far.`}
+            ? `Each of these is more than about $${dollars}. Start with what you have and add these as you can.`
+            : `Your $${dollars} runs out about here. That's around $${Math.round(spent)} so far. Some below have free ways to start.`}
           <span aria-hidden="true" className="h-0.5 min-w-6 flex-1 bg-orange" />
         </p>
       </li>
@@ -113,7 +113,9 @@ function Body({ entries, st, row, budget }: { entries: ListEntry[]; st: (e: List
         </p>
         <ul className="mt-2 max-w-3xl divide-y divide-line">
           {order.flatMap((e, i) => {
-            const item = <ItemRow key={e.key} {...row(e)} showContainer />;
+            // Below the line, point out a free way to start, like filling jugs from the tap.
+            const free = i >= fits && st(e) === "need" ? FREE_WAYS[e.item.id] : undefined;
+            const item = <ItemRow key={e.key} {...(free ? { ...row(e), note: free } : row(e))} showContainer />;
             return i === fits && rest.length > 0 ? [line, item] : [item];
           })}
         </ul>

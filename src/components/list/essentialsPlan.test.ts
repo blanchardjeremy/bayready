@@ -46,8 +46,8 @@ describe("budget cutoff", () => {
     entry("flashlights", [8, 16]), // 12
   ];
 
-  it("covers everything above the first item that would go over, using the middle of each range", () => {
-    // water 10.5 + bags 15 + food 15 = 40.5; + flashlights 12 = 52.5 is over $50.
+  it("takes what fits in priority order, using the middle of each range", () => {
+    // water 10.5 + bags 15 + food 15 = 40.5; flashlights (12) would go over $50, and so would the bin.
     const plan = budgetPlan(list, allNeed, 50);
     expect(plan.order.map((e) => e.item.id)).toEqual(["water", "toilet-bags", "food", "flashlights", "bin"]);
     expect(plan.fits).toBe(3);
@@ -62,10 +62,17 @@ describe("budget cutoff", () => {
     expect(plan.spent).toBeCloseTo(49.5);
   });
 
-  it("stops at the first one over, even if something cheaper comes later", () => {
+  it("skips one big item so cheaper ones behind it still fit", () => {
     const plan = budgetPlan([entry("water", [60, 80]), entry("toilet-bags", [1, 2])], allNeed, 50);
-    expect(plan.fits).toBe(0);
-    expect(plan.spent).toBe(0);
+    expect(plan.order.map((e) => e.item.id)).toEqual(["toilet-bags", "water"]);
+    expect(plan.fits).toBe(1);
+    expect(plan.spent).toBe(1.5);
+  });
+
+  it("leaves cash below the line, since it's money set aside", () => {
+    const plan = budgetPlan([entry("cash-go", [0, 0], "go"), entry("toilet-bags", [1, 2])], allNeed, 50);
+    expect(plan.order.map((e) => e.item.id)).toEqual(["toilet-bags", "cash-go"]);
+    expect(plan.fits).toBe(1);
   });
 
   it("fits everything when the budget is big enough", () => {

@@ -81,21 +81,25 @@ export interface BudgetPlan {
 }
 
 /**
- * Walks the essentials in budget order, adding up what's still needed, and
- * stops at the first one that would go over. Everything above that point is
- * what the budget roughly covers.
+ * Walks the essentials in budget order and takes each one that still fits,
+ * skipping any that would go over, so one big item (like a lot of water)
+ * doesn't block the cheaper ones behind it. The ones that fit come first in
+ * `order`; the rest follow in their usual order.
  */
 export function budgetPlan(entries: ListEntry[], st: (e: ListEntry) => ItemState, dollars: number): BudgetPlan {
-  const order = budgetOrder(entries);
+  const fitting: ListEntry[] = [];
+  const rest: ListEntry[] = [];
   let spent = 0;
-  let fits = 0;
-  for (const e of order) {
+  for (const e of budgetOrder(entries)) {
     const cost = st(e) === "need" ? midCost(e) : 0;
-    if (spent + cost > dollars) break;
-    spent += cost;
-    fits++;
+    // Cash has no price on the list, but it's money set aside, not something a small budget covers.
+    const isCash = e.item.id.startsWith("cash") && st(e) === "need";
+    if (!isCash && spent + cost <= dollars) {
+      spent += cost;
+      fitting.push(e);
+    } else rest.push(e);
   }
-  return { order, fits, spent };
+  return { order: [...fitting, ...rest], fits: fitting.length, spent };
 }
 
 /**

@@ -18,16 +18,28 @@ npm run build     # production build
 - **Wizard** (`/build/[step]`): one question per screen, 10 steps for Basics, plus 2 more for
   Advanced (days at home and power). Every step has a default, so pressing Continue all the way through still gives a
   good list. Each step is its own URL, so the browser Back button and page titles work.
-- **List** (`/list`): grouped by kit (around the house, stay-at-home bin, go bag, car), with a "Start here"
-  card of free first steps, a shopping view, and a weekend / month / later plan. Long plan steps split
-  into "Do or gather, free" and "To buy" (sorted by store). Around-the-house tasks are grouped into
-  Make a plan, Neighbors and community, Sign-ups and paperwork, and Make your home safer. Items can be marked
-  "have it" or skipped. Advanced items sit in a collapsed "Level up" group for Basics users. Start
-  here takes up to 6 free first-weekend steps, highest `startRank` first. A "When it happens" card
-  (`src/data/firstHour.ts`) has its own Print button and is also a spreadsheet tab.
+- **List** (`/list`), top to bottom:
+  1. The heading, a one-line "Planning for" summary (answer badges that link to their wizard step), and
+     a "Happening now?" link to the When it happens card.
+  2. **Start here:** up to 6 free first-weekend steps, highest `startRank` first.
+  3. **The essentials** (`Essentials.tsx`, keys in `src/data/essentials.ts`): the short list to get
+     and put away first, with "x of N" progress and a finish state. Rows are the same rows as the full
+     list, so checkmarks are shared. The budget answer sets the order (`essentialsPlan.ts`): for $0,
+     free ways and things already at home come first; for $50 and $150, a line marks where the money
+     roughly runs out (middle of each cost range, in `BUDGET_ORDER`); anything else is grouped by kit.
+  4. **Save your list** (after the first checkmark), then the export row.
+  5. **Your full list:** the size toggle (Basics, 1 week / Advanced, 2 weeks + extras), kit progress
+     bars (only once something is checked), and three views: by kit, a shopping list with checkboxes,
+     and a weekend / month / later plan. Long plan steps split into "Do or gather, free" and "To buy"
+     (sorted by store). Around-the-house tasks are grouped into Make a plan, Neighbors and community,
+     Sign-ups and paperwork, and Make your home safer. Items can be marked "have it" or skipped, and
+     essentials get a small tag. Advanced items sit in a collapsed "When you're ready" group for
+     Basics users.
+  6. **When it happens** (`src/data/firstHour.ts`), with its own Print button. Also a spreadsheet tab.
+  7. **Know your home**, **Keep it fresh**, and "Clear everything on this device".
 - **OK / HELP sign** (`/sign`): a printable window sign, linked from the list.
 - **Privacy:** answers live in `localStorage`. Share links carry the answers in the URL fragment,
-  so nothing is sent to a server.
+  so nothing is sent to a server. See "Saving, offline, and the Home Screen app" below.
 
 ## Spreadsheet export
 
@@ -82,12 +94,54 @@ green for done, amber for soon, orange only for "replace now". Everything else i
 | `src/lib/share.ts` | Share links, packed bit by bit (see the comment at the top) |
 | `src/lib/buildList.ts` | Turns answers + items into the list. Pure and tested |
 | `src/components/wizard/` | Wizard steps and step titles |
-| `src/components/list/` | Results page |
+| `src/components/list/` | Results page. `essentialsPlan.ts` (budget order and cutoff) and `sharing.ts` (save prompt, private links, pasted links) are pure and tested |
+| `src/lib/ics.ts` | Calendar events and the twice-yearly reminder dates. Tested |
+| `src/lib/storage.ts` | The `localStorage` store behind `useStored`, and "Clear everything" |
+| `src/app/manifest.ts`, `public/sw.js`, `public/icons/` | The installable app and its offline copy |
 | `research/` | Source research: `supplies.md` (items, numbers, sources) and `ux.md` (question flow, presentation) |
+
+### Saving, offline, and the Home Screen app
+
+Everything is saved in the browser, so the main risk is losing it. Safari on iPhone deletes a site's
+saved data after about 7 days of use without a visit. The defenses, in order:
+
+- **The link is the backup.** Calendar events (Start here and the twice-yearly reminders) carry the
+  full share link as "Your list". After the first checkmark, a "Save your list" card offers Copy
+  link, Email it to myself (`mailto:`, no server), and Add to Home Screen steps. Hiding it sets
+  `bayready:savePrompt:v1`.
+- **Opening your own link** (one that matches what's saved on this device) just shows your list.
+  Opening a different list shows the "list from a link" banner, and "Make it my list" asks before
+  replacing a list already saved here.
+- **The empty state** says lists can be cleared and takes a pasted link. That's also how the Home
+  Screen app on iPhone gets a list: it has its own storage, separate from Safari, and starts empty.
+- **Home Screen apps** aren't subject to Safari's 7-day rule, and they work offline.
+- **Clear everything on this device** removes every `localStorage` and `sessionStorage` key starting
+  with `bayready:`. Give any new saved key that prefix so it's cleared too.
+- Hashes on `/list` are either a share code or a jump to a section. The sections links can jump to
+  are in `LIST_ANCHORS` (`sharing.ts`); add new ones there, or the hash is read as a list.
+
+The Home Screen app: `src/app/manifest.ts` becomes `manifest.webmanifest`, with `start_url` (the
+list), `scope`, and icon paths built with `sitePath`, so they include `/bayready` on GitHub Pages.
+The icons in `public/icons/` are drawn from the same tag as `src/app/icon.svg`.
+
+The offline copy: `public/sw.js`, registered by `src/components/ServiceWorker.tsx` in production
+builds only (`npm run dev` never registers it). Pages are network first, so a deploy shows up on the
+next online visit; files under `/_next/static`, icons, and fonts are cache first, since their names
+change when their contents do. On install it saves the home page, the list, the sign, and Sources,
+plus every built file they use. It reads its own scope, so it works at `/` and at `/bayready/`.
+Bump `VERSION` at the top of `sw.js` to throw away every saved copy. To try it, build with
+`PAGES_BASE_PATH=/bayready npm run build`, serve `out/` under `/bayready/`, open the list once, then
+go offline in dev tools and reload.
+
+Reminders (`twiceYearlyChecks` in `src/lib/ics.ts`) repeat every year on the second Sunday of March
+(the spring time change, 10am) and the third Thursday of October (the Great ShakeOut, 6pm). The
+.ics file holds both. Google Calendar can only add one at a time, so the menu has one item for each.
 
 ### Share links
 
-Links hold the answers and checkmarks, never Know your home or notes. They're packed bit by bit
+Links hold the answers and checkmarks, never Know your home or notes. Answers include names and
+health needs, so when there are any, the share dialog says so and offers a link without them
+(`withoutPersonalInfo` in `sharing.ts`: names cleared, needs unanswered). They're packed bit by bit
 (see the comment at the top of `src/lib/share.ts`) and built so links people already sent keep
 working as the app grows:
 

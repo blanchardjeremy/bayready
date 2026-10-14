@@ -89,5 +89,29 @@ export function firstHourCard(ctx: Context): CardSection[] {
   ];
   if (other.length) sections.push({ title: sections.length ? "Other emergencies" : "When it happens", lines: other });
 
+  // Recovery: what to do once the danger has passed. Sources: ATC-20 building
+  // placards, DisasterAssistance.gov, SBA disaster loans, CSLB, SAMHSA.
+  const damage = has("earthquake") || has("wildfire") || has("flood");
+  sections.push({
+    title: "In the days after",
+    lines: [
+      ...(has("earthquake")
+        ? [
+            "Inspectors may post a colored sign on your building. Green means OK to use, yellow means limited entry, and red means unsafe, so stay out.",
+            "Stored water running low? Listen for where water is being handed out, and bring clean containers with lids. Water-heater and pool water are for flushing, not drinking.",
+          ]
+        : []),
+      ...(damage
+        ? [
+            "Photograph damage before you clean up, then call your insurer. Keep receipts for anything you spend while you can't live at home.",
+            "Once a disaster is declared, apply for help at DisasterAssistance.gov. SBA disaster loans cover renters too, for things you lost.",
+            "Watch for contractor scams. Check the license at cslb.ca.gov, get the price in writing, and don't pay much up front.",
+          ]
+        : []),
+      ...(hasKids ? ["Keep kids' routines as normal as you can, and limit news on TV and phones."] : []),
+      "Feeling overwhelmed? Call or text the Disaster Distress Helpline at 1-800-985-5990, any time.",
+    ],
+  });
+
   return sections;
 }

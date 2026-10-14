@@ -57,6 +57,40 @@ describe("safety rules", () => {
   });
 });
 
+describe("the card", () => {
+  it("ends with what to do in the days after", () => {
+    const card = firstHourCard(ctxFor({ hazards: ["earthquake"], household: { ...EMPTY_ANSWERS.household, kids: 1 } }));
+    const after = card[card.length - 1];
+    expect(after.title).toBe("In the days after");
+    const text = after.lines.join(" ");
+    for (const want of [/Green/, /yellow/, /red means unsafe/, /Photograph damage/, /insurer/, /DisasterAssistance\.gov/, /renters/, /contractor/, /water is being handed out/, /1-800-985-5990/, /routines/]) {
+      expect(text).toMatch(want);
+    }
+  });
+
+  it("keeps the days-after section short when nothing is damaged", () => {
+    const card = firstHourCard(ctxFor({ hazards: ["smoke"] }));
+    expect(card[card.length - 1].lines).toEqual([expect.stringMatching(/Disaster Distress Helpline/)]);
+  });
+
+  it("tells families not to rush the school", () => {
+    const kids = cardLines({ hazards: ["earthquake"], household: { ...EMPTY_ANSWERS.household, kids: 2 } }).join(" ");
+    expect(kids).toMatch(/Don't call or rush the school/);
+    expect(cardLines({ hazards: ["earthquake"] }).join(" ")).not.toMatch(/school/);
+  });
+});
+
+describe("recovery", () => {
+  it("puts the financial first aid kit and home video in Basics, for later", () => {
+    const list = buildList(ctxFor({ hazards: ["earthquake"] }), ITEMS);
+    for (const id of ["effak", "home-inventory"]) {
+      const e = list.find((e) => e.item.id === id)!;
+      expect(e.level, id).toBe("basics");
+      expect(e.item.stage, id).toBe("later");
+    }
+  });
+});
+
 describe("essentials", () => {
   it("only names items that exist", async () => {
     const { ESSENTIAL_KEYS } = await import("./essentials");

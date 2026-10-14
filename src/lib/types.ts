@@ -96,6 +96,7 @@ export type Category =
   | "home-safety"
   | "comfort"
   | "plan"
+  | "practice"
   | "community"
   | "signup";
 
@@ -186,8 +187,10 @@ export interface Item {
   /**
    * Done per person rather than once for the household. In the go bag: every
    * bag gets one. For to-dos: every adult does it (their own phone, accounts, IDs).
+   * "adults": only adults' and teens' bags get one (N95s and phone power banks
+   * aren't for kids under 13).
    */
-  perPerson?: boolean;
+  perPerson?: boolean | "adults";
   /**
    * Rank among the free first-weekend steps for "Start here" (lower comes first).
    * Unranked steps follow in list order.

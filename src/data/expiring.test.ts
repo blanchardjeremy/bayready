@@ -27,6 +27,16 @@ describe("expiringSections", () => {
     ]);
   });
 
+  it("doesn't give kids rows for adults-only things", () => {
+    const household = { ...EMPTY_ANSWERS.household, adults: 1, kids: 1 };
+    const [, adult, kid] = sections({ build: "both", household, needs: ["meds", "vision-hearing"] });
+    const rows = (s: typeof adult) => s.rows.map((r) => r.item);
+    expect(rows(adult)).toEqual(expect.arrayContaining(["Phone power bank", "Prescription medicine"]));
+    expect(rows(kid)).not.toContain("Phone power bank");
+    expect(rows(kid)).not.toContain("Prescription medicine");
+    expect(rows(kid).some((r) => r.startsWith("Contacts"))).toBe(false);
+  });
+
   it("starts shared supplies with food, then places to add your own", () => {
     const rows = sections({ build: "both" })[0].rows.map((r) => r.item);
     expect(rows[0]).toBe("[Example] Canned beans");

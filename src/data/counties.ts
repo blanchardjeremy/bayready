@@ -16,6 +16,12 @@ export interface County {
   block?: { label: string; url: string };
 }
 
+/** Oakland runs its own training, CORE, instead of Alameda County Fire's CERT (checked 2026-10-14). */
+export const OAKLAND_CORE = {
+  label: "Oakland CORE classes",
+  url: "https://www.oaklandca.gov/Public-Safety-Streets/Emergency-Preparedness-Services/Ready-Oakland-CORE",
+};
+
 // Alert, CERT, and neighborhood links checked 2026-10-11. Several counties redirect
 // their short domains to pages on the county site; we link the landing page directly.
 // Santa Clara and Solano have no countywide CERT program, so they use FEMA's CERT page.
@@ -28,6 +34,9 @@ export const COUNTIES: County[] = [
     tsunami: true,
     ebmud: true,
     cert: { label: "CERT classes (Alameda County Fire)", url: "https://fire.acgov.org/emergency-preparedness" },
+    // Alameda County Fire's CERT doesn't serve Oakland, Berkeley, Fremont, or Hayward, which
+    // run their own. We only know the county, so the training item names Oakland's CORE in its
+    // text, and the Sources page links it.
   },
   {
     id: "contra-costa",
@@ -45,7 +54,6 @@ export const COUNTIES: County[] = [
     hazards: ["wildfire", "flood"],
     tsunami: true,
     cert: { label: "Ready Marin classes", url: "https://readymarin.marincounty.gov" },
-    block: { label: "Ready Marin neighborhood groups", url: "https://readymarin.marincounty.gov" },
   },
   {
     id: "napa",

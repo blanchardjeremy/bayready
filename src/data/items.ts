@@ -1,4 +1,4 @@
-import type { Container, Context, Item, Quantity } from "@/lib/types";
+import type { Container, Context, Item, NeedId, Quantity } from "@/lib/types";
 import { COUNTY_BY_ID } from "./counties";
 import { sitePath, siteUrl } from "@/lib/urls";
 
@@ -11,12 +11,16 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 const each = (n: number, one: string, many?: string): Quantity => ({ text: plural(n, one, many) });
 const range = (lo: number, hi: number, n = 1): [number, number] => [lo * n, hi * n];
 
+/** Gallons per person per day. EBMUD asks for 2; most other agencies say 1. */
+export const waterPerPerson = (ctx: Context) => (ctx.ebmud ? 2 : 1);
+
+/** Gallons a day for people and pets at home. */
+const waterPerDay = (ctx: Context) =>
+  ctx.people * waterPerPerson(ctx) + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1;
+
 /** Gallons of drinking water for people and pets at home. */
 export function stayWaterGallons(ctx: Context): number {
-  const d = ctx.stayDays;
-  const people = ctx.people * d;
-  const pets = ctx.dogs * 0.5 * d + ctx.cats * 0.25 * d + ctx.otherPets * 0.1 * d;
-  return Math.ceil(people + pets);
+  return Math.ceil(waterPerDay(ctx) * ctx.stayDays);
 }
 
 function waterBuy(gal: number): string {
@@ -31,8 +35,17 @@ const eachBag = (amount: string) => (ctx: Context): Quantity => ({
   buy: ctx.carriers > 1 ? `for ${ctx.carriers} bags` : undefined,
 });
 
-/** People eating regular food: adults and teens count as one, kids about two-thirds. Babies have formula and baby food. */
-const eaters = (ctx: Context) => ctx.adults + ctx.kids * 0.7;
+/** A go bag item for adults and teens only (perPerson: "adults"). Kids under 13 skip it. */
+const eachAdultBag = (amount: string) => (ctx: Context): Quantity => ({
+  text: ctx.kids > 0 ? `${amount} per adult or teen` : `${amount} each`,
+  buy: ctx.adults > 1 ? `for ${ctx.adults} bags` : undefined,
+});
+
+/**
+ * People eating regular food. Kids count as a whole person: rationing guidance
+ * says not to cut back food for children. Babies have formula and baby food.
+ */
+const eaters = (ctx: Context) => ctx.adults + ctx.kids;
 
 /** One row of the stay-at-home food plan, counted in store units and scaled by days at home. */
 function foodPart(o: {
@@ -65,10 +78,26 @@ function foodPart(o: {
   };
 }
 
-const isEastBay = (ctx: Context) => ctx.ebmud;
+/** Any health need, or "Prefer not to say", which gets the general health items. */
+const anyNeeds = (ctx: Context) => ctx.needs.size > 0 || ctx.needsPrivate;
+const hasNeed = (...ids: NeedId[]) => (ctx: Context) => ids.some((n) => ctx.needs.has(n));
 
-const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
+/** Two buckets keep pee and poop apart, which matters more as the household grows. */
+const toiletBuckets = (ctx: Context) => (ctx.level === "advanced" || ctx.people > 2 ? 2 : 1);
 const notApartment = (ctx: Context) => ctx.home !== "apartment-low" && ctx.home !== "apartment-high";
+
+/** The Great ShakeOut drill: the third Thursday in October. The next one on or after `today`. */
+export function nextShakeOut(today: Date): Date {
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  for (const year of [today.getFullYear(), today.getFullYear() + 1]) {
+    const firstThursday = 1 + ((4 - new Date(year, 9, 1).getDay() + 7) % 7);
+    const drill = new Date(year, 9, firstThursday + 14);
+    if (drill >= start) return drill;
+  }
+  throw new Error("unreachable");
+}
+
+const shakeOutLabel = (d: Date) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
 // ---------------------------------------------------------------------------
 // Items
@@ -85,7 +114,7 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    why: "Free texts and calls about evacuations, fires, and other emergencies near you. Most are opt-in, and few people sign up.",
+    why: "Free texts and calls about evacuations, fires, and other emergencies near you. Signing up takes a couple of minutes, and it's how your county warns you about your own address.",
     tip: "Sign up with your home address, plus work or school if they're in a different county.",
     link: (ctx) => {
       const c = ctx.answers.county ? COUNTY_BY_ID[ctx.answers.county] : undefined;
@@ -97,14 +126,39 @@ export const ITEMS: Item[] = [
   {
     id: "contact",
     startRank: 4,
-    name: "Make a household plan",
+    name: "Pick an out-of-area contact and two meeting spots",
     category: "plan",
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    why: "Pick an out-of-area contact everyone can text, plus two meeting spots: one right outside, and one outside your neighborhood in case you can't get home.",
-    tip: "Decide who picks up kids and pets if you can't get home. After a big quake, local calls often fail but texts and long-distance calls can get through. Write the plan on paper, put a copy in every bag, and go over it once a year.",
+    why: "Ask someone outside the Bay Area to be the person everyone texts. Then pick two meeting spots: one right outside, and one outside your neighborhood in case you can't get home.",
+    tip: "After a big quake, local phone lines jam, but a text to someone far away often gets through, and they can pass news between you. Decide who picks up kids and pets if you can't get home. Go over the plan once a year.",
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "group-text",
+    name: "Start a household group text and agree on a check-in message",
+    category: "plan",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.carriers > 1,
+    why: "One thread for everyone at home, plus your out-of-area contact. Agree on short messages, like \"OK, at home\" or \"OK, going to the meeting spot\", so one quick text says it all.",
+    tip: "Texts often get through when calls don't, and they save battery.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "wallet-cards",
+    name: "Make a wallet card for each person",
+    category: "plan",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "A small card with your out-of-area contact, meeting spots, and key numbers, so the plan is with you even when your phone is dead. Use the wallet cards in your PDF.",
+    tip: "Kids keep theirs in their backpack. Update the cards when a number changes.",
+    stage: "month",
     shop: "free",
   },
   {
@@ -134,6 +188,31 @@ export const ITEMS: Item[] = [
     shop: "free",
   },
   {
+    id: "tetanus",
+    name: "Check that everyone's tetanus shot is up to date",
+    category: "first-aid",
+    containers: ["home"],
+    level: "basics",
+    hazards: ["earthquake", "flood", "wildfire"],
+    why: "Cuts from glass, debris, and flood water can cause tetanus. Adults need a booster every 10 years, and sooner after a dirty wound if it's been 5 years.",
+    tip: "Not sure when your last one was? Ask your doctor or pharmacy. Kids get theirs with their regular shots.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "first-aid-class",
+    name: "Have one adult take a CPR or Stop the Bleed class",
+    category: "first-aid",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "After a big disaster, help can take hours. Knowing how to stop heavy bleeding or do CPR can save someone before it arrives.",
+    tip: "Stop the Bleed classes take about an hour and are often free. Fire departments and the Red Cross teach CPR. One person in your home is plenty to start.",
+    link: () => ({ label: "Find a Stop the Bleed class", url: "https://www.stopthebleed.org" }),
+    stage: "later",
+    shop: "free",
+  },
+  {
     id: "evac-zone",
     startRank: 3,
     name: "Look up your evacuation zone",
@@ -154,7 +233,7 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: ["outage"],
-    why: "PG&E warns people before planned power shutoffs, usually a day or two ahead. You don't need a PG&E account, so renters can sign up too.",
+    why: "PG&E tries to warn people a day or two before planned power shutoffs, but sometimes it's only a few hours. You don't need a PG&E account, so renters can sign up too.",
     tip: "You can add more than one address, like work, school, or a parent's place.",
     link: () => ({ label: "PG&E address alerts", url: "https://www.pge.com/addressalert" }),
     stage: "weekend",
@@ -227,11 +306,105 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    when: anyNeeds,
+    // For needs where someone may need hands-on help, not glasses or a special diet.
+    when: (ctx) =>
+      ctx.needsPrivate ||
+      hasNeed("mobility", "power-device", "oxygen", "cold-meds", "cognitive", "caregiver", "dialysis", "communication")(ctx),
     why: "Pick two or three people nearby, like a neighbor, friend, or coworker, who'd check on you after a disaster. Tell them what help you might need.",
     tip: "Don't count on just one person, or only on paid help, since they may not be able to reach you. Show someone how your equipment works, and think about giving them a key.",
     link: () => ({ label: "Ready.gov: planning with a disability", url: "https://www.ready.gov/disability" }),
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "health-general",
+    name: "If anyone takes medicine or uses medical equipment, plan for it",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.needsPrivate,
+    why: "Pharmacies and power may be out for a while. Keep a week or more of extra medicine and supplies, a written list of medicines and doses, and a way to power any equipment.",
+    tip: "Ask your pharmacy or doctor how to get extra ahead of time. If no one at home needs this, skip it.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "comm-access",
+    name: "Set up alerts and 911 so they work for you",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("communication"),
+    why: "Call 911 if you can, text if you can't: texting 911 works across California. Turn on flashing and vibrating alerts in your phone's accessibility settings, and look for a smoke alarm with a strobe light or bed shaker.",
+    tip: "Pack pen and paper or a communication card in your bag. A battery lantern lights up a room so you can lip-read or sign in the dark.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "cognitive-plan",
+    name: "Make sure someone who may get confused is never left alone",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("cognitive"),
+    why: "Stress and change can make confusion worse, and some people wander. Agree who stays with them the whole time, and who takes over if that person is hurt or away.",
+    tip: "Pack an ID bracelet with your number, a recent photo, and a few familiar comfort things in their bag. Calm, simple practice helps.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "caregiver-plan",
+    name: "Make a backup plan for daily care",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("caregiver"),
+    why: "If the person who gives care can't get there, who steps in? Line up a backup, and write down the daily routine, medicines, and equipment so someone new can help.",
+    tip: "Ask your home health agency or IHSS provider what their emergency plan is, and how they'd reach you.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "dialysis-plan",
+    name: "Get your dialysis emergency plan from your care team",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("dialysis"),
+    why: "Ask for the 3-day emergency diet, which limits potassium, salt, and fluid, and keep those foods in your bin. Ask your clinic for its backup plan: where you'd go if it closes, and how they'd reach you.",
+    tip: "Can't reach your clinic after a disaster? Call the KCER patient hotline at 866-901-3773. Keep your treatment schedule and recent lab results with your medical info.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "pregnancy-plan",
+    name: "If you're pregnant: pack vitamins, records, and your provider's number",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("pregnancy"),
+    why: "Put prenatal vitamins, any medicines, and a copy of your prenatal records with your supplies. Save your provider's after-hours number and the address of the hospital where you plan to deliver.",
+    tip: "Store extra water: you'll need more than a gallon a day, especially in heat or smoke. Close to your due date, plan how you'd get to the hospital if roads are blocked.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "service-animal",
+    name: "Pack for your service animal",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("service-animal"),
+    why: "Keep their food, water, a bowl, any medicine, vaccination records, and ID with your own go bag. Service animals are allowed in shelters, even ones that don't take pets.",
+    tip: "Add a leash, waste bags, and a photo of the two of you in case you get separated.",
+    stage: "month",
     shop: "free",
   },
   {
@@ -254,8 +427,8 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: ["earthquake", "flood"],
-    why: "Only turn off the gas if you smell gas or hear hissing. Once it's off, only PG&E can turn it back on, which can take days.",
-    tip: "In a house, keep a wrench by the gas meter, about $15. In an apartment, ask your building manager where these are and who handles them. If pipes break after a quake, close the water main to keep the clean water in your pipes and water heater.",
+    why: "Only turn off the gas if you smell gas or hear hissing. Once it's off, only PG&E can turn it back on, and after a big quake that can take weeks.",
+    tip: "In a house, keep a wrench by the gas meter, about $15. In an apartment, ask your building manager where these are and who handles them. If pipes break after a quake, close the water main so dirty water can't get into your pipes.",
     stage: "weekend",
     shop: "free",
   },
@@ -267,7 +440,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     why: "Fires are common after quakes and during outages. Generators, grills, and gas heaters used during outages cause carbon monoxide poisoning.",
-    tip: "Press the test button monthly. Replace smoke alarms at 10 years and CO alarms at 5 to 7. Put a CO alarm with battery backup near where people sleep. Plan two ways out of every room.",
+    tip: "Press the test button monthly. Replace smoke alarms at 10 years, and CO alarms by the date on the back, usually 7 to 10 years. Put a CO alarm with battery backup near where people sleep. Plan two ways out of every room.",
     cost: () => [0, 40],
     stage: "month",
     shop: "hardware",
@@ -417,7 +590,7 @@ export const ITEMS: Item[] = [
     name: "Take a video walk-through of your home",
     category: "signup",
     containers: ["home"],
-    level: "advanced",
+    level: "basics",
     hazards: ["earthquake", "wildfire", "flood"],
     why: "Open closets and drawers and say what things are as you film. It makes an insurance claim much easier if you lose everything.",
     tip: "Save it somewhere off-site, like the cloud or an email to a relative. Redo it once a year.",
@@ -482,14 +655,62 @@ export const ITEMS: Item[] = [
     id: "drop-cover",
     startRank: 6,
     name: "Practice Drop, Cover, and Hold On",
-    category: "plan",
+    category: "practice",
     containers: ["home"],
     level: "basics",
     hazards: ["earthquake"],
     why: "Drop to your hands and knees, cover your head and neck under a sturdy table, and hold on until the shaking stops. Don't run outside.",
     tip: "In bed? Stay there and cover your head with a pillow. In a wheelchair? Lock the wheels and cover your head and neck. Practice once with everyone at home. The Great ShakeOut drill is the third Thursday in October, a good day to invite the neighbors.",
-    link: () => ({ label: "Great ShakeOut", url: "https://www.shakeout.org/california/" }),
+    link: () => ({ label: `Great ShakeOut: ${shakeOutLabel(nextShakeOut(new Date()))}`, url: "https://www.shakeout.org/california/" }),
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "practice-text",
+    name: "Send a test text to your out-of-area contact",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Send your check-in message and ask them to text back. It takes two minutes, and you'll know the plan works before you need it.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-meet",
+    name: "Walk to your meeting spots together",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Walk to both spots once with everyone, so no one has to work out the way after a disaster. About 20 minutes.",
+    tip: "Point out landmarks to kids, and agree what to do if a spot is blocked.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-leave",
+    name: "Practice leaving in 10 minutes",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.kits.includes("go") || (["wildfire", "tsunami", "flood"] as const).some((h) => ctx.hazards.has(h)),
+    why: "Set a timer for 10 minutes. Grab the go bags, medicine, chargers, papers, and pets, and get everyone out the door or into the car. Then talk about what slowed you down.",
+    tip: "Pets hide when things get hectic, so practice getting them into carriers. June, before fire season, is a good time to do it again.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "practice-fire",
+    name: "Do a night fire drill, with two ways out",
+    category: "practice",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "Once, after dark: press the smoke alarm test button and have everyone get out from their bedroom and meet outside. Then do it again using the second way out. About 10 minutes.",
+    tip: "Kids can sleep through a smoke alarm, so agree which adult goes to them. In an apartment building, use the stairs, never the elevator.",
+    stage: "later",
     shop: "free",
   },
   {
@@ -499,8 +720,8 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: ["earthquake"],
-    why: "After a big quake, a sign in the window tells neighbors and crews who needs help first, so they can skip homes that are fine.",
-    tip: "Keep it by the front door with some tape. Put up HELP even if you can't get to the door.",
+    why: "After a big quake, a sign in the window tells your neighbors who needs help first, so whoever walks the block can skip homes that are fine.",
+    tip: "Keep it by the front door with some tape, and tell the neighbors you've met to look for it. Put up HELP even if you can't get to the door.",
     // A full URL in the browser, so the link also works from the spreadsheet.
     link: () => ({ label: "Print the sign", url: typeof window === "undefined" ? sitePath("/sign") : siteUrl("/sign") }),
     stage: "month",
@@ -598,15 +819,29 @@ export const ITEMS: Item[] = [
   },
   {
     id: "school-plan",
-    name: "Learn your kids' school pickup plan",
+    startRank: 3,
+    name: "Learn your kids' school or daycare pickup plan",
     category: "plan",
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    when: (ctx) => ctx.kids > 0,
-    why: "Schools keep kids until an approved adult picks them up. Make sure the emergency card lists people who could get there if you're stuck across the Bay.",
-    tip: "Ask how the school will reach parents, and where kids would go if the school moves them.",
+    when: (ctx) => ctx.kids + ctx.babies > 0,
+    why: "Schools and daycares keep kids until an adult on their emergency card picks them up. For each child, fill in the card again every school year, with at least one person who wouldn't have to cross a bridge. Bring photo ID when you pick up.",
+    tip: "After a quake, don't call or rush the school. Schools have plans to look after kids until someone on the card arrives, and calls tie up the lines. Ask now how the school will reach parents, and where kids would go if it moves them.",
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "kids-ready",
+    name: "Get kids ready: their own bag, one number, and a job",
+    category: "baby-kids",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.kids > 0,
+    why: "Let kids help pack their own bag with a comfort item and snacks they like. Help each one memorize one phone number, and give them a job, like grabbing the flashlight or the pet's leash.",
+    tip: "Having a job helps kids feel more in control when things are scary.",
+    stage: "month",
     shop: "free",
   },
   {
@@ -629,8 +864,8 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "advanced",
     hazards: "all",
-    why: "You'll learn first aid, how to put out small fires, and how to help neighbors safely until crews arrive. It's free in most of the Bay Area (NERT in San Francisco).",
-    tip: "Short on time? A first aid and CPR class, or a 2-hour Get Ready class, is a great start. One person in your home is plenty.",
+    why: "You'll learn first aid, how to put out small fires, and how to help neighbors safely until crews arrive. It's free in most of the Bay Area. San Francisco's is called NERT, and Oakland's is CORE.",
+    tip: "Short on time? A first aid and CPR class, or a 2-hour Get Ready class, is a great start. One person in your home is plenty. In Alameda County, Oakland, Berkeley, Fremont, and Hayward run their own classes, so check your city's fire department.",
     link: (ctx) => {
       const c = ctx.answers.county ? COUNTY_BY_ID[ctx.answers.county] : undefined;
       return c?.cert ?? { label: "Find a CERT program", url: "https://www.fema.gov/emergency-managers/individuals-communities/preparedness-activities-webinars/community-emergency-response-team" };
@@ -640,18 +875,19 @@ export const ITEMS: Item[] = [
   },
   {
     id: "block",
-    name: "Get your block or building together",
+    name: "Meet three neighbors and agree who walks the block",
     category: "community",
     containers: ["home"],
-    level: "advanced",
+    level: "basics",
     hazards: "all",
-    why: "One short meeting with neighbors: swap numbers, pick a spot to meet, and note who has useful skills or tools, like first aid, a ladder, or a power station.",
-    tip: "Snacks help. Let people share only what they want to, and let them say if they'd like a check-in. The spreadsheet has a Neighbors tab for notes.",
+    why: "Meet three neighbors on your floor or block, and agree one of you will walk the block after a quake to see who needs help.",
+    tip: "Show them the OK / HELP sign so everyone knows to look for it. When you're ready, a short block meeting goes further: pick a spot to meet, and note who has useful skills or tools, like first aid or a ladder. Let people share only what they want to. The spreadsheet has a Neighbors tab for notes.",
+    // San Francisco has Map Your Neighborhood. Everyone else gets the Listos block party kit.
     link: (ctx) => {
       const c = ctx.answers.county ? COUNTY_BY_ID[ctx.answers.county] : undefined;
       return c?.block ?? { label: "Listos California block party kit", url: "https://www.listoscalifornia.org/blockparty/" };
     },
-    stage: "later",
+    stage: "month",
     shop: "free",
   },
   {
@@ -686,48 +922,27 @@ export const ITEMS: Item[] = [
   },
   {
     id: "water",
-    scalesWithDays: {
-      perDay: (ctx) => ctx.people + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1,
-      unit: "gallons",
-      costPerDay: (ctx) => range(1, 2, ctx.people + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1),
-    },
+    scalesWithDays: { perDay: waterPerDay, unit: "gallons", costPerDay: (ctx) => range(1, 2, waterPerDay(ctx)) },
     name: "Drinking water",
     category: "water",
     containers: ["stay"],
     level: "basics",
     hazards: "all",
-    why: "Plan on 1 gallon per person per day, for drinking and basic cleaning. After a big quake, tap water may be off or unsafe for days or weeks.",
-    tip: "Kids, nursing parents, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.",
+    why: "Plan on at least 1 gallon per person per day, for drinking and basic cleaning. EBMUD asks East Bay households for 2. After a big quake, tap water may be off or unsafe for days or weeks.",
+    tip: "Kids, nursing parents, pregnant people, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.",
     qty: (ctx) => {
       const gal = stayWaterGallons(ctx);
       const start = Math.ceil((gal / ctx.stayDays) * 3);
+      const ebmud = ctx.ebmud ? "This counts 2 gallons a day each, as EBMUD asks. " : "";
       return {
         text: `${gal} gallons`,
-        buy: `${waterBuy(gal)}. If that's a lot, start with ${start} gallons (3 days) and add more over time.`,
+        buy: `${ebmud}${waterBuy(gal)}. If that's a lot, start with ${start} gallons (3 days) and add more over time.`,
       };
     },
     cost: (ctx) => range(1, 2, stayWaterGallons(ctx)),
     stage: "month",
     shop: "grocery",
     haveKey: "water",
-  },
-  {
-    id: "water-ebmud",
-    scalesWithDays: { perDay: (ctx) => ctx.people, unit: "more gallons", costPerDay: (ctx) => range(1, 2, ctx.people) },
-    name: "Extra water to reach 2 gallons a day",
-    category: "water",
-    containers: ["stay"],
-    level: "advanced",
-    hazards: ["earthquake"],
-    when: isEastBay,
-    why: "East Bay water agencies like EBMUD recommend 2 gallons per person per day for at least a week. The USGS estimates East Bay water could be out for about 6 weeks after a big Hayward Fault quake.",
-    qty: (ctx) => {
-      const gal = ctx.people * ctx.stayDays;
-      return { text: `${gal} more gallons`, buy: waterBuy(gal) };
-    },
-    cost: (ctx) => range(1, 2, ctx.people * ctx.stayDays),
-    stage: "later",
-    shop: "grocery",
   },
   {
     id: "bleach",
@@ -788,16 +1003,19 @@ export const ITEMS: Item[] = [
   },
   // A simple daily food plan: per person, a can of protein, a can of fruit or
   // vegetables, a couple of servings of crackers or cereal, a spoonful of nut
-  // butter, and a snack. About 1,200 to 1,500 calories, which Ready.gov says
-  // healthy people can live on for a while. Kids count as about two-thirds.
+  // butter, and a snack. It's less than people usually eat, so the copy steers
+  // toward filling picks (beans or chili over tuna, fruit in juice, full-fat).
+  // Lean picks can come in well under 1,000 calories. No agency gives a daily
+  // calorie number for this, so we don't quote one. Everyone counts as one
+  // person, kids included: rationing guidance excludes kids and pregnancy.
   foodPart({
     id: "food",
     name: "Canned protein: beans, tuna, chicken, or chili",
     perPersonPerDay: 1,
     unit: ["can", "cans"],
     unitCost: [1.5, 3],
-    why: "The base of your food plan: about one can per person per day. Together with the other food rows, that's 1,200 to 1,500 calories a day each. Ready.gov says healthy people can get by on that for a while, so you don't need full meals.",
-    tip: "Most kitchens already have a few days of food. Buy what you already eat, so you can rotate it into meals and replace it. Pull-tab lids save needing the opener.",
+    why: "The base of your food plan: about one can per person per day. With the other food rows, it's enough to get by, not full meals. Don't cut back on food for kids, or for anyone pregnant or nursing.",
+    tip: "Pick filling foods: beans, chili, or chicken over tuna, fruit packed in juice, and full-fat over low-fat. On a low-salt or fluid-limited diet? Pick low-sodium cans and ask your doctor how much to drink in a heat wave. Buy what you already eat, so you can rotate it into meals. Pull-tab lids save needing the opener.",
   }),
   foodPart({
     id: "food-fruit-veg",
@@ -1016,7 +1234,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     why: "One for each person. Headlamps leave your hands free.",
-    tip: "Skip candles. They're a leading cause of fires after earthquakes.",
+    tip: "Skip candles. They're a common cause of fires after earthquakes.",
     qty: (ctx) => each(ctx.people, "light"),
     cost: (ctx) => range(8, 15, ctx.people),
     stage: "month",
@@ -1030,6 +1248,8 @@ export const ITEMS: Item[] = [
     containers: ["stay"],
     level: "advanced",
     hazards: ["outage", "earthquake"],
+    // Lip-reading and signing need light on faces, not a flashlight beam.
+    promote: hasNeed("communication"),
     why: "Lights up a whole room so you're not juggling flashlights at dinner.",
     qty: () => each(1, "lantern"),
     cost: () => [15, 30],
@@ -1052,7 +1272,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "powerbank",
-    perPerson: true,
+    perPerson: "adults",
     examples: [{ label: "BLAVOR solar power bank", url: "https://www.amazon.com/dp/B07FDXDB3W" }],
     coveredByGo: true,
     name: "Phone power bank",
@@ -1062,23 +1282,23 @@ export const ITEMS: Item[] = [
     hazards: "all",
     why: "Your phone is your flashlight, radio, and lifeline. A charged power bank keeps it going for a few days.",
     tip: "10,000 mAh charges most phones two or three times. Recharge it every few months.",
-    qty: (ctx, c) => (c === "go" ? eachBag("1")(ctx) : each(ctx.adults, "power bank")),
-    cost: (ctx, c) => range(15, 35, c === "go" ? ctx.carriers : ctx.adults),
+    qty: (ctx, c) => (c === "go" ? eachAdultBag("1")(ctx) : each(ctx.adults, "power bank")),
+    cost: (ctx) => range(15, 35, ctx.adults),
     stage: "month",
     shop: "online",
     haveKey: "powerbank",
   },
   {
     id: "cable",
-    perPerson: true,
+    perPerson: "adults",
     name: "Phone charging cable",
     category: "light-power",
     containers: ["go"],
     level: "basics",
     hazards: "all",
     why: "Easy to forget when you leave in a hurry, and phones don't all use the same plug.",
-    qty: eachBag("1"),
-    cost: (ctx) => range(5, 15, ctx.carriers),
+    qty: eachAdultBag("1"),
+    cost: (ctx) => range(5, 15, ctx.adults),
     stage: "month",
     shop: "online",
   },
@@ -1134,22 +1354,22 @@ export const ITEMS: Item[] = [
     containers: ["stay", "go"],
     level: "basics",
     hazards: "all",
-    why: "If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance.",
+    why: "If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance, plus the Disaster Distress Helpline (call or text 1-800-985-5990) and 988 for a mental health crisis.",
     qty: (ctx, c) => (c === "go" ? eachBag("1 card")(ctx) : null),
-    tip: "Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.",
+    tip: "The wallet cards in your PDF work well for this. Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.",
     stage: "weekend",
     shop: "free",
   },
   {
     id: "first-aid",
-    coveredByGo: true,
+    // No coveredByGo: the go bag's kit is small, so home keeps a full one too.
     name: "First aid kit",
     category: "first-aid",
     containers: ["stay", "go"],
     level: "basics",
     hazards: "all",
     why: "Cuts, scrapes, and sprains are the most common injuries after a quake. Help may be slow to arrive.",
-    tip: "Make sure it has bandages, gauze, tape, alcohol wipes, nitrile gloves, and tweezers. A small kit is fine for the go bag. A printed guide or the Red Cross First Aid app works without internet.",
+    tip: "Make sure it has bandages, gauze, tape, nitrile gloves, tweezers, and a squeeze bottle or syringe for rinsing wounds with clean water, the first step for any cut. A small kit is fine for the go bag. A printed guide or the Red Cross First Aid app works without internet.",
     qty: () => each(1, "kit"),
     cost: (ctx, c) => (c === "go" ? [15, 30] : [25, 50]),
     stage: "month",
@@ -1178,7 +1398,7 @@ export const ITEMS: Item[] = [
     hazards: "all",
     when: (ctx) => ctx.needs.has("meds"),
     why: "Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can.",
-    tip: "Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.",
+    tip: "Include supplies like test strips, needles, or ostomy supplies. To get extra, ask your pharmacy for a \"vacation override\" or your doctor for a 90-day supply. In a declared disaster, Medicare drug plans lift \"refill too soon\" limits, and California pharmacists can give emergency refills. For controlled medicines, like methadone or buprenorphine, ask your clinic about its emergency plan. If you don't take any, tick your name.",
     qty: (ctx, c) => (c === "go" ? eachBag("7 days")(ctx) : { text: ctx.level === "advanced" ? "14 days" : "7 days or more" }),
     stage: "month",
     shop: "pharmacy",
@@ -1249,7 +1469,8 @@ export const ITEMS: Item[] = [
     hazards: "all",
     when: (ctx) => ctx.needs.has("mobility"),
     why: "A tire patch kit, spare cane, a charged spare battery for a power chair or scooter, or a manual backup chair. Elevators may be out for days.",
-    cost: () => [10, 60],
+    tip: "Costs vary a lot. A patch kit is a few dollars, but a spare power chair battery or backup chair can cost hundreds. Ask your supplier and your insurance what they cover.",
+    cost: () => [20, 500],
     stage: "month",
     shop: "online",
   },
@@ -1323,9 +1544,9 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: ["earthquake"],
     why: "Don't flush after a big quake until you know the sewer lines are OK. A 5-gallon bucket lined with heavy bags, plus kitty litter or sawdust, works.",
-    tip: "Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot.",
-    qty: (ctx) => each(ctx.level === "advanced" ? 2 : 1, "bucket"),
-    cost: (ctx) => (ctx.level === "advanced" ? [16, 30] : [8, 15]),
+    tip: "Snap-on toilet seats for buckets are cheap. A second bucket to keep pee and poop separate cuts the smell a lot. Tie off full bags and keep them in a trash can with a lid, away from where people live, until officials say how to get rid of them. Set up a place to wash hands next to it: a jug of water, soap, and a bowl or bucket to catch the water.",
+    qty: (ctx) => each(toiletBuckets(ctx), "bucket"),
+    cost: (ctx) => range(8, 15, toiletBuckets(ctx)),
     stage: "month",
     shop: "hardware",
   },
@@ -1337,9 +1558,10 @@ export const ITEMS: Item[] = [
     containers: ["stay"],
     level: "basics",
     hazards: "all",
-    why: "To line the toilet bucket, and for trash, since garbage pickup may stop. Get more than you think.",
-    qty: (ctx) => ({ text: ctx.level === "advanced" ? "40+ bags" : "30+ bags" }),
-    cost: () => [10, 20],
+    why: "To line the toilet bucket: about one a day per person. Get extra for trash, since garbage pickup may stop.",
+    scalesWithDays: { perDay: (ctx) => ctx.people, unit: "bags", unitOne: "bag", costPerDay: (ctx) => range(0.5, 1.5, ctx.people) },
+    qty: (ctx) => each(ctx.people * ctx.stayDays, "bag"),
+    cost: (ctx) => range(0.5, 1.5, ctx.people * ctx.stayDays),
     stage: "month",
     shop: "grocery",
   },
@@ -1419,16 +1641,16 @@ export const ITEMS: Item[] = [
   },
   {
     id: "n95",
-    perPerson: true,
+    perPerson: "adults",
     name: "N95 masks",
     category: "air",
     containers: ["stay", "go"],
     level: "basics",
     hazards: ["smoke", "wildfire", "earthquake"],
     why: "They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't.",
-    tip: "Look for \"NIOSH approved\" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.",
-    qty: (ctx, c) => (c === "go" ? eachBag("2")(ctx) : each((ctx.adults + ctx.kids) * 5, "mask")),
-    cost: (ctx, c) => range(1, 1.5, (ctx.adults + ctx.kids) * (c === "stay" ? 5 : 2)),
+    tip: "Look for \"NIOSH approved\" on the box. They need a snug fit, so pick a size for each adult and teen. N95s aren't made for kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.",
+    qty: (ctx, c) => (c === "go" ? eachAdultBag("2")(ctx) : each(ctx.adults * 5, "mask")),
+    cost: (ctx, c) => range(1, 1.5, ctx.adults * (c === "stay" ? 5 : 2)),
     stage: "month",
     shop: "hardware",
     haveKey: "n95",
@@ -1548,7 +1770,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     why: "Turn on emergency alerts in Settings, add Emergency SOS contacts and a Medical ID, download an offline map of the Bay Area, and install MyShake for earthquake warnings.",
-    tip: "Each takes a couple of minutes. Android phones have quake alerts built in, but MyShake is a good backup. Newer iPhones and some Android phones can text 911 by satellite with no signal. Try the demo in Settings.",
+    tip: "Each takes a couple of minutes. Android phones have quake alerts built in, but MyShake is a good backup. With no signal, newer iPhones and some Android phones can text 911 by satellite, and iPhones can text your contacts too. It only works outside with a clear view of the sky. Try the demo in Settings.",
     link: () => ({ label: "Get MyShake", url: "https://myshake.berkeley.edu" }),
     stage: "weekend",
     shop: "free",
@@ -1558,7 +1780,7 @@ export const ITEMS: Item[] = [
     name: "Fill out FEMA's financial first aid kit",
     category: "signup",
     containers: ["home"],
-    level: "advanced",
+    level: "basics",
     hazards: "all",
     why: "A checklist for gathering account numbers, policies, and key papers now, so you're not hunting for them after a disaster.",
     link: () => ({ label: "Emergency Financial First Aid Kit", url: "https://www.ready.gov/emergency-financial-first-aid-kit" }),
@@ -2003,7 +2225,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     why: "Proof of who you are and where you live helps you get back into evacuated areas and get aid. Each person carries their own.",
-    tip: "Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers.",
+    tip: "Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers. No ID? You can still get help: Red Cross shelters don't ask for ID or immigration status to stay.",
     qty: eachBag("1 set"),
     cost: (ctx) => range(0, 5, ctx.carriers),
     stage: "weekend",
@@ -2232,12 +2454,13 @@ export const ITEMS: Item[] = [
   },
   {
     id: "road-flares",
-    name: "Road flares or reflective triangles",
+    name: "Reflective triangles",
     category: "tools",
     containers: ["car"],
     level: "basics",
     hazards: "all",
     why: "Keep you visible if you're stopped on the side of the road.",
+    tip: "Skip road flares. They can start fires in dry grass.",
     cost: () => [10, 25],
     stage: "later",
     shop: "hardware",
@@ -2250,8 +2473,9 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: ["smoke", "wildfire"],
     why: "For driving through smoke. Set vents to recirculate too.",
-    qty: (ctx) => each(ctx.adults + ctx.kids, "mask"),
-    cost: (ctx) => range(1, 2, ctx.adults + ctx.kids),
+    tip: "One for each adult and teen. N95s aren't made for kids.",
+    qty: (ctx) => each(ctx.adults, "mask"),
+    cost: (ctx) => range(1, 2, ctx.adults),
     stage: "month",
     shop: "hardware",
     haveKey: "n95",

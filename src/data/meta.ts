@@ -41,12 +41,14 @@ export const CATEGORY_META: Record<Category, string> = {
   "home-safety": "Make your home safer",
   comfort: "Comfort and calm",
   plan: "Make a plan",
+  practice: "Practice",
   community: "Neighbors and community",
   signup: "Sign-ups and paperwork",
 };
 
 export const CATEGORY_ORDER: Category[] = [
   "plan",
+  "practice",
   "community",
   "signup",
   "home-safety",

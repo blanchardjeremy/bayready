@@ -67,7 +67,7 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
     ]),
 
     { item: "N95 masks", kit: "Stay-at-home bin", note: "Use the date on the box. The straps weaken over time." },
-    { item: "Smoke and carbon monoxide alarms", kit: "Around the house", every: 12, note: "Press test. Most newer alarms have sealed batteries: replace smoke alarms at 10 years, CO alarms at 5 to 7." },
+    { item: "Smoke and carbon monoxide alarms", kit: "Around the house", every: 12, note: "Press test. Most newer alarms have sealed batteries: replace smoke alarms at 10 years, and CO alarms by the date on the back, usually 7 to 10 years." },
     { item: "Household plan and phone numbers", kit: "Around the house", every: 12, note: "Go over it together. A good time is the Great ShakeOut drill, the third Thursday in October." },
     { item: "Fire extinguisher", kit: "Around the house", every: 12, note: "Check the gauge is in the green." },
     ...when(ctx.babies > 0, [{ item: "Diapers and baby clothes", kit: "Go bag" as const, every: 6, note: "Check the sizes." }]),
@@ -90,12 +90,13 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
       rows: [
         { item: "Go bag food", kit: "Go bag", every: 12, note: "Bars or ration packs. Eat them and replace them before they go stale." },
         { item: "Go bag water", kit: "Go bag", every: 6, note: "" },
-        { item: "Phone power bank", kit: "Go bag", every: 3, note: "Recharge every few months. They slowly drain." },
+        // Kids under 13 skip things a grown-up handles for them: power banks, prescriptions, and contacts.
+        ...when(!isKid, [{ item: "Phone power bank", kit: "Go bag" as const, every: 3, note: "Recharge every few months. They slowly drain." }]),
         { item: "Phone numbers and ID copies", kit: "Go bag", every: 12, note: "Update numbers, IDs, and insurance." },
-        ...when(ctx.needs.has("meds"), [
+        ...when(!isKid && ctx.needs.has("meds"), [
           { item: "Prescription medicine", kit: "Go bag" as const, every: 6, note: "Rotate the backup into daily use so it never expires. Skip if none." },
         ]),
-        ...when(ctx.needs.has("vision-hearing"), [
+        ...when(!isKid && ctx.needs.has("vision-hearing"), [
           { item: "Contacts, solution, or hearing aid batteries", kit: "Go bag" as const, note: "Use the date on the package. Skip if none." },
         ]),
         isKid

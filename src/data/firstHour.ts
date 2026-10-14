@@ -12,6 +12,9 @@ export interface CardSection {
   lines: string[];
 }
 
+const KIDS_AT_SCHOOL =
+  "Kids at school or daycare stay there until an adult on their emergency card picks them up. Don't call or rush the school. Go when it's safe, and bring ID.";
+
 export function firstHourCard(ctx: Context): CardSection[] {
   const has = (h: HazardId) => ctx.hazards.has(h);
   const go = ctx.kits.includes("go");
@@ -21,6 +24,7 @@ export function firstHourCard(ctx: Context): CardSection[] {
   // Agencies ask households like these to leave at the evacuation warning, not wait for the order.
   const needsExtraTime = ctx.kids + ctx.babies > 0 || ctx.pets > 0 || mobility || device || ctx.car === "no";
   const cantWalkFar = mobility ? " Can't walk far? Use your ride plan, or as a last resort go to the third floor or higher of a sturdy building." : "";
+  const hasKids = ctx.kids + ctx.babies > 0;
   const sections: CardSection[] = [];
 
   if (has("earthquake")) {
@@ -41,14 +45,16 @@ export function firstHourCard(ctx: Context): CardSection[] {
           ? "If the building looks badly damaged, take your go bags and leave. Leave a note saying where you went."
           : "If the building looks badly damaged, grab shoes, your phone, medicine, and ID, and leave. Leave a note saying where you went.",
         "Text, don't call. Send one \"We're OK\" to your out-of-area contact, then save your battery.",
+        ...(hasKids && has("earthquake") ? [KIDS_AT_SCHOOL] : []),
         "Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.",
-        "Put your OK or HELP sign in the window, and check in with your neighbors.",
+        "Put your OK or HELP sign in the window. Once your home is safe, check on your neighbors, and walk the block if that's what you agreed.",
         "Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.",
       ],
     });
   }
 
   const other = [
+    ...(hasKids && !has("earthquake") ? [KIDS_AT_SCHOOL] : []),
     ...(has("wildfire")
       ? [
           needsExtraTime
@@ -82,6 +88,30 @@ export function firstHourCard(ctx: Context): CardSection[] {
       : []),
   ];
   if (other.length) sections.push({ title: sections.length ? "Other emergencies" : "When it happens", lines: other });
+
+  // Recovery: what to do once the danger has passed. Sources: ATC-20 building
+  // placards, DisasterAssistance.gov, SBA disaster loans, CSLB, SAMHSA.
+  const damage = has("earthquake") || has("wildfire") || has("flood");
+  sections.push({
+    title: "In the days after",
+    lines: [
+      ...(has("earthquake")
+        ? [
+            "Inspectors may post a colored sign on your building. Green means OK to use, yellow means limited entry, and red means unsafe, so stay out.",
+            "Stored water running low? Listen for where water is being handed out, and bring clean containers with lids. Water-heater and pool water are for flushing, not drinking.",
+          ]
+        : []),
+      ...(damage
+        ? [
+            "Photograph damage before you clean up, then call your insurer. Keep receipts for anything you spend while you can't live at home.",
+            "Once a disaster is declared, apply for help at DisasterAssistance.gov. SBA disaster loans cover renters too, for things you lost.",
+            "Watch for contractor scams. Check the license at cslb.ca.gov, get the price in writing, and don't pay much up front.",
+          ]
+        : []),
+      ...(hasKids ? ["Keep kids' routines as normal as you can, and limit news on TV and phones."] : []),
+      "Feeling overwhelmed? Call or text the Disaster Distress Helpline at 1-800-985-5990, any time.",
+    ],
+  });
 
   return sections;
 }

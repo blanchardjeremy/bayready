@@ -97,8 +97,8 @@ describe("spreadsheet export", () => {
     const wb = await roundTrip();
     const todos = wb.getWorksheet("To-dos")!;
     const supplies = wb.getWorksheet("Supplies")!;
-    expect(findRow(todos, "Make a household plan")).toBeGreaterThan(0);
-    expect(findRow(supplies, "Make a household plan")).toBe(0);
+    expect(findRow(todos, "Pick an out-of-area contact and two meeting spots")).toBeGreaterThan(0);
+    expect(findRow(supplies, "Pick an out-of-area contact and two meeting spots")).toBe(0);
     expect(findRow(supplies, "Drinking water")).toBeGreaterThan(0);
   });
 
@@ -226,6 +226,17 @@ describe("spreadsheet export", () => {
     }
   });
 
+  it("leaves the kids' cells empty on adults-only go bag rows", async () => {
+    const ws = (await roundTrip()).getWorksheet("Supplies")!;
+    expect(ws.getCell(`A${findRowA(ws, "In every bag")}`).text).toMatch(/adults only/);
+    const cable = findRow(ws, "Phone charging cable");
+    expect(["D", "E", "F"].map((c) => ws.getCell(`${c}${cable}`).value)).toEqual(["Not done", "Not done", null]);
+    expect(ws.getCell(`F${cable}`).dataValidation).toBeUndefined();
+    expect((ws.getCell(`A${cable}`).value as { formula: string }).formula).toBe(
+      `IF(COUNTIF(D${cable}:E${cable},"Done")=2,"Have",IF(COUNTIF(D${cable}:E${cable},"Done")>0,"Partly","Need"))`,
+    );
+  });
+
   it("splits the go bag into every-bag items and one-for-the-group items", async () => {
     const ws = (await roundTrip()).getWorksheet("Supplies")!;
     const every = findRowA(ws, "In every bag");
@@ -234,7 +245,7 @@ describe("spreadsheet export", () => {
     expect(group).toBeGreaterThan(every);
     expect(findRow(ws, "Water bottle")).toBeGreaterThan(every);
     expect(findRow(ws, "Water bottle")).toBeLessThan(group);
-    expect(findRow(ws, "First aid kit")).toBeGreaterThan(group);
+    expect(findRow(ws, "Water purification tablets")).toBeGreaterThan(group);
   });
 
   it("has a Notes column instead of Where", async () => {
@@ -276,7 +287,7 @@ describe("spreadsheet export", () => {
     expect((ws.getCell(`A${alerts}`).value as { formula: string }).formula).toContain('"Partly"');
     expect(ws.getCell(`E${alerts}`).value).toBe("Each adult");
 
-    const plan = findRow(ws, "Make a household plan");
+    const plan = findRow(ws, "Pick an out-of-area contact and two meeting spots");
     expect(ws.getCell(`C${plan}`).value).toBeNull();
     expect(ws.getCell(`A${plan}`).value).toBe("To do");
     expect(ws.getCell(`E${plan}`).dataValidation?.formulae).toEqual(["Overview!$B$17:$B$24"]);
@@ -292,18 +303,18 @@ describe("spreadsheet export", () => {
     const ws = wb.getWorksheet("Supplies")!;
     const water = findRow(ws, "Drinking water");
     const amount = ws.getCell(`C${water}`).value as { formula: string; result: string };
-    // 2 adults + 1 kid + 1 dog = 3.5 gallons a day
-    expect(amount.formula).toBe('ROUNDUP(3.5*Overview!$C$14,0)&" gallons"');
-    expect(amount.result).toBe("25 gallons");
+    // Alameda is EBMUD: 2 adults + 1 kid at 2 gallons, plus 1 dog = 6.5 gallons a day
+    expect(amount.formula).toBe('ROUNDUP(6.5*Overview!$C$14,0)&" gallons"');
+    expect(amount.result).toBe("46 gallons");
     const cost = ws.getCell(`${col(ws, "Est. cost")}${water}`).value as { formula: string; result: number };
-    expect(cost.formula).toBe("ROUND(1.5*ROUNDUP(3.5*Overview!$C$14,0),0)");
-    expect(cost.result).toBe(38);
+    expect(cost.formula).toBe("ROUND(1.5*ROUNDUP(6.5*Overview!$C$14,0),0)");
+    expect(cost.result).toBe(69);
 
-    // Food is a plan in store units: 2 adults + 1 kid eat like 2.7 people
+    // Food is a plan in store units: 2 adults + 1 kid eat like 3 people
     const protein = findRow(ws, "Canned protein: beans, tuna, chicken, or chili");
     const cell = ws.getCell(`C${protein}`).value as { formula: string; result: string };
-    expect(cell.formula).toBe('ROUNDUP(2.7*Overview!$C$14,0)&IF(ROUNDUP(2.7*Overview!$C$14,0)=1," can"," cans")');
-    expect(cell.result).toBe("19 cans");
+    expect(cell.formula).toBe('ROUNDUP(3*Overview!$C$14,0)&IF(ROUNDUP(3*Overview!$C$14,0)=1," can"," cans")');
+    expect(cell.result).toBe("21 cans");
     const butter = ws.getCell(`C${findRow(ws, "Peanut butter or other nut butter")}`).value as { result: string };
     expect(butter.result).toBe("2 jars");
 

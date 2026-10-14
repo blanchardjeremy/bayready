@@ -25,8 +25,13 @@ export default function SignPage() {
         <h1 className="text-[2.2rem] font-extrabold leading-tight tracking-[-0.025em]">OK / HELP window sign</h1>
         <div className="mt-3 max-w-[64ch] space-y-3 text-lg text-ink-soft">
           <p>
-            After a big earthquake, neighbors and crews go door to door. A sign in a window facing the street tells
-            them who needs help first, so they can skip homes that are fine.
+            This sign is for your neighbors. After a big earthquake, the people on your block are often the first
+            help anyone gets. A sign in a window facing the street tells them who needs help first, so they can skip
+            homes that are fine.
+          </p>
+          <p>
+            It works best if you&apos;ve agreed ahead of time that one of you will walk the block after a quake. Show
+            this sign to the neighbors you&apos;ve met, so everyone knows to look for it.
           </p>
           <p>
             Print this page, cut or fold it in half, and keep it by your front door with some tape. Put up HELP even

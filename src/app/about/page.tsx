@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OAKLAND_CORE } from "@/data/counties";
 
 export const metadata: Metadata = { title: "Sources – Bay Ready" };
 
@@ -29,6 +30,7 @@ const SOURCES: { group: string; links: [string, string, string][] }[] = [
     group: "Neighbors and community",
     links: [
       ["SF NERT", "https://sf-fire.org/nert", "San Francisco's free neighborhood emergency response training."],
+      ["Oakland CORE", OAKLAND_CORE.url, "Oakland's free emergency preparedness and response classes."],
       ["Map Your Neighborhood", "https://sf-fire.org/nert/map-your-neighborhood", "A short guide to getting your block ready together."],
       ["FEMA: CERT", "https://www.fema.gov/emergency-managers/individuals-communities/preparedness-activities-webinars/community-emergency-response-team", "Free community emergency response training, offered across the Bay Area."],
       ["Listos California block party", "https://www.listoscalifornia.org/blockparty/", "A kit for getting to know your neighbors and planning together."],
@@ -55,8 +57,9 @@ export default function AboutPage() {
         <p>
           The lists here are built from public guidance by Bay Area counties, water utilities, the State of
           California, FEMA, and the CDC. When agencies disagree, we say so and pick the more careful number. For
-          example, Bay Area agencies recommend about a week of water at home, while FEMA says at least 3 days. We
-          use a week.
+          example, Bay Area agencies recommend about a week of supplies at home, while FEMA says at least 3 days. We
+          use a week. Most agencies say 1 gallon of water per person per day, but EBMUD asks East Bay households for
+          2, so East Bay lists use 2.
         </p>
         <p>
           <span className="font-semibold text-ink">Why neighbors are on the list.</span> After the 1995 Kobe

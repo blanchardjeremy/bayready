@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, STARTER_ANSWERS, deriveContext, normalizeAnswers, peopleNames } from "./answers";
 import { buildList, firstSteps, slotDone, stageOf, stateOf } from "./buildList";
-import { ITEMS, stayWaterGallons } from "@/data/items";
+import { ITEMS, nextShakeOut, stayWaterGallons } from "@/data/items";
 import type { Answers } from "./types";
 
 const answers = (patch: Partial<Answers> = {}): Answers => ({ ...STARTER_ANSWERS, ...patch });
@@ -53,10 +53,22 @@ describe("buildList", () => {
   });
 
   it("doesn't duplicate go bag gear in the stay-at-home bin when building both", () => {
-    expect(ids(answers({ build: "stay" })).has("stay:first-aid")).toBe(true);
+    expect(ids(answers({ build: "stay" })).has("stay:flashlights")).toBe(true);
+    const both = ids(answers({ build: "both" }));
+    expect(both.has("go:headlamp-go")).toBe(true);
+    expect(both.has("stay:flashlights")).toBe(false);
+  });
+
+  it("keeps a full first aid kit at home even with a go bag", () => {
     const both = ids(answers({ build: "both" }));
     expect(both.has("go:first-aid")).toBe(true);
-    expect(both.has("stay:first-aid")).toBe(false);
+    expect(both.has("stay:first-aid")).toBe(true);
+    expect(ITEMS.find((i) => i.id === "first-aid")!.tip).toMatch(/rinsing wounds/);
+  });
+
+  it("asks about tetanus shots and a first aid class in Basics", () => {
+    const basics = list(answers()).filter((e) => e.level === "basics").map((e) => e.key);
+    expect(basics).toEqual(expect.arrayContaining(["home:tetanus", "home:first-aid-class"]));
   });
 
   it("skips hazard-specific items for hazards not picked", () => {
@@ -92,7 +104,38 @@ describe("buildList", () => {
   it("puts the person with an access need in charge of their own check-ins", () => {
     expect(ids(answers()).has("home:support-network")).toBe(false);
     expect(ids(answers({ needs: ["mobility"] })).has("home:support-network")).toBe(true);
-    expect(ids(answers({ needs: "private" })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["vision-hearing"] })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["diet"] })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["dialysis"] })).has("home:support-network")).toBe(true);
+  });
+
+  it("gives \"Prefer not to say\" the general health items instead of nothing", () => {
+    const keys = ids(answers({ build: "both", needs: "private" }));
+    for (const key of ["home:health-general", "home:support-network", "go:med-info"]) expect(keys.has(key), key).toBe(true);
+    // ...but nothing for a specific need
+    expect(keys.has("home:dialysis-plan")).toBe(false);
+    expect(ids(answers({ needs: [] })).has("home:health-general")).toBe(false);
+  });
+
+  it("adds a task for each new kind of need", () => {
+    const tasks = {
+      communication: "comm-access",
+      cognitive: "cognitive-plan",
+      caregiver: "caregiver-plan",
+      dialysis: "dialysis-plan",
+      pregnancy: "pregnancy-plan",
+      "service-animal": "service-animal",
+    } as const;
+    for (const [need, id] of Object.entries(tasks)) {
+      const entries = list(answers({ needs: [need as keyof typeof tasks] }));
+      const e = entries.find((e) => e.item.id === id);
+      expect(e?.level, need).toBe("basics");
+      expect(e?.cost[1], need).toBe(0);
+      // Each need's task only shows for that need
+      expect(list(answers({ needs: [] })).some((e) => e.item.id === id), id).toBe(false);
+    }
+    expect(list(answers({ needs: ["communication"] })).find((e) => e.key === "stay:lantern")?.level).toBe("basics");
+    expect(ITEMS.find((i) => i.id === "dialysis-plan")!.tip).toMatch(/866-901-3773/);
   });
 
   it("offers a ride only to households with a car, and asks one person to take CERT", () => {
@@ -101,6 +144,48 @@ describe("buildList", () => {
     expect(ids(answers({ ...adv, car: "no" })).has("home:offer-ride")).toBe(false);
     const two = answers({ ...adv, household: { ...EMPTY_ANSWERS.household, adults: 2 } });
     expect(list(two).find((e) => e.key === "home:training")?.slots).toEqual([]);
+  });
+
+  it("puts meeting the neighbors in Basics, after the first weekend", () => {
+    const block = list(answers()).find((e) => e.key === "home:block")!;
+    expect(block.level).toBe("basics");
+    expect(stageOf(block, answers())).toBe("month");
+    expect(block.item.why).toMatch(/walk the block/);
+    const link = (county: Answers["county"]) => block.item.link!(deriveContext(answers({ county })))?.url;
+    expect(link("san-francisco")).toContain("map-your-neighborhood");
+    for (const county of ["marin", "alameda", null] as const) expect(link(county)).toContain("listoscalifornia.org/blockparty");
+  });
+
+  it("splits the household plan into separate tasks", () => {
+    const solo = ids(answers());
+    expect(solo.has("home:contact")).toBe(true);
+    expect(solo.has("home:wallet-cards")).toBe(true);
+    expect(solo.has("home:group-text")).toBe(false);
+    expect(ids(answers({ household: { ...EMPTY_ANSWERS.household, adults: 2 } })).has("home:group-text")).toBe(true);
+  });
+
+  it("adds free practice drills, mostly after the first weekend", () => {
+    const practice = list(answers({ build: "both" })).filter((e) => e.item.category === "practice");
+    expect(practice.map((e) => e.item.id)).toEqual(
+      expect.arrayContaining(["drop-cover", "practice-text", "practice-meet", "practice-leave", "practice-fire"]),
+    );
+    for (const e of practice) {
+      expect(e.cost[1], e.item.id).toBe(0);
+      expect(e.level, e.item.id).toBe("basics");
+    }
+    expect(practice.filter((e) => e.item.stage === "weekend").map((e) => e.item.id)).toEqual(["drop-cover"]);
+    // Only households that might leave practice leaving
+    expect(ids(answers({ build: "stay", hazards: ["earthquake"] })).has("home:practice-leave")).toBe(false);
+    expect(ids(answers({ build: "stay", hazards: ["wildfire"] })).has("home:practice-leave")).toBe(true);
+  });
+
+  it("gives the date of the next Great ShakeOut", () => {
+    expect(nextShakeOut(new Date(2026, 9, 14)).toDateString()).toBe(new Date(2026, 9, 15).toDateString());
+    expect(nextShakeOut(new Date(2026, 9, 15)).toDateString()).toBe(new Date(2026, 9, 15).toDateString());
+    expect(nextShakeOut(new Date(2026, 9, 16)).toDateString()).toBe(new Date(2027, 9, 21).toDateString());
+    expect(nextShakeOut(new Date(2025, 0, 1)).toDateString()).toBe(new Date(2025, 9, 16).toDateString());
+    const link = ITEMS.find((i) => i.id === "drop-cover")!.link!(deriveContext(answers()));
+    expect(link?.label).toMatch(/^Great ShakeOut: Thursday, October \d+$/);
   });
 
   it("links CERT and neighborhood programs for the county, with fallbacks", () => {
@@ -136,6 +221,37 @@ describe("quantities", () => {
     expect(stayWaterGallons(withDog)).toBe(25); // 21 + 0.5 × 7, rounded up
   });
 
+  it("water is 2 gallons per person per day in Basics for EBMUD households", () => {
+    const ebmud = answers({ county: "alameda", household: { ...EMPTY_ANSWERS.household, adults: 2, dogs: 1 } });
+    expect(deriveContext(ebmud).ebmud).toBe(true);
+    expect(stayWaterGallons(deriveContext(ebmud))).toBe(32); // 2 × 2 × 7, plus 0.5 × 7 for the dog
+    const water = list(ebmud).find((e) => e.key === "stay:water")!;
+    expect(water.level).toBe("basics");
+    expect(water.qty?.text).toBe("32 gallons");
+    expect(water.qty?.buy).toContain("EBMUD");
+    expect(list(answers({ county: "san-francisco" })).find((e) => e.key === "stay:water")?.qty?.buy).not.toContain("EBMUD");
+    // No separate "extra water" row any more
+    expect(list({ ...ebmud, level: "advanced" }).some((e) => e.item.id === "water-ebmud")).toBe(false);
+  });
+
+  it("counts kids as a whole person in the food plan", () => {
+    const fam = answers({ household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 2 } });
+    expect(list(fam).find((e) => e.key === "stay:food")?.qty?.text).toBe("28 cans");
+    const food = ITEMS.find((i) => i.id === "food")!;
+    expect(`${food.why} ${food.tip}`).not.toMatch(/Ready\.gov/);
+    expect(food.tip).toMatch(/low-sodium/);
+  });
+
+  it("scales the toilet to the household", () => {
+    const qty = (a: Answers, key: string) => list(a).find((e) => e.key === key)?.qty?.text;
+    expect(qty(answers(), "stay:toilet")).toBe("1 bucket");
+    expect(qty(answers(), "stay:toilet-bags")).toBe("7 bags");
+    const five = answers({ household: { ...EMPTY_ANSWERS.household, adults: 2, kids: 2, babies: 1 } });
+    expect(qty(five, "stay:toilet")).toBe("2 buckets");
+    expect(qty(five, "stay:toilet-bags")).toBe("35 bags");
+    expect(ITEMS.find((i) => i.id === "toilet")!.tip).toMatch(/lid/);
+  });
+
   it("advanced defaults to 14 days and honors a 7-day choice", () => {
     expect(deriveContext(answers({ level: "advanced" })).stayDays).toBe(14);
     expect(deriveContext(answers({ level: "advanced", days: 7 })).stayDays).toBe(7);
@@ -161,6 +277,15 @@ describe("state and staging", () => {
     const entry = list(answers()).find((e) => e.key === "stay:bin")!;
     expect(stageOf(entry, answers())).toBe("weekend");
     expect(stageOf(entry, answers({ budget: "0" }))).toBe("month");
+  });
+
+  it("puts the school plan in Start here for households with kids", () => {
+    const a = answers({ household: { ...EMPTY_ANSWERS.household, kids: 1 } });
+    const entries = list(a).filter((e) => e.level === "basics");
+    expect(firstSteps(entries, (e) => stateOf(e, {}, a), a).map((e) => e.item.id).slice(0, 3)).toEqual(["alerts", "school-plan", "contact"]);
+    expect(ids(answers({ household: { ...EMPTY_ANSWERS.household, babies: 1 } })).has("home:school-plan")).toBe(true);
+    expect(ids(a).has("home:kids-ready")).toBe(true);
+    expect(ids(answers()).has("home:school-plan")).toBe(false);
   });
 
   it("Start here picks the highest-impact free steps, not the first in the list", () => {
@@ -199,7 +324,7 @@ describe("per-person tracking", () => {
     expect(find({ ...family, needs: ["meds"] }, "go:med-info").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "go:water-go").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "go:docs-copies").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
-    for (const key of ["go:cash-go", "go:powerbank"]) expect(find(family, key).slots).toHaveLength(3);
+    expect(find(family, "go:cash-go").slots).toHaveLength(3);
     expect(find({ ...family, needs: ["meds"] }, "go:rx").slots).toHaveLength(3);
     // Stay-at-home bin copies aren't tracked per person
     expect(find({ ...family, build: "stay" }, "stay:powerbank").slots).toEqual([]);
@@ -208,6 +333,20 @@ describe("per-person tracking", () => {
     expect(find(family, "go:gloves").qty?.text).toBe("1 pair");
     expect(find(family, "go:first-aid").slots).toEqual([]);
     expect(find(family, "home:contact").slots).toEqual([]);
+  });
+
+  it("doesn't give kids N95s, power banks, or charging cables", () => {
+    for (const key of ["go:n95", "go:powerbank", "go:cable"]) {
+      const e = find(family, key);
+      expect(e.slots, key).toEqual(["Me", "Adult 2"]);
+      expect(e.qty?.text, key).toMatch(/per adult or teen/);
+    }
+    expect(find(family, "go:n95").cost).toEqual([4, 6]); // 2 masks for each of 2 adults
+    expect(find({ ...family, build: "stay" }, "stay:n95").qty?.text).toBe("10 masks");
+    // One adult with a kid: just one, for the group
+    const solo = answers({ build: "both", household: { ...EMPTY_ANSWERS.household, adults: 1, kids: 2 } });
+    expect(find(solo, "go:powerbank").slots).toEqual([]);
+    expect(find(solo, "go:powerbank").qty?.text).toBe("1 per adult or teen");
   });
 
   it("doesn't split things for a one-person household", () => {

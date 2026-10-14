@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type MouseEvent, type ReactNode } from "react";
 import {
   ANSWERS_KEY,
   normalizeAnswers,
@@ -269,6 +269,29 @@ export function ListView() {
   const activeCount = main.filter((e) => st(e) !== "skip").length;
   const levelUpCount = levelUp.filter((e) => st(e) !== "skip").length;
 
+  // Copies the share link. Shown beside the title and in the export row. It only explains what's in the link,
+  // or left out of it, when there's something to explain.
+  const copyShareLink = () => {
+    const url = shareUrl();
+    const personal = hasPersonalInfo(answers);
+    const open = (ok: boolean) => setSharing({ url, privateUrl: privateShareUrl(), copied: ok, personal });
+    navigator.clipboard.writeText(url).then(
+      () => {
+        if (personal || hasHomeInfo) return open(true);
+        flash(t.flash.linkCopied);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2500);
+      },
+      () => open(false),
+    );
+  };
+  const shareButton = (
+    <Button type="button" variant="secondary" onClick={copyShareLink}>
+      {linkCopied ? <CheckIcon /> : <LinkIcon />}
+      {linkCopied ? t.exports.linkCopied : t.exports.copyLink}
+    </Button>
+  );
+
   return (
     // In print, a flex column lets Know your home move up under the header.
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 print:flex print:flex-col">
@@ -292,7 +315,32 @@ export function ListView() {
         </div>
       )}
 
-      <Header ctx={ctx} answers={answers} readOnly={!!shared} hasFirstHour={hasFirstHour} />
+      <Header
+        ctx={ctx}
+        answers={answers}
+        readOnly={!!shared}
+        hasFirstHour={hasFirstHour}
+        actions={
+          // The same Print and Download PDF as the export row further down, so they're easy to find up top.
+          <>
+            {shareButton}
+            <MenuButton
+              label={busy === "print" ? t.exports.preparing : t.exports.print}
+              icon={<PrinterIcon />}
+              align="responsive"
+              disabled={busy !== null}
+              items={pdfChoices(t, (part) => run("print", () => printPdf(exportInput(), part), ""))}
+            />
+            <MenuButton
+              label={busy === "pdf" ? t.exports.makingPdf : t.exports.pdf}
+              icon={<PdfIcon />}
+              align="responsive"
+              disabled={busy !== null}
+              items={pdfChoices(t, (part) => run("pdf", () => downloadPdf(exportInput(), part), t.flash.pdfDone))}
+            />
+          </>
+        }
+      />
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
@@ -309,28 +357,7 @@ export function ListView() {
       )}
 
       <div className="no-print mt-10 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => {
-            // Only explain what's in the link, or left out of it, when there's something to explain.
-            const url = shareUrl();
-            const personal = hasPersonalInfo(answers);
-            const open = (ok: boolean) => setSharing({ url, privateUrl: privateShareUrl(), copied: ok, personal });
-            navigator.clipboard.writeText(url).then(
-              () => {
-                if (personal || hasHomeInfo) return open(true);
-                flash(t.flash.linkCopied);
-                setLinkCopied(true);
-                setTimeout(() => setLinkCopied(false), 2500);
-              },
-              () => open(false),
-            );
-          }}
-        >
-          {linkCopied ? <CheckIcon /> : <LinkIcon />}
-          {linkCopied ? t.exports.linkCopied : t.exports.copyLink}
-        </Button>
+        {shareButton}
         <Button type="button" variant="secondary" onClick={() => copy(asText(kits, main, st, ctx), t.flash.textCopied)}>
           <CopyTextIcon />
           {t.exports.copyText}
@@ -541,11 +568,14 @@ function Header({
   answers,
   readOnly,
   hasFirstHour,
+  actions,
 }: {
   ctx: Context;
   answers: Answers;
   readOnly: boolean;
   hasFirstHour: boolean;
+  /** Buttons beside the title, like Print and Download PDF. */
+  actions?: ReactNode;
 }) {
   const t = messagesFor(ctx.lang).list.header;
   const build = resolveBuild(answers);
@@ -583,7 +613,10 @@ function Header({
 
   return (
     <div className="print:-order-2">
-      <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">{t.title}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">{t.title}</h1>
+        {actions && <div className="no-print flex flex-wrap gap-2 sm:mt-1">{actions}</div>}
+      </div>
       <div className="mt-2 flex items-center gap-x-2 sm:flex-wrap">
         <span className="shrink-0 text-[0.9rem] font-semibold text-ink-soft">{t.planningFor}</span>
         {/* On phones the answers scroll sideways on one line instead of taking up the first screen. */}
@@ -1193,7 +1226,7 @@ function KeepFresh({ busy, listUrl, onPrint }: { busy: boolean; listUrl: string;
       <h2 id="keep-fresh" className="text-2xl font-extrabold tracking-tight">
         {t.fresh.title}
       </h2>
-      <div className="mt-2 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:items-start">
         <div>
           <p className="max-w-[60ch] text-ink-soft">{t.fresh.body}</p>
           <p className="mt-3 max-w-[60ch] text-ink-soft">{t.fresh.paper}</p>

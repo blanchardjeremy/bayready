@@ -29,8 +29,11 @@ export function MenuButton({
   icon?: ReactNode;
   items: MenuItem[];
   variant?: keyof typeof buttonClass;
-  /** Which edge of the button the menu lines up with. Use "left" when the button sits at the left of the page. */
-  align?: "left" | "right";
+  /**
+   * Which edge of the button the menu lines up with. Use "left" when the button sits at the left of the page,
+   * and "responsive" for a button that's on the left on phones and on the right on wider screens.
+   */
+  align?: "left" | "right" | "responsive";
   disabled?: boolean;
   className?: string;
 }) {
@@ -88,7 +91,7 @@ export function MenuButton({
         <div
           id={menuId}
           role="menu"
-          className={`absolute ${align === "left" ? "left-0" : "right-0"} z-20 mt-1.5 min-w-56 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]`}
+          className={`absolute ${{ left: "left-0", right: "right-0", responsive: "left-0 sm:left-auto sm:right-0" }[align]} z-20 mt-1.5 min-w-56 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]`}
         >
           {items.map((it, i) =>
             it.href ? (

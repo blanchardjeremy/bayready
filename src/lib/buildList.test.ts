@@ -136,6 +136,19 @@ describe("quantities", () => {
     expect(stayWaterGallons(withDog)).toBe(25); // 21 + 0.5 × 7, rounded up
   });
 
+  it("water is 2 gallons per person per day in Basics for EBMUD households", () => {
+    const ebmud = answers({ county: "alameda", household: { ...EMPTY_ANSWERS.household, adults: 2, dogs: 1 } });
+    expect(deriveContext(ebmud).ebmud).toBe(true);
+    expect(stayWaterGallons(deriveContext(ebmud))).toBe(32); // 2 × 2 × 7, plus 0.5 × 7 for the dog
+    const water = list(ebmud).find((e) => e.key === "stay:water")!;
+    expect(water.level).toBe("basics");
+    expect(water.qty?.text).toBe("32 gallons");
+    expect(water.qty?.buy).toContain("EBMUD");
+    expect(list(answers({ county: "san-francisco" })).find((e) => e.key === "stay:water")?.qty?.buy).not.toContain("EBMUD");
+    // No separate "extra water" row any more
+    expect(list({ ...ebmud, level: "advanced" }).some((e) => e.item.id === "water-ebmud")).toBe(false);
+  });
+
   it("advanced defaults to 14 days and honors a 7-day choice", () => {
     expect(deriveContext(answers({ level: "advanced" })).stayDays).toBe(14);
     expect(deriveContext(answers({ level: "advanced", days: 7 })).stayDays).toBe(7);

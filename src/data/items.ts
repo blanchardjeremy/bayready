@@ -11,12 +11,16 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 const each = (n: number, one: string, many?: string): Quantity => ({ text: plural(n, one, many) });
 const range = (lo: number, hi: number, n = 1): [number, number] => [lo * n, hi * n];
 
+/** Gallons per person per day. EBMUD asks for 2; most other agencies say 1. */
+export const waterPerPerson = (ctx: Context) => (ctx.ebmud ? 2 : 1);
+
+/** Gallons a day for people and pets at home. */
+const waterPerDay = (ctx: Context) =>
+  ctx.people * waterPerPerson(ctx) + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1;
+
 /** Gallons of drinking water for people and pets at home. */
 export function stayWaterGallons(ctx: Context): number {
-  const d = ctx.stayDays;
-  const people = ctx.people * d;
-  const pets = ctx.dogs * 0.5 * d + ctx.cats * 0.25 * d + ctx.otherPets * 0.1 * d;
-  return Math.ceil(people + pets);
+  return Math.ceil(waterPerDay(ctx) * ctx.stayDays);
 }
 
 function waterBuy(gal: number): string {
@@ -64,8 +68,6 @@ function foodPart(o: {
     haveKey: "food",
   };
 }
-
-const isEastBay = (ctx: Context) => ctx.ebmud;
 
 const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
 const notApartment = (ctx: Context) => ctx.home !== "apartment-low" && ctx.home !== "apartment-high";
@@ -686,48 +688,27 @@ export const ITEMS: Item[] = [
   },
   {
     id: "water",
-    scalesWithDays: {
-      perDay: (ctx) => ctx.people + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1,
-      unit: "gallons",
-      costPerDay: (ctx) => range(1, 2, ctx.people + ctx.dogs * 0.5 + ctx.cats * 0.25 + ctx.otherPets * 0.1),
-    },
+    scalesWithDays: { perDay: waterPerDay, unit: "gallons", costPerDay: (ctx) => range(1, 2, waterPerDay(ctx)) },
     name: "Drinking water",
     category: "water",
     containers: ["stay"],
     level: "basics",
     hazards: "all",
-    why: "Plan on 1 gallon per person per day, for drinking and basic cleaning. After a big quake, tap water may be off or unsafe for days or weeks.",
-    tip: "Kids, nursing parents, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.",
+    why: "Plan on at least 1 gallon per person per day, for drinking and basic cleaning. EBMUD asks East Bay households for 2. After a big quake, tap water may be off or unsafe for days or weeks.",
+    tip: "Kids, nursing parents, pregnant people, sick people, and anyone in a heat wave need more. Store it somewhere cool and dark, away from chemicals. Replace store-bought water by its date, and water you bottled from the tap every 6 months. Pets are counted in the amount.",
     qty: (ctx) => {
       const gal = stayWaterGallons(ctx);
       const start = Math.ceil((gal / ctx.stayDays) * 3);
+      const ebmud = ctx.ebmud ? "This counts 2 gallons a day each, as EBMUD asks. " : "";
       return {
         text: `${gal} gallons`,
-        buy: `${waterBuy(gal)}. If that's a lot, start with ${start} gallons (3 days) and add more over time.`,
+        buy: `${ebmud}${waterBuy(gal)}. If that's a lot, start with ${start} gallons (3 days) and add more over time.`,
       };
     },
     cost: (ctx) => range(1, 2, stayWaterGallons(ctx)),
     stage: "month",
     shop: "grocery",
     haveKey: "water",
-  },
-  {
-    id: "water-ebmud",
-    scalesWithDays: { perDay: (ctx) => ctx.people, unit: "more gallons", costPerDay: (ctx) => range(1, 2, ctx.people) },
-    name: "Extra water to reach 2 gallons a day",
-    category: "water",
-    containers: ["stay"],
-    level: "advanced",
-    hazards: ["earthquake"],
-    when: isEastBay,
-    why: "East Bay water agencies like EBMUD recommend 2 gallons per person per day for at least a week. The USGS estimates East Bay water could be out for about 6 weeks after a big Hayward Fault quake.",
-    qty: (ctx) => {
-      const gal = ctx.people * ctx.stayDays;
-      return { text: `${gal} more gallons`, buy: waterBuy(gal) };
-    },
-    cost: (ctx) => range(1, 2, ctx.people * ctx.stayDays),
-    stage: "later",
-    shop: "grocery",
   },
   {
     id: "bleach",

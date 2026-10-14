@@ -292,12 +292,12 @@ describe("spreadsheet export", () => {
     const ws = wb.getWorksheet("Supplies")!;
     const water = findRow(ws, "Drinking water");
     const amount = ws.getCell(`C${water}`).value as { formula: string; result: string };
-    // 2 adults + 1 kid + 1 dog = 3.5 gallons a day
-    expect(amount.formula).toBe('ROUNDUP(3.5*Overview!$C$14,0)&" gallons"');
-    expect(amount.result).toBe("25 gallons");
+    // Alameda is EBMUD: 2 adults + 1 kid at 2 gallons, plus 1 dog = 6.5 gallons a day
+    expect(amount.formula).toBe('ROUNDUP(6.5*Overview!$C$14,0)&" gallons"');
+    expect(amount.result).toBe("46 gallons");
     const cost = ws.getCell(`${col(ws, "Est. cost")}${water}`).value as { formula: string; result: number };
-    expect(cost.formula).toBe("ROUND(1.5*ROUNDUP(3.5*Overview!$C$14,0),0)");
-    expect(cost.result).toBe(38);
+    expect(cost.formula).toBe("ROUND(1.5*ROUNDUP(6.5*Overview!$C$14,0),0)");
+    expect(cost.result).toBe(69);
 
     // Food is a plan in store units: 2 adults + 1 kid eat like 2.7 people
     const protein = findRow(ws, "Canned protein: beans, tuna, chicken, or chili");

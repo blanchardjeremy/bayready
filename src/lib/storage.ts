@@ -96,3 +96,25 @@ export function useStored<T>(
 export function clearStored(key: string) {
   write(key, null);
 }
+
+/**
+ * Removes every saved value whose key starts with `prefix`, in localStorage,
+ * sessionStorage, and this tab's memory copy. For "Clear everything on this device".
+ */
+export function clearAllStored(prefix: string) {
+  const keys = new Set([...memory.keys()].filter((k) => k.startsWith(prefix)));
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (k?.startsWith(prefix)) keys.add(k);
+    }
+  } catch {
+    // storage blocked: only the memory copy exists
+  }
+  try {
+    for (const k of Object.keys(window.sessionStorage)) if (k.startsWith(prefix)) window.sessionStorage.removeItem(k);
+  } catch {
+    // nothing saved there
+  }
+  keys.forEach((k) => write(k, null));
+}

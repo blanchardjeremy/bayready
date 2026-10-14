@@ -7,17 +7,24 @@ import { CalendarIcon } from "./icons";
 
 /**
  * A button that opens a small menu: Google Calendar first (most people), then an
- * .ics file for Apple Calendar, Outlook, and the rest.
+ * .ics file for Apple Calendar, Outlook, and the rest. Google can only add one
+ * event at a time, so with several events it gets one menu item each, while the
+ * .ics file holds them all.
  */
 export function AddToCalendar({
   event,
+  events = event ? [event] : [],
   label = "Add to calendar",
   variant = "secondary",
+  align = "right",
   className = "",
 }: {
-  event: CalendarEvent;
+  event?: CalendarEvent;
+  events?: CalendarEvent[];
   label?: string;
   variant?: keyof typeof buttonClass;
+  /** Which edge of the button the menu lines up with. Use "left" when the button sits at the left of the page. */
+  align?: "left" | "right";
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -72,34 +79,38 @@ export function AddToCalendar({
         <div
           id={menuId}
           role="menu"
-          className="absolute right-0 z-20 mt-1.5 min-w-56 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]"
+          className={`absolute ${align === "left" ? "left-0" : "right-0"} z-20 mt-1.5 min-w-56 overflow-hidden rounded-lg border border-line bg-paper py-1 shadow-[0_12px_32px_-12px_rgba(19,41,61,0.35)]`}
         >
-          <a
-            ref={(el) => {
-              items.current[0] = el;
-            }}
-            role="menuitem"
-            href={googleCalendarUrl(event)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            className={item}
-          >
-            Google Calendar
-          </a>
+          {events.map((ev, i) => (
+            <a
+              key={ev.title}
+              ref={(el) => {
+                items.current[i] = el;
+              }}
+              role="menuitem"
+              href={googleCalendarUrl(ev)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className={item}
+            >
+              Google Calendar
+              {events.length > 1 && <span className="text-ink-soft">: {ev.name ?? ev.title}</span>}
+            </a>
+          ))}
           <button
             ref={(el) => {
-              items.current[1] = el;
+              items.current[events.length] = el;
             }}
             role="menuitem"
             type="button"
             onClick={() => {
-              downloadIcs(event);
+              downloadIcs(events);
               close();
             }}
             className={item}
           >
-            iCal file <span className="text-ink-soft">(Apple, Outlook)</span>
+            iCal file <span className="text-ink-soft">({events.length > 1 ? "both, for Apple or Outlook" : "Apple, Outlook"})</span>
           </button>
         </div>
       )}

@@ -15,6 +15,8 @@ import {
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
 import { firstStepDate, twiceYearlyChecks } from "@/lib/ics";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { MenuButton, type MenuItem } from "@/components/MenuButton";
+import { downloadPdf, printPdf, type PdfPart } from "@/lib/exportPdf";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
@@ -316,26 +318,22 @@ export function ListView() {
           <CopyTextIcon />
           Copy as text
         </Button>
-        <Button
-          type="button"
-          variant="secondary"
+        {/* Print and the PDF are the same file, short or complete. They're imported up front, not on click,
+            because printing on Safari opens a tab, and that only works during the click itself. */}
+        <MenuButton
+          label={busy === "print" ? "Getting it ready…" : "Print"}
+          icon={<PrinterIcon />}
+          align="left"
           disabled={busy !== null}
-          onClick={() => run("print", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput())), "")}
-        >
-          <PrinterIcon />
-          {busy === "print" ? "Getting it ready…" : "Print"}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
+          items={pdfChoices((part) => run("print", () => printPdf(exportInput(), part), ""))}
+        />
+        <MenuButton
+          label={busy === "pdf" ? "Making PDF…" : "Download PDF"}
+          icon={<PdfIcon />}
+          align="left"
           disabled={busy !== null}
-          onClick={() =>
-            run("pdf", () => import("@/lib/exportPdf").then((m) => m.downloadPdf(exportInput())), "PDF downloaded.")
-          }
-        >
-          <PdfIcon />
-          {busy === "pdf" ? "Making PDF…" : "Download PDF"}
-        </Button>
+          items={pdfChoices((part) => run("pdf", () => downloadPdf(exportInput(), part), "PDF downloaded."))}
+        />
         <Button
           type="button"
           variant="primary"
@@ -445,7 +443,7 @@ export function ListView() {
       <KeepFresh
         busy={busy === "refresh"}
         listUrl={shareUrl()}
-        onPrint={() => run("refresh", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput(), "refresh")), "")}
+        onPrint={() => run("refresh", () => printPdf(exportInput(), "refresh"), "")}
       />
 
       {!shared && (
@@ -565,7 +563,7 @@ function Header({
   // One badge per answer, each jumping to the wizard step that sets it. The values read on
   // their own, so the labels are only for screen readers.
   const groups: { label: string; step: string; value: string }[] = [
-    { label: "Building", step: "", value: kitNames.join(" + ") },
+    { label: "Building", step: "kit", value: kitNames.join(" + ") },
     { label: "For", step: "household", value: people.join(", ") },
     { label: "Hazards", step: "hazards", value: hazards.join(", ") },
     ...(build !== "go"
@@ -1415,4 +1413,28 @@ function asText(kits: Container[], main: ListEntry[], st: (e: ListEntry) => Item
 function joinList(xs: string[]) {
   if (xs.length <= 1) return xs.join("");
   return `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+}
+
+/** The two ways to print or save the PDF: just the essentials, or everything. */
+function pdfChoices(choose: (part: PdfPart) => void): MenuItem[] {
+  return [
+    {
+      key: "short",
+      onSelect: () => choose("short"),
+      label: (
+        <>
+          Short version <span className="text-ink-soft">(your plan, the card, and the essentials)</span>
+        </>
+      ),
+    },
+    {
+      key: "list",
+      onSelect: () => choose("list"),
+      label: (
+        <>
+          Everything <span className="text-ink-soft">(the full list and refresh log)</span>
+        </>
+      ),
+    },
+  ];
 }

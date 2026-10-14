@@ -1112,7 +1112,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
 
   // Know your home: blanks for the things the to-dos ask people to find out.
   overviewSection(ws, row++, "Know your home");
-  for (const { label, value, fact, bag } of factFields(homeFacts(ctx), ctx, input.home ?? EMPTY_HOME)) {
+  for (const { label, value, fact, person } of factFields(homeFacts(ctx), ctx, input.home ?? EMPTY_HOME)) {
     ws.getRow(row).height = 24;
     const l = ws.getCell(`B${row}`);
     l.value = label;
@@ -1126,7 +1126,7 @@ function buildOverview(ws: Worksheet, input: ExportInput, layout: SupplyLayout) 
     v.fill = fill(C.input);
     v.border = { bottom: hairline };
     v.alignment = { vertical: "middle", indent: 1, wrapText: true };
-    if (!bag) v.note = fact.hint;
+    if (!person) v.note = fact.hint;
     row++;
   }
   row++;

@@ -12,8 +12,8 @@ export const HOME_CARD_ID = "know-your-home";
 /** One "Know your home" answer: a label, a text field, and a short hint under it. */
 export function FactInput({ field, onChange }: { field: FactField; onChange: (value: string) => void }) {
   const id = useId();
-  // Per-person go bag boxes share one hint, so only the first shows it.
-  const hint = field.bag ? null : field.fact.hint;
+  // Per-person boxes (go bags, cell numbers) share one hint, so only the first shows it.
+  const hint = field.person ? null : field.fact.hint;
   return (
     <div className="min-w-0">
       <label htmlFor={id} className="block text-[0.85rem] font-semibold text-ink-soft">

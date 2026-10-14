@@ -162,13 +162,22 @@ Add an entry to `ITEMS` in `src/data/items.ts`. The main fields:
 - `hazards`: `"all"` or a list. The item shows if any listed hazard is picked
 - `when`: any other condition (pets, babies, home type, and so on)
 - `coveredByGo`: when someone builds both kits, skip the stay-at-home bin copy because the go bag is at home
+- `perPerson`: tracked for each person (`true`), or only for adults and teens (`"adults"`), for
+  things little kids shouldn't carry, like N95s and phone power banks
+- `category`: includes `practice` for short drills (test text, meeting-spot walk, evacuation and fire drills)
 - `examples`: product links shown as examples, not endorsements
 
-Then run `npm test`. The data tests check that ids are unique and that every item evaluates
-cleanly for a household that triggers everything.
+Then add the id to the end of `SHARE_IDS` in `src/data/shareIds.ts`, and run `npm test`. The data
+tests check that ids are unique, that every item evaluates cleanly for a household that triggers
+everything, and that the safety rules in `src/data/safety.test.ts` still hold (oxygen and flames,
+carbon monoxide, heat stroke, water filters, evacuation warnings). If an item belongs in the short
+list to buy first, add its key to `src/data/essentials.ts`.
 
 ## Key decisions (see `research/` for sources)
 
+- **Water is 1 gallon per person per day, or 2 on EBMUD.** EBMUD asks its customers for 2, and East
+  Bay outages after a big quake could last weeks. `ctx.ebmud` comes from the ZIP code if known, else
+  the county.
 - **Basics = 7 days at home, Advanced = 14.** Bay Area agencies (ReadySF, EBMUD, Cal OES) recommend
   about a week, and the CDC and Red Cross say two weeks. The water line suggests starting with 3 days.
 - **Go bag water is about 1 liter per person plus purification.** Three days of water (about 25 lb)
@@ -182,6 +191,19 @@ cleanly for a household that triggers everything.
   people to list who they think is vulnerable.
 - **Renting and owning aren't inferred from home type.** Rows where the job is usually the
   landlord's say so in the copy.
+
+## PDF
+
+`src/lib/exportPdf.ts` draws the PDF with jsPDF, loaded on click. Print and Download PDF use the same
+file, so a printout matches a saved PDF. Each offers two versions:
+
+- **Short:** Know your home, When it happens, wallet cards, Start here, and the essentials. About 4
+  pages for a family.
+- **Everything:** the same first pages, then the full list and the refresh log.
+
+It embeds Noto Sans subsets from `public/fonts/` (Latin including Vietnamese, Greek, Cyrillic; see
+the README there for the source and license), fetched once per visit. Chinese, Japanese, and Korean
+characters and emoji are still dropped. If the fonts don't load, it falls back to Helvetica.
 
 ## Before launch
 

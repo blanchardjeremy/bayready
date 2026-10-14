@@ -82,7 +82,7 @@ export const SHOP_META: Record<Shop, string> = {
 export const SHOP_ORDER: Shop[] = ["free", "grocery", "pharmacy", "hardware", "outdoor", "online"];
 
 export const STAGE_META: Record<Stage, { name: string; desc: string }> = {
-  weekend: { name: "This weekend", desc: "Free quick wins. About an hour all together." },
+  weekend: { name: "This weekend", desc: "Free quick wins. Most take 5 to 15 minutes each." },
   month: { name: "This month", desc: "Gather what you have, pack it up, and make a shopping trip or two." },
   later: { name: "Later", desc: "Extra days, backups, and gear for when you're ready." },
 };

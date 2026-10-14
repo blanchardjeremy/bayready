@@ -12,6 +12,9 @@ export interface CardSection {
   lines: string[];
 }
 
+const KIDS_AT_SCHOOL =
+  "Kids at school or daycare stay there until an adult on their emergency card picks them up. Don't call or rush the school. Go when it's safe, and bring ID.";
+
 export function firstHourCard(ctx: Context): CardSection[] {
   const has = (h: HazardId) => ctx.hazards.has(h);
   const go = ctx.kits.includes("go");
@@ -21,6 +24,7 @@ export function firstHourCard(ctx: Context): CardSection[] {
   // Agencies ask households like these to leave at the evacuation warning, not wait for the order.
   const needsExtraTime = ctx.kids + ctx.babies > 0 || ctx.pets > 0 || mobility || device || ctx.car === "no";
   const cantWalkFar = mobility ? " Can't walk far? Use your ride plan, or as a last resort go to the third floor or higher of a sturdy building." : "";
+  const hasKids = ctx.kids + ctx.babies > 0;
   const sections: CardSection[] = [];
 
   if (has("earthquake")) {
@@ -41,6 +45,7 @@ export function firstHourCard(ctx: Context): CardSection[] {
           ? "If the building looks badly damaged, take your go bags and leave. Leave a note saying where you went."
           : "If the building looks badly damaged, grab shoes, your phone, medicine, and ID, and leave. Leave a note saying where you went.",
         "Text, don't call. Send one \"We're OK\" to your out-of-area contact, then save your battery.",
+        ...(hasKids && has("earthquake") ? [KIDS_AT_SCHOOL] : []),
         "Don't flush until you know the sewer is OK. Use the bucket toilet. If pipes broke, close the water main.",
         "Put your OK or HELP sign in the window. Once your home is safe, check on your neighbors, and walk the block if that's what you agreed.",
         "Listen to a battery radio (KCBS 740 AM or KQED 88.5 FM) and your county alerts. For shelter or help, call 211.",
@@ -49,6 +54,7 @@ export function firstHourCard(ctx: Context): CardSection[] {
   }
 
   const other = [
+    ...(hasKids && !has("earthquake") ? [KIDS_AT_SCHOOL] : []),
     ...(has("wildfire")
       ? [
           needsExtraTime

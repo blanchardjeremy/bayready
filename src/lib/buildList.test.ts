@@ -248,6 +248,15 @@ describe("state and staging", () => {
     expect(stageOf(entry, answers({ budget: "0" }))).toBe("month");
   });
 
+  it("puts the school plan in Start here for households with kids", () => {
+    const a = answers({ household: { ...EMPTY_ANSWERS.household, kids: 1 } });
+    const entries = list(a).filter((e) => e.level === "basics");
+    expect(firstSteps(entries, (e) => stateOf(e, {}, a), a).map((e) => e.item.id).slice(0, 3)).toEqual(["alerts", "school-plan", "contact"]);
+    expect(ids(answers({ household: { ...EMPTY_ANSWERS.household, babies: 1 } })).has("home:school-plan")).toBe(true);
+    expect(ids(a).has("home:kids-ready")).toBe(true);
+    expect(ids(answers()).has("home:school-plan")).toBe(false);
+  });
+
   it("Start here picks the highest-impact free steps, not the first in the list", () => {
     const a = answers({ hazards: ["earthquake", "outage", "smoke", "wildfire"] });
     const entries = list(a).filter((e) => e.level === "basics");

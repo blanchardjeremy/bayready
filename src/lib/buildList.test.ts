@@ -53,10 +53,22 @@ describe("buildList", () => {
   });
 
   it("doesn't duplicate go bag gear in the stay-at-home bin when building both", () => {
-    expect(ids(answers({ build: "stay" })).has("stay:first-aid")).toBe(true);
+    expect(ids(answers({ build: "stay" })).has("stay:flashlights")).toBe(true);
+    const both = ids(answers({ build: "both" }));
+    expect(both.has("go:headlamp-go")).toBe(true);
+    expect(both.has("stay:flashlights")).toBe(false);
+  });
+
+  it("keeps a full first aid kit at home even with a go bag", () => {
     const both = ids(answers({ build: "both" }));
     expect(both.has("go:first-aid")).toBe(true);
-    expect(both.has("stay:first-aid")).toBe(false);
+    expect(both.has("stay:first-aid")).toBe(true);
+    expect(ITEMS.find((i) => i.id === "first-aid")!.tip).toMatch(/rinsing wounds/);
+  });
+
+  it("asks about tetanus shots and a first aid class in Basics", () => {
+    const basics = list(answers()).filter((e) => e.level === "basics").map((e) => e.key);
+    expect(basics).toEqual(expect.arrayContaining(["home:tetanus", "home:first-aid-class"]));
   });
 
   it("skips hazard-specific items for hazards not picked", () => {

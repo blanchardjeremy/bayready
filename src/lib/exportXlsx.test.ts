@@ -245,7 +245,7 @@ describe("spreadsheet export", () => {
     expect(group).toBeGreaterThan(every);
     expect(findRow(ws, "Water bottle")).toBeGreaterThan(every);
     expect(findRow(ws, "Water bottle")).toBeLessThan(group);
-    expect(findRow(ws, "First aid kit")).toBeGreaterThan(group);
+    expect(findRow(ws, "Water purification tablets")).toBeGreaterThan(group);
   });
 
   it("has a Notes column instead of Where", async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_ANSWERS, STARTER_ANSWERS, deriveContext, normalizeAnswers, peopleNames } from "./answers";
-import { buildList, firstSteps, slotDone, stageOf, stateOf } from "./buildList";
+import { buildList, firstSteps, formatCost, slotDone, stageOf, stateOf } from "./buildList";
 import { ITEMS, nextShakeOut, stayWaterGallons } from "@/data/items";
 import type { Answers } from "./types";
 
@@ -423,6 +423,16 @@ describe("names", () => {
     const a = normalizeAnswers({ names: { adults: ["  Alex  ", 5, "x".repeat(50)], kids: "nope" } });
     expect(a.names).toEqual({ adults: ["Alex", "", "x".repeat(30)], kids: [] });
     expect(normalizeAnswers({}).names).toEqual({ adults: [], kids: [] });
+  });
+});
+
+describe("formatCost", () => {
+  it("writes costs, and free in either language", () => {
+    expect(formatCost([20, 40])).toBe("$20–40");
+    expect(formatCost([15, 15])).toBe("~$15");
+    expect(formatCost([0, 0])).toBe("Free");
+    expect(formatCost([0, 0], "es")).toBe("Gratis");
+    expect(formatCost([120, 1500], "es")).toBe("$120–1,500");
   });
 });
 

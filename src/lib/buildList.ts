@@ -94,8 +94,9 @@ export function sumCost(entries: ListEntry[]): [number, number] {
   return entries.reduce<[number, number]>((acc, e) => [acc[0] + e.cost[0], acc[1] + e.cost[1]], [0, 0]);
 }
 
-export function formatCost([lo, hi]: [number, number]): string {
-  if (hi === 0) return "Free";
+/** "$20–40", "~$15", or "Free" ("Gratis" in Spanish). Numbers stay American in both languages. */
+export function formatCost([lo, hi]: [number, number], lang: Lang = "en"): string {
+  if (hi === 0) return lang === "es" ? "Gratis" : "Free";
   const r = (n: number) => (n >= 100 ? Math.round(n / 10) * 10 : Math.round(n)).toLocaleString("en-US");
   if (r(lo) === r(hi)) return `~$${r(hi)}`;
   return `$${r(lo)}–${r(hi)}`;

@@ -104,7 +104,38 @@ describe("buildList", () => {
   it("puts the person with an access need in charge of their own check-ins", () => {
     expect(ids(answers()).has("home:support-network")).toBe(false);
     expect(ids(answers({ needs: ["mobility"] })).has("home:support-network")).toBe(true);
-    expect(ids(answers({ needs: "private" })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["vision-hearing"] })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["diet"] })).has("home:support-network")).toBe(false);
+    expect(ids(answers({ needs: ["dialysis"] })).has("home:support-network")).toBe(true);
+  });
+
+  it("gives \"Prefer not to say\" the general health items instead of nothing", () => {
+    const keys = ids(answers({ build: "both", needs: "private" }));
+    for (const key of ["home:health-general", "home:support-network", "go:med-info"]) expect(keys.has(key), key).toBe(true);
+    // ...but nothing for a specific need
+    expect(keys.has("home:dialysis-plan")).toBe(false);
+    expect(ids(answers({ needs: [] })).has("home:health-general")).toBe(false);
+  });
+
+  it("adds a task for each new kind of need", () => {
+    const tasks = {
+      communication: "comm-access",
+      cognitive: "cognitive-plan",
+      caregiver: "caregiver-plan",
+      dialysis: "dialysis-plan",
+      pregnancy: "pregnancy-plan",
+      "service-animal": "service-animal",
+    } as const;
+    for (const [need, id] of Object.entries(tasks)) {
+      const entries = list(answers({ needs: [need as keyof typeof tasks] }));
+      const e = entries.find((e) => e.item.id === id);
+      expect(e?.level, need).toBe("basics");
+      expect(e?.cost[1], need).toBe(0);
+      // Each need's task only shows for that need
+      expect(list(answers({ needs: [] })).some((e) => e.item.id === id), id).toBe(false);
+    }
+    expect(list(answers({ needs: ["communication"] })).find((e) => e.key === "stay:lantern")?.level).toBe("basics");
+    expect(ITEMS.find((i) => i.id === "dialysis-plan")!.tip).toMatch(/866-901-3773/);
   });
 
   it("offers a ride only to households with a car, and asks one person to take CERT", () => {

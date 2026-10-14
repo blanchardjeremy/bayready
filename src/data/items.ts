@@ -1,4 +1,4 @@
-import type { Container, Context, Item, Quantity } from "@/lib/types";
+import type { Container, Context, Item, NeedId, Quantity } from "@/lib/types";
 import { COUNTY_BY_ID } from "./counties";
 import { sitePath, siteUrl } from "@/lib/urls";
 
@@ -78,7 +78,9 @@ function foodPart(o: {
   };
 }
 
-const anyNeeds = (ctx: Context) => ctx.needs.size > 0;
+/** Any health need, or "Prefer not to say", which gets the general health items. */
+const anyNeeds = (ctx: Context) => ctx.needs.size > 0 || ctx.needsPrivate;
+const hasNeed = (...ids: NeedId[]) => (ctx: Context) => ids.some((n) => ctx.needs.has(n));
 
 /** Two buckets keep pee and poop apart, which matters more as the household grows. */
 const toiletBuckets = (ctx: Context) => (ctx.level === "advanced" || ctx.people > 2 ? 2 : 1);
@@ -304,11 +306,105 @@ export const ITEMS: Item[] = [
     containers: ["home"],
     level: "basics",
     hazards: "all",
-    when: anyNeeds,
+    // For needs where someone may need hands-on help, not glasses or a special diet.
+    when: (ctx) =>
+      ctx.needsPrivate ||
+      hasNeed("mobility", "power-device", "oxygen", "cold-meds", "cognitive", "caregiver", "dialysis", "communication")(ctx),
     why: "Pick two or three people nearby, like a neighbor, friend, or coworker, who'd check on you after a disaster. Tell them what help you might need.",
     tip: "Don't count on just one person, or only on paid help, since they may not be able to reach you. Show someone how your equipment works, and think about giving them a key.",
     link: () => ({ label: "Ready.gov: planning with a disability", url: "https://www.ready.gov/disability" }),
     stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "health-general",
+    name: "If anyone takes medicine or uses medical equipment, plan for it",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: (ctx) => ctx.needsPrivate,
+    why: "Pharmacies and power may be out for a while. Keep a week or more of extra medicine and supplies, a written list of medicines and doses, and a way to power any equipment.",
+    tip: "Ask your pharmacy or doctor how to get extra ahead of time. If no one at home needs this, skip it.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "comm-access",
+    name: "Set up alerts and 911 so they work for you",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("communication"),
+    why: "Call 911 if you can, text if you can't: texting 911 works across California. Turn on flashing and vibrating alerts in your phone's accessibility settings, and look for a smoke alarm with a strobe light or bed shaker.",
+    tip: "Pack pen and paper or a communication card in your bag. A battery lantern lights up a room so you can lip-read or sign in the dark.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "cognitive-plan",
+    name: "Make sure someone who may get confused is never left alone",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("cognitive"),
+    why: "Stress and change can make confusion worse, and some people wander. Agree who stays with them the whole time, and who takes over if that person is hurt or away.",
+    tip: "Pack an ID bracelet with your number, a recent photo, and a few familiar comfort things in their bag. Calm, simple practice helps.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "caregiver-plan",
+    name: "Make a backup plan for daily care",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("caregiver"),
+    why: "If the person who gives care can't get there, who steps in? Line up a backup, and write down the daily routine, medicines, and equipment so someone new can help.",
+    tip: "Ask your home health agency or IHSS provider what their emergency plan is, and how they'd reach you.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "dialysis-plan",
+    name: "Get your dialysis emergency plan from your care team",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("dialysis"),
+    why: "Ask for the 3-day emergency diet, which limits potassium, salt, and fluid, and keep those foods in your bin. Ask your clinic for its backup plan: where you'd go if it closes, and how they'd reach you.",
+    tip: "Can't reach your clinic after a disaster? Call the KCER patient hotline at 866-901-3773. Keep your treatment schedule and recent lab results with your medical info.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
+    id: "pregnancy-plan",
+    name: "If you're pregnant: pack vitamins, records, and your provider's number",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("pregnancy"),
+    why: "Put prenatal vitamins, any medicines, and a copy of your prenatal records with your supplies. Save your provider's after-hours number and the address of the hospital where you plan to deliver.",
+    tip: "Store extra water: you'll need more than a gallon a day, especially in heat or smoke. Close to your due date, plan how you'd get to the hospital if roads are blocked.",
+    stage: "month",
+    shop: "free",
+  },
+  {
+    id: "service-animal",
+    name: "Pack for your service animal",
+    category: "access",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    when: hasNeed("service-animal"),
+    why: "Keep their food, water, a bowl, any medicine, vaccination records, and ID with your own go bag. Service animals are allowed in shelters, even ones that don't take pets.",
+    tip: "Add a leash, waste bags, and a photo of the two of you in case you get separated.",
+    stage: "month",
     shop: "free",
   },
   {
@@ -1152,6 +1248,8 @@ export const ITEMS: Item[] = [
     containers: ["stay"],
     level: "advanced",
     hazards: ["outage", "earthquake"],
+    // Lip-reading and signing need light on faces, not a flashlight beam.
+    promote: hasNeed("communication"),
     why: "Lights up a whole room so you're not juggling flashlights at dinner.",
     qty: () => each(1, "lantern"),
     cost: () => [15, 30],
@@ -1256,7 +1354,7 @@ export const ITEMS: Item[] = [
     containers: ["stay", "go"],
     level: "basics",
     hazards: "all",
-    why: "If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance.",
+    why: "If your phone dies, do you know anyone's number? Include your out-of-area contact, doctors, and insurance, plus the Disaster Distress Helpline (call or text 1-800-985-5990) and 988 for a mental health crisis.",
     qty: (ctx, c) => (c === "go" ? eachBag("1 card")(ctx) : null),
     tip: "The wallet cards in your PDF work well for this. Kids carry one too, with your numbers, in their bag or pocket. Help them memorize one number.",
     stage: "weekend",
@@ -1300,7 +1398,7 @@ export const ITEMS: Item[] = [
     hazards: "all",
     when: (ctx) => ctx.needs.has("meds"),
     why: "Pharmacies may be closed or out of stock. The CDC suggests at least a week's supply in your go bag and two weeks at home if you can.",
-    tip: "Include supplies like test strips, needles, or ostomy supplies. If a medicine needs the fridge, keep a small cooler and ice packs ready. Ask your doctor or insurer about a 90-day or early refill. In a declared emergency, California pharmacists can give emergency refills. If you don't take any, tick your name.",
+    tip: "Include supplies like test strips, needles, or ostomy supplies. To get extra, ask your pharmacy for a \"vacation override\" or your doctor for a 90-day supply. In a declared disaster, Medicare drug plans lift \"refill too soon\" limits, and California pharmacists can give emergency refills. For controlled medicines, like methadone or buprenorphine, ask your clinic about its emergency plan. If you don't take any, tick your name.",
     qty: (ctx, c) => (c === "go" ? eachBag("7 days")(ctx) : { text: ctx.level === "advanced" ? "14 days" : "7 days or more" }),
     stage: "month",
     shop: "pharmacy",
@@ -2127,7 +2225,7 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: "all",
     why: "Proof of who you are and where you live helps you get back into evacuated areas and get aid. Each person carries their own.",
-    tip: "Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers.",
+    tip: "Your ID, health insurance card, home or renters policy, spare house and car keys, and a printed photo of your family and pets in case you get separated. Kids: a copy of their birth certificate. Pets: microchip numbers. No ID? You can still get help: Red Cross shelters don't ask for ID or immigration status to stay.",
     qty: eachBag("1 set"),
     cost: (ctx) => range(0, 5, ctx.carriers),
     stage: "weekend",

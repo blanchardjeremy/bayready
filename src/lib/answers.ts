@@ -47,14 +47,21 @@ export const GO_DAYS = 3;
 export const MAX_PEOPLE = 8;
 
 /** The default label for a person when they haven't been named. */
-export function defaultName(role: "adults" | "kids", i: number): string {
+export function defaultName(role: "adults" | "kids", i: number, lang: Lang = "en"): string {
+  if (lang === "es") {
+    if (role === "adults") return i === 0 ? "Yo" : `Adulto ${i + 1}`;
+    return `Niño ${i + 1}`;
+  }
   if (role === "adults") return i === 0 ? "Me" : `Adult ${i + 1}`;
   return `Kid ${i + 1}`;
 }
 
-/** Everyone who can carry a bag, adults first: the names people gave, or "Me", "Adult 2", "Kid 1". */
-export function peopleNames(ctx: Pick<Context, "adults" | "kids"> & { names?: Names }): string[] {
-  const pick = (role: "adults" | "kids", i: number) => ctx.names?.[role][i]?.trim() || defaultName(role, i);
+/**
+ * Everyone who can carry a bag, adults first: the names people gave, or
+ * "Me", "Adult 2", "Kid 1" ("Yo", "Adulto 2", "Niño 1" in Spanish).
+ */
+export function peopleNames(ctx: Pick<Context, "adults" | "kids"> & { names?: Names; lang?: Lang }): string[] {
+  const pick = (role: "adults" | "kids", i: number) => ctx.names?.[role][i]?.trim() || defaultName(role, i, ctx.lang);
   const names = [
     ...Array.from({ length: ctx.adults }, (_, i) => pick("adults", i)),
     ...Array.from({ length: ctx.kids }, (_, i) => pick("kids", i)),

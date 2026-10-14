@@ -137,3 +137,33 @@ cleanly for a household that triggers everything.
   speaker's read.
 - Items marked "unverified" in `research/supplies.md` (CAL FIRE wording, landslide signs, and
   others) deserve a human read.
+
+## ZIP code lookup
+
+The county step has an optional ZIP code field. `src/data/zips.ts` maps every ZIP code in the ten
+counties (457, including PO box ZIPs) to its county and two flags:
+
+- **EBMUD:** EBMUD serves most of the ZIP code. When the ZIP is known, it sets `ctx.ebmud` instead
+  of the county guess (Alameda and Contra Costa), so Fremont, Pleasanton, and Concord no longer get
+  EBMUD's 2-gallon advice, and Orinda and Danville still do.
+- **Tsunami:** part of the ZIP code is in the California Geological Survey's mapped tsunami hazard
+  area. It pre-checks tsunami on the hazards step, with a note saying why.
+
+A known ZIP also picks the county, and the person can still change it. An unknown ZIP gets a short
+note and changes nothing. "Prefer not to say" for the county clears the ZIP. The ZIP is
+`answers.zip` (five digits or null) and rides at the end of share links.
+
+Limits, all noted in the header of `zips.ts` with sources:
+
+- It's ZIP-level. Water districts and tsunami zones follow streets, and most flagged ZIPs have only a
+  shoreline strip in the zone. The hazards step links to MyHazards for an address-level check.
+- Split ZIPs go to the county with the most land, except a few where nearly everyone lives in the
+  other county (Petaluma 94952, East Palo Alto 94303, Calistoga 94515, Berkeley hills 94708, Los
+  Gatos 95033). ZIPs mostly outside the ten counties (Mountain House 95391 and a few on the Yolo,
+  Sacramento, San Joaquin, and San Benito lines) aren't listed.
+- Partial EBMUD ZIPs (Hayward 94541 and 94542, Castro Valley 94552, Walnut Creek, Pleasant Hill,
+  Martinez, Canyon) are marked by majority and noted in the file. The water board's boundaries are
+  self-reported from 2019.
+- The CGS layer includes the Napa River and Petaluma River shores, so some Napa ZIPs are flagged
+  even though `counties.ts` lists Napa without a tsunami area.
+- Recheck it when USPS adds ZIPs or CGS updates its maps.

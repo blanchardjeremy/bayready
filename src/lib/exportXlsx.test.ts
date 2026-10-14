@@ -6,8 +6,9 @@ import { buildList, slotDone, stateOf } from "./buildList";
 import { toXlsx } from "./exportXlsx";
 import { ITEMS } from "@/data/items";
 import type { ItemState } from "./types";
+import type { Lang } from "@/i18n/lang";
 
-function makeInput(states: Record<string, ItemState> = {}) {
+function makeInput(states: Record<string, ItemState> = {}, lang: Lang = "en") {
   const answers = normalizeAnswers({
     build: "both",
     county: "alameda",
@@ -15,7 +16,7 @@ function makeInput(states: Record<string, ItemState> = {}) {
     household: { adults: 2, kids: 1, dogs: 1 },
     have: ["flashlight"],
   });
-  const ctx = deriveContext(answers);
+  const ctx = deriveContext(answers, lang);
   const entries = buildList(ctx, ITEMS).filter((e) => e.level === "basics");
   return {
     answers,
@@ -28,9 +29,10 @@ function makeInput(states: Record<string, ItemState> = {}) {
   };
 }
 
-async function roundTrip(states?: Record<string, ItemState>) {
-  const buf = await toXlsx(ExcelJS, makeInput(states));
-  if (process.env.XLSX_OUT) writeFileSync(process.env.XLSX_OUT, Buffer.from(buf));
+async function roundTrip(states?: Record<string, ItemState>, lang: Lang = "en") {
+  const buf = await toXlsx(ExcelJS, makeInput(states, lang));
+  if (process.env.XLSX_OUT) writeFileSync(process.env.XLSX_OUT.replace(/\.xlsx$/, lang === "en" ? ".xlsx" : `-${lang}.xlsx`), Buffer.from(buf));
+
   const back = new ExcelJS.Workbook();
   await back.xlsx.load(buf as unknown as ArrayBuffer);
   return back;
@@ -468,5 +470,178 @@ describe("spreadsheet export", () => {
     await wb.xlsx.load(buf as unknown as ArrayBuffer);
     const ws = wb.getWorksheet("Supplies")!;
     expect(ws.getCell("D5").value).toBe("Who's buying");
+  });
+});
+
+describe("spreadsheet export in Spanish", () => {
+  type CF = { ref: string; rules: { formulae: string[]; style: { fill?: { bgColor?: { argb: string } } } }[] };
+  const cfs = (ws: ExcelJS.Worksheet) => (ws as unknown as { conditionalFormattings: CF[] }).conditionalFormattings;
+  const formula = (c: ExcelJS.Cell) => (c.value as { formula?: string } | null)?.formula ?? "";
+
+  // Every value a formula or a color rule may look for, in Spanish.
+  const SPANISH = new Set(["Falta", "Lo tengo", "Omitir", "En parte", "Pendiente", "Hecho", "Vence ya", "Vence pronto", "Al día"]);
+  const ENGLISH = ["Need", "Have", "Skip", "Partly", "To do", "Done", "Not done", "Due now", "Due soon", "Good"];
+
+  it("names the tabs in Spanish", async () => {
+    const wb = await roundTrip(undefined, "es");
+    expect(wb.worksheets.map((w) => w.name)).toEqual([
+      "Resumen", "Tareas", "Suministros", "Fechas de vencimiento", "Vecinos", "Cuando ocurra",
+    ]);
+  });
+
+  it("uses the same Spanish words in dropdowns, formulas, and colors, and points only at tabs that exist", async () => {
+    const wb = await roundTrip(undefined, "es");
+    const tabs = new Set(wb.worksheets.map((w) => w.name));
+    const formulas: string[] = [];
+    const lists: string[] = [];
+    for (const ws of wb.worksheets) {
+      ws.eachRow((r) =>
+        r.eachCell((c) => {
+          if (formula(c)) formulas.push(formula(c));
+          const dv = c.dataValidation;
+          if (dv?.type === "list") lists.push(...(dv.formulae as string[]));
+        }),
+      );
+      for (const cf of cfs(ws)) for (const rule of cf.rules) formulas.push(...rule.formulae);
+    }
+    expect(formulas.length).toBeGreaterThan(100);
+
+    // The words formulas compare against (not the spaced bits they join, like " de ").
+    const compared = new Set(
+      formulas
+        .flatMap((f) => [...f.matchAll(/"([^"]*)"/g)].map((m) => m[1]))
+        .filter((s) => s && !s.startsWith(" ") && !/^Persona \d$/.test(s)),
+    );
+    expect(compared.size).toBeGreaterThan(5);
+    for (const s of compared) expect(SPANISH.has(s), s).toBe(true);
+    for (const en of ENGLISH) expect(formulas.join("\n"), en).not.toContain(`"${en}"`);
+
+    // Status dropdowns offer the words the formulas count, and no English.
+    const offered = new Set(lists.filter((l) => l.startsWith('"')).flatMap((l) => l.slice(1, -1).split(",")));
+    for (const s of ["Falta", "Lo tengo", "Omitir", "Pendiente", "Hecho"]) expect(offered.has(s), s).toBe(true);
+    for (const en of ENGLISH) expect(offered.has(en), en).toBe(false);
+
+    // Every tab a formula or dropdown points at exists.
+    for (const f of [...formulas, ...lists]) {
+      for (const m of f.matchAll(/(?:'((?:[^']|'')+)'|([A-Za-zÀ-ÿ0-9_]+))!/g)) {
+        const name = (m[1] ?? m[2]).replace(/''/g, "'");
+        expect(tabs.has(name), `${name} in ${f}`).toBe(true);
+      }
+    }
+  });
+
+  it("counts Spanish statuses on the Resumen tab", async () => {
+    const wb = await roundTrip(undefined, "es");
+    const ws = wb.getWorksheet("Resumen")!;
+    const stat = (label: string) => formula(ws.getCell(`C${findRow(ws, label)}`));
+    expect(stat("Tareas hechas")).toBe(
+      'COUNTIF(Tareas!$A:$A,"Hecho")&" de "&(COUNTIF(Tareas!$A:$A,"Hecho")+COUNTIF(Tareas!$A:$A,"Pendiente")+COUNTIF(Tareas!$A:$A,"En parte"))',
+    );
+    expect(stat("Suministros listos")).toBe(
+      'COUNTIF(Suministros!$A:$A,"Lo tengo")&" de "&(COUNTIF(Suministros!$A:$A,"Lo tengo")+COUNTIF(Suministros!$A:$A,"Falta")+COUNTIF(Suministros!$A:$A,"En parte"))',
+    );
+    expect(stat("Falta comprar")).toMatch(/^SUMIF\(Suministros!\$A:\$A,"Falta",Suministros!\$(\w+):\$\1\)\+SUMIF\(Suministros!\$A:\$A,"En parte",/);
+    expect(stat("Vence ya")).toBe(`COUNTIF('Fechas de vencimiento'!$G:$G,"Vence ya")`);
+    expect(stat("Vence en los próximos 6 meses")).toBe(`COUNTIF('Fechas de vencimiento'!$G:$G,"Vence pronto")`);
+    expect(ws.getCell("B14").value).toBe("Días en casa");
+    expect(ws.getCell(`C${findRow(ws, "Próxima revisión")}`).numFmt).toBe("d mmm yyyy");
+  });
+
+  it("gives Supplies Spanish statuses, per-person columns, and colors", async () => {
+    const ws = (await roundTrip({ "stay:water": "have" }, "es")).getWorksheet("Suministros")!;
+    const headers: string[] = [];
+    ws.getRow(5).eachCell({ includeEmpty: true }, (c) => headers.push(c.text));
+    expect(headers).toEqual(["Estado", "Artículo", "Cantidad", "", "", "", "Quién compra", "Costo aprox.", "Ejemplo", "Notas"]);
+    expect(ws.getCell("A4").text).toBe("Qué conseguir");
+
+    const every = findRowA(ws, "En cada mochila");
+    expect(every).toBeGreaterThan(findRowA(ws, "Mochila de emergencia"));
+    expect(findRowA(ws, "Uno para todo el grupo")).toBeGreaterThan(every);
+    expect(formula(ws.getCell(`D${every}`))).toBe('IF(Resumen!$B$17="","Persona 1",Resumen!$B$17)');
+
+    // The first item in every bag: a Hecho / Pendiente cell per person, and a status that counts them.
+    const r = every + 1;
+    expect(ws.getCell(`D${r}`).dataValidation?.formulae).toEqual(['"Pendiente,Hecho"']);
+    expect(["Pendiente", "Hecho"]).toContain(ws.getCell(`D${r}`).value);
+    expect(formula(ws.getCell(`A${r}`))).toBe(
+      `IF(COUNTIF(D${r}:F${r},"Hecho")=3,"Lo tengo",IF(COUNTIF(D${r}:F${r},"Hecho")>0,"En parte","Falta"))`,
+    );
+
+    // Household items: a plain dropdown, and the Who list from the Resumen tab.
+    const essentials = findRowA(ws, "Lo esencial");
+    expect(essentials).toBe(findRowA(ws, "Caja para quedarse en casa") + 1);
+    expect(findRowA(ws, "Todo lo demás")).toBeGreaterThan(essentials);
+    const water = essentials + 1;
+    expect(ws.getCell(`A${water}`).dataValidation?.formulae).toEqual(['"Falta,Lo tengo,Omitir"']);
+    expect(ws.getCell(`G${water}`).dataValidation?.formulae).toEqual(["Resumen!$B$17:$B$24"]);
+    expect(["Falta", "Lo tengo"]).toContain(ws.getCell(`A${water}`).value);
+
+    const total = findRow(ws, "Falta comprar (cálculo aproximado)");
+    expect(formula(ws.getCell(`H${total}`))).toContain('"Falta"');
+
+    const names = cfs(ws).find((c) => c.ref.startsWith("B"))!;
+    expect(names.rules.map((x) => x.formulae[0])).toEqual(['$A6="Lo tengo"', 'OR($A6="Falta",$A6="En parte")', '$A6="Omitir"']);
+    const person = cfs(ws).find((c) => c.ref.startsWith("D"))!;
+    expect(person.rules.map((x) => x.formulae[0])).toEqual(['D6="Hecho"', 'D6="Pendiente"']);
+    expect(cfs(ws).some((c) => c.rules.some((x) => x.formulae[0] === '$A6="En parte"'))).toBe(true);
+  });
+
+  it("gives To-dos Spanish statuses", async () => {
+    const ws = (await roundTrip({ "home:alerts@0": "have" }, "es")).getWorksheet("Tareas")!;
+    expect(ws.getCell("E4").value).toBe("Quién");
+    expect(findRowA(ws, "Cada adulto")).toBe(5);
+    expect(findRowA(ws, "Este fin de semana")).toBeGreaterThan(5);
+    const alerts = 6;
+    expect([ws.getCell(`C${alerts}`).value, ws.getCell(`D${alerts}`).value]).toEqual(["Hecho", "Pendiente"]);
+    expect(formula(ws.getCell(`A${alerts}`))).toContain('"En parte"');
+    expect(ws.getCell(`E${alerts}`).value).toBe("Cada adulto");
+    const weekend = findRowA(ws, "Este fin de semana");
+    expect(ws.getCell(`A${weekend + 1}`).dataValidation?.formulae).toEqual(['"Pendiente,Hecho,Omitir"']);
+    // Wide enough for "Pendiente" and the dropdown arrow.
+    expect(ws.getColumn("A").width).toBeGreaterThanOrEqual(13);
+  });
+
+  it("works out Vence el and Aviso in Spanish on Fechas de vencimiento", async () => {
+    const ws = (await roundTrip(undefined, "es")).getWorksheet("Fechas de vencimiento")!;
+    const headers: string[] = [];
+    ws.getRow(4).eachCell((c) => headers.push(c.text));
+    expect(headers).toEqual(["Artículo", "Dónde", "Cambiar cada", "Empacado el", "Fecha del paquete", "Vence el", "Aviso", "Notas"]);
+    const r = 6; // the first row under the first section
+    expect(formula(ws.getCell(`G${r}`))).toBe(
+      `IF(F${r}="","",IF(F${r}<=TODAY(),"Vence ya",IF(F${r}<=EDATE(TODAY(),6),"Vence pronto","Al día")))`,
+    );
+    expect(ws.getCell(`C${r}`).numFmt).toBe('0" meses"');
+    expect(ws.getCell(`D${r}`).numFmt).toBe("d mmm yyyy");
+    expect(ws.getCell(`B${r}`).value).toBe("Caja para quedarse en casa");
+    expect(ws.getCell(`B${r}`).dataValidation?.formulae).toEqual([
+      '"Caja para quedarse en casa,Mochila de emergencia,Kit para el carro,En la casa"',
+    ]);
+    const row = cfs(ws).find((c) => c.ref.startsWith("A"))!;
+    expect(row.rules.map((x) => x.formulae[0])).toEqual(['$G5="Vence ya"', '$G5="Vence pronto"']);
+    const heads = cfs(ws).find((c) => c.ref.startsWith("G"))!;
+    expect(heads.rules.map((x) => x.formulae[0])).toEqual(['$G5="Vence ya"', '$G5="Vence pronto"', '$G5="Al día"']);
+    expect(ws.getCell("G4").note).toContain("Vence ya: ya pasó la fecha.");
+  });
+
+  it("translates Vecinos, the card, the Resumen, and the credit", async () => {
+    const wb = await roundTrip(undefined, "es");
+    const neighbors = wb.getWorksheet("Vecinos")!;
+    expect(neighbors.getCell("A4").value).toBe("Nombre");
+    expect(neighbors.getCell("F5").dataValidation?.formulae).toEqual(['"Sí,No"']);
+    expect(wb.getWorksheet("Cuando ocurra")!.getCell("A1").value).toBe("Cuando ocurra");
+    for (const ws of wb.worksheets) {
+      let credit = "";
+      ws.eachRow((r) =>
+        r.eachCell((c) => {
+          const v = c.value as { text?: string } | null;
+          if (v && typeof v === "object" && v.text?.startsWith("Hecho con Bay Ready")) credit = v.text;
+        }),
+      );
+      expect(credit, ws.name).not.toBe("");
+      expect(ws.headerFooter.oddFooter, ws.name).toContain("Página &P de &N");
+    }
+    const overview = wb.getWorksheet("Resumen")!;
+    expect(overview.getCell("B2").value).toBe("Nuestro kit de emergencia");
+    expect(findRow(overview, "Cómo usar esta hoja")).toBeGreaterThan(0);
   });
 });

@@ -26,20 +26,25 @@ export function withoutPersonalInfo(answers: Answers): Answers {
 }
 
 /**
- * "Save your list" shows on someone's own list once they've checked something
- * off themselves (not just the wizard's "have" picks), until they hide it.
+ * "Keep your own copy" shows on someone's own list once they've put something
+ * in it worth keeping: a checkmark of their own (not just the wizard's "have"
+ * picks), or Know your home info, which the link can't bring back. It stays
+ * until they hide it.
  */
 export function shouldOfferSave({
   shared,
   dismissed,
   states,
+  homeInfo = false,
 }: {
   shared: boolean;
   dismissed: boolean;
   states: Record<string, ItemState>;
+  /** Whether Know your home or the notes have anything in them. */
+  homeInfo?: boolean;
 }): boolean {
   if (shared || dismissed) return false;
-  return Object.values(states).includes("have");
+  return homeInfo || Object.values(states).includes("have");
 }
 
 /**

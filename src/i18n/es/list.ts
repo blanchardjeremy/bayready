@@ -289,18 +289,24 @@ export const list: Translation<typeof en> = {
   reveal: { show: "Ver", hide: "Ocultar" },
 
   save: {
-    title: "Guarde su lista",
+    title: "Guarde su propia copia",
     hide: "Ocultar esto",
-    body: "Su lista se guarda solo en este navegador. En iPhone, Safari puede borrarla si no entra al sitio en más o menos una semana. Guarde el enlace en un lugar seguro y siempre podrá recuperarla.",
+    body: "No confíe en este sitio para guardar su lista. Solo se guarda en este navegador, y puede borrarse sin aviso: si borra su historial, cambia de celular o, en iPhone, si no entra en más o menos una semana. Guarde una copia en otro lugar.",
+    printTitle: "Imprímala o guarde el PDF",
+    printBody: "Guarda todo, incluida la información de Conozca su casa y sus notas. Ponga una copia impresa en su caja.",
+    print: "Imprimir",
+    pdf: "Descargar PDF",
+    linkTitle: "Copie el enlace",
+    linkBody: "Recupera sus respuestas y marcas en cualquier celular o computadora. No incluye Conozca su casa ni sus notas.",
     copy: "Copiar enlace",
     copied: "Enlace copiado",
     email: "Mandármelo por correo",
     failed: "Su navegador no nos dejó copiarlo. Pruebe la opción de correo.",
-    iphoneTitle: "En iPhone: agréguela a su pantalla de inicio",
+    iphoneTitle: "En iPhone: también puede agregarla a su pantalla de inicio",
     iphoneBody:
       "En Safari, toque el botón Compartir y luego Agregar a inicio. La app de la pantalla de inicio guarda su lista y funciona sin conexión. Empieza vacía, así que primero copie su enlace y péguelo cuando abra la app.",
     privacy:
-      "El enlace tiene sus respuestas y marcas, incluidos los nombres y las necesidades de salud que haya puesto, así que no lo comparta. La información de Conozca su casa no va en el enlace, así que imprímala también.",
+      "El enlace tiene sus respuestas y marcas, incluidos los nombres y las necesidades de salud que haya puesto, así que no lo comparta.",
     mailSubject: "Mi lista de emergencia",
     mailBody: (url) =>
       `Este es el enlace a mi lista de emergencia de Bay Ready. Ábralo para recuperar la lista en cualquier celular o computadora:\n\n${url}\n`,

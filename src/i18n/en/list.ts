@@ -294,18 +294,23 @@ export const list = {
   reveal: { show: "Show", hide: "Hide" },
 
   save: {
-    title: "Save your list",
+    title: "Keep your own copy",
     hide: "Hide this",
-    body: "Your list is saved in this browser only. On iPhone, Safari can clear it if you don't visit for about a week. Keep the link somewhere safe and you can always bring it back.",
+    body: "Don't count on this website to hold on to your list. It's saved only in this browser, and it can disappear without warning: when you clear your history, switch phones, or, on iPhone, after about a week away. Keep a copy somewhere else.",
+    printTitle: "Print it or save the PDF",
+    printBody: "Keeps everything, including your Know your home info and notes. Put a printed copy in your bin.",
+    print: "Print",
+    pdf: "Download PDF",
+    linkTitle: "Copy the link",
+    linkBody: "Brings back your answers and checkmarks on any phone or computer. It doesn't include Know your home or your notes.",
     copy: "Copy link",
     copied: "Link copied",
     email: "Email it to myself",
     failed: "Your browser didn't let us copy it. Try the email option.",
-    iphoneTitle: "On iPhone: add it to your Home Screen",
+    iphoneTitle: "On iPhone: you can also add it to your Home Screen",
     iphoneBody:
       "In Safari, tap the Share button, then Add to Home Screen. The Home Screen app keeps your list and works without a connection. It starts empty, so copy your link first, then paste it in when you open the app.",
-    privacy:
-      "The link has your answers and checkmarks, including any names and health needs, so keep it to yourself. Know your home info isn't in it, so print that too.",
+    privacy: "The link has your answers and checkmarks, including any names and health needs, so keep it to yourself.",
     mailSubject: "My emergency list",
     mailBody: (url: string) =>
       `Here's the link to my Bay Ready emergency list. Open it to bring the list back on any phone or computer:\n\n${url}\n`,

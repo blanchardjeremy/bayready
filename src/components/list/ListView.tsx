@@ -298,8 +298,14 @@ export function ListView() {
 
       <Essentials entries={main.filter(isEssential)} st={st} row={row} budget={answers.budget} />
 
-      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states }) && (
-        <SaveYourList url={shareUrl()} onDismiss={() => setSaveDismissed(true)} />
+      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states, homeInfo: hasHomeInfo }) && (
+        <SaveYourList
+          url={shareUrl()}
+          onDismiss={() => setSaveDismissed(true)}
+          busy={busy !== null}
+          onPrint={() => run("print", () => printPdf(exportInput(), "list"), "")}
+          onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
+        />
       )}
 
       <div className="no-print mt-10 flex flex-wrap gap-2">

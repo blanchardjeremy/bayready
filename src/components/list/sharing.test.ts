@@ -37,6 +37,9 @@ describe("the Save your list card", () => {
   it("waits for a checkmark someone made themselves", () => {
     expect(shouldOfferSave({ shared: false, dismissed: false, states: {} })).toBe(false);
     expect(shouldOfferSave({ shared: false, dismissed: false, states: { "stay:radio": "skip" } })).toBe(false);
+    // Know your home info isn't in the link, so typing some is reason enough to suggest a copy.
+    expect(shouldOfferSave({ shared: false, dismissed: false, states: {}, homeInfo: true })).toBe(true);
+    expect(shouldOfferSave({ shared: false, dismissed: true, states: {}, homeInfo: true })).toBe(false);
     expect(shouldOfferSave({ shared: false, dismissed: false, states: { "stay:radio": "have" } })).toBe(true);
     expect(shouldOfferSave({ shared: false, dismissed: false, states: { "home:alerts@1": "have" } })).toBe(true);
   });

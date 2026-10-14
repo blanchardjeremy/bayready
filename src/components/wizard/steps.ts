@@ -1,31 +1,41 @@
 import type { Metadata } from "next";
 
 export type StepId =
-  | "build"
   | "county"
   | "hazards"
   | "household"
   | "needs"
   | "have"
-  | "level"
+  | "kit"
   | "home"
-  | "days"
   | "car"
+  | "level"
+  | "days"
   | "power"
   | "start";
 
+/**
+ * The order people see. They describe their situation before choosing a kit, so the
+ * kit step can make a suggestion. Each step's URL is /build/<id>, and /build itself
+ * shows the first step.
+ */
+export const MAIN_STEPS: StepId[] = ["county", "hazards", "household", "needs", "have", "kit", "home", "car", "level"];
+/** Only for Advanced, between the level and the last step. */
+export const ADVANCED_STEPS: StepId[] = ["days", "power"];
+export const LAST_STEP: StepId = "start";
+
 /** Each step's question. Doubles as the page title so screen readers hear it on navigation. */
 export const STEP_TITLES: Record<StepId, string> = {
-  build: "What would you like to put together?",
   county: "Which county do you live in?",
   hazards: "Which of these do you want to be ready for?",
   household: "Who are you prepping for?",
   needs: "Does anyone rely on any of these?",
   have: "Tap anything you already have at home",
-  level: "How much do you want to take on right now?",
+  kit: "What would you like to put together?",
   home: "What kind of home do you live in?",
-  days: "How many days do you want to cover at home?",
   car: "Do you usually have a car?",
+  level: "How much do you want to take on right now?",
+  days: "How many days do you want to cover at home?",
   power: "If the power is out for days, what matters most?",
   start: "When could you take your first step?",
 };

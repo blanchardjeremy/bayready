@@ -26,10 +26,15 @@ import { SHARE_IDS } from "@/data/shareIds";
  *
  * To add a field later, put it at the very end behind a 1-bit "present" flag.
  * Older links end before it, or in zero padding, which reads as "not present".
+ *
+ * Added since October 2026, in order after the marks:
+ * - ZIP code: a present flag, then the five digits as one 17-bit number.
  */
 
 type States = Record<string, ItemState>;
 const VERSION = 1;
+/** 99999 fits in 17 bits. */
+const ZIP_BITS = 17;
 
 /** Kits in mark order, most common first since earlier ones take fewer bits. Append only. */
 const MARK_KITS: Container[] = ["home", "go", "stay", "car"];
@@ -75,6 +80,10 @@ class BitReader {
   }
   flag() {
     return this.bit() === 1;
+  }
+  /** A "present" flag for a field added later. Older links end before it, which reads as absent. */
+  present() {
+    return this.i < this.data.length * 8 && this.flag();
   }
   gamma() {
     let len = 0;
@@ -239,6 +248,10 @@ export function encodeShare(answers: Answers, states: States = {}): string {
   writeSet(w, POWERS, a.power);
 
   writeMarks(w, changedMarks(a, states));
+
+  // Fields added later go here, each behind a "present" flag.
+  w.flag(a.zip !== null);
+  if (a.zip !== null) w.write(Number(a.zip), ZIP_BITS);
   return toBase64Url(w.bytes());
 }
 
@@ -270,7 +283,9 @@ export function decodeShare(hash: string): { answers: Answers; states: States } 
       car: readOne(r, CARS),
       power: readSet(r, POWERS),
     });
-    return { answers, states: readMarks(r) };
+    const states = readMarks(r);
+    if (r.present()) answers.zip = normalizeAnswers({ zip: String(r.read(ZIP_BITS)).padStart(5, "0") }).zip;
+    return { answers, states };
   } catch {
     return null;
   }

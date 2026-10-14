@@ -35,6 +35,12 @@ const eachBag = (amount: string) => (ctx: Context): Quantity => ({
   buy: ctx.carriers > 1 ? `for ${ctx.carriers} bags` : undefined,
 });
 
+/** A go bag item for adults and teens only (perPerson: "adults"). Kids under 13 skip it. */
+const eachAdultBag = (amount: string) => (ctx: Context): Quantity => ({
+  text: ctx.kids > 0 ? `${amount} per adult or teen` : `${amount} each`,
+  buy: ctx.adults > 1 ? `for ${ctx.adults} bags` : undefined,
+});
+
 /**
  * People eating regular food. Kids count as a whole person: rationing guidance
  * says not to cut back food for children. Babies have formula and baby food.
@@ -1042,7 +1048,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "powerbank",
-    perPerson: true,
+    perPerson: "adults",
     examples: [{ label: "BLAVOR solar power bank", url: "https://www.amazon.com/dp/B07FDXDB3W" }],
     coveredByGo: true,
     name: "Phone power bank",
@@ -1052,23 +1058,23 @@ export const ITEMS: Item[] = [
     hazards: "all",
     why: "Your phone is your flashlight, radio, and lifeline. A charged power bank keeps it going for a few days.",
     tip: "10,000 mAh charges most phones two or three times. Recharge it every few months.",
-    qty: (ctx, c) => (c === "go" ? eachBag("1")(ctx) : each(ctx.adults, "power bank")),
-    cost: (ctx, c) => range(15, 35, c === "go" ? ctx.carriers : ctx.adults),
+    qty: (ctx, c) => (c === "go" ? eachAdultBag("1")(ctx) : each(ctx.adults, "power bank")),
+    cost: (ctx) => range(15, 35, ctx.adults),
     stage: "month",
     shop: "online",
     haveKey: "powerbank",
   },
   {
     id: "cable",
-    perPerson: true,
+    perPerson: "adults",
     name: "Phone charging cable",
     category: "light-power",
     containers: ["go"],
     level: "basics",
     hazards: "all",
     why: "Easy to forget when you leave in a hurry, and phones don't all use the same plug.",
-    qty: eachBag("1"),
-    cost: (ctx) => range(5, 15, ctx.carriers),
+    qty: eachAdultBag("1"),
+    cost: (ctx) => range(5, 15, ctx.adults),
     stage: "month",
     shop: "online",
   },
@@ -1411,16 +1417,16 @@ export const ITEMS: Item[] = [
   },
   {
     id: "n95",
-    perPerson: true,
+    perPerson: "adults",
     name: "N95 masks",
     category: "air",
     containers: ["stay", "go"],
     level: "basics",
     hazards: ["smoke", "wildfire", "earthquake"],
     why: "They filter out the fine particles in wildfire smoke, plus dust after a quake. Cloth and surgical masks don't.",
-    tip: "Look for \"NIOSH approved\" on the box. They need a snug fit, so pick a size for each person. N95s aren't made for young kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.",
-    qty: (ctx, c) => (c === "go" ? eachBag("2")(ctx) : each((ctx.adults + ctx.kids) * 5, "mask")),
-    cost: (ctx, c) => range(1, 1.5, (ctx.adults + ctx.kids) * (c === "stay" ? 5 : 2)),
+    tip: "Look for \"NIOSH approved\" on the box. They need a snug fit, so pick a size for each adult and teen. N95s aren't made for kids, so keep them indoors with clean air instead. Extras are easy to share with neighbors on smoky days.",
+    qty: (ctx, c) => (c === "go" ? eachAdultBag("2")(ctx) : each(ctx.adults * 5, "mask")),
+    cost: (ctx, c) => range(1, 1.5, ctx.adults * (c === "stay" ? 5 : 2)),
     stage: "month",
     shop: "hardware",
     haveKey: "n95",
@@ -2243,8 +2249,9 @@ export const ITEMS: Item[] = [
     level: "basics",
     hazards: ["smoke", "wildfire"],
     why: "For driving through smoke. Set vents to recirculate too.",
-    qty: (ctx) => each(ctx.adults + ctx.kids, "mask"),
-    cost: (ctx) => range(1, 2, ctx.adults + ctx.kids),
+    tip: "One for each adult and teen. N95s aren't made for kids.",
+    qty: (ctx) => each(ctx.adults, "mask"),
+    cost: (ctx) => range(1, 2, ctx.adults),
     stage: "month",
     shop: "hardware",
     haveKey: "n95",

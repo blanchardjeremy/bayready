@@ -90,12 +90,13 @@ export function expiringSections(ctx: Context): ExpiringSection[] {
       rows: [
         { item: "Go bag food", kit: "Go bag", every: 12, note: "Bars or ration packs. Eat them and replace them before they go stale." },
         { item: "Go bag water", kit: "Go bag", every: 6, note: "" },
-        { item: "Phone power bank", kit: "Go bag", every: 3, note: "Recharge every few months. They slowly drain." },
+        // Kids under 13 skip things a grown-up handles for them: power banks, prescriptions, and contacts.
+        ...when(!isKid, [{ item: "Phone power bank", kit: "Go bag" as const, every: 3, note: "Recharge every few months. They slowly drain." }]),
         { item: "Phone numbers and ID copies", kit: "Go bag", every: 12, note: "Update numbers, IDs, and insurance." },
-        ...when(ctx.needs.has("meds"), [
+        ...when(!isKid && ctx.needs.has("meds"), [
           { item: "Prescription medicine", kit: "Go bag" as const, every: 6, note: "Rotate the backup into daily use so it never expires. Skip if none." },
         ]),
-        ...when(ctx.needs.has("vision-hearing"), [
+        ...when(!isKid && ctx.needs.has("vision-hearing"), [
           { item: "Contacts, solution, or hearing aid batteries", kit: "Go bag" as const, note: "Use the date on the package. Skip if none." },
         ]),
         isKid

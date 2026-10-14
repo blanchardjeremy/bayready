@@ -226,6 +226,17 @@ describe("spreadsheet export", () => {
     }
   });
 
+  it("leaves the kids' cells empty on adults-only go bag rows", async () => {
+    const ws = (await roundTrip()).getWorksheet("Supplies")!;
+    expect(ws.getCell(`A${findRowA(ws, "In every bag")}`).text).toMatch(/adults only/);
+    const cable = findRow(ws, "Phone charging cable");
+    expect(["D", "E", "F"].map((c) => ws.getCell(`${c}${cable}`).value)).toEqual(["Not done", "Not done", null]);
+    expect(ws.getCell(`F${cable}`).dataValidation).toBeUndefined();
+    expect((ws.getCell(`A${cable}`).value as { formula: string }).formula).toBe(
+      `IF(COUNTIF(D${cable}:E${cable},"Done")=2,"Have",IF(COUNTIF(D${cable}:E${cable},"Done")>0,"Partly","Need"))`,
+    );
+  });
+
   it("splits the go bag into every-bag items and one-for-the-group items", async () => {
     const ws = (await roundTrip()).getWorksheet("Supplies")!;
     const every = findRowA(ws, "In every bag");

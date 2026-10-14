@@ -278,12 +278,21 @@ const PERSON_COL_WIDTH = 15;
 const DONE = "Done";
 const NOT_DONE = "Not done";
 
-/** A Done / Not done dropdown per person, or plain empty cells when the row is done once for everyone. */
-function personCells(r: ExcelJSNamespace.Row, startCol: number, count: number, done: ((i: number) => boolean) | null) {
+/**
+ * A Done / Not done dropdown per person, or plain empty cells when the row is done once for everyone.
+ * Only the first `active` people get a dropdown (adults-only go bag items leave the kids' cells empty).
+ */
+function personCells(
+  r: ExcelJSNamespace.Row,
+  startCol: number,
+  count: number,
+  done: ((i: number) => boolean) | null,
+  active = count,
+) {
   for (let i = 0; i < count; i++) {
     const cell = r.getCell(startCol + i);
     cell.border = { bottom: hairline };
-    if (!done) continue;
+    if (!done || i >= active) continue;
     cell.value = done(i) ? DONE : NOT_DONE;
     cell.font = font({ size: 10 });
     cell.alignment = { vertical: "middle", horizontal: "center" };
@@ -614,7 +623,13 @@ function buildSupplies(ws: Worksheet, list: ListEntry[], input: ExportInput): Su
     if (kit === "go" && bags) {
       // What goes in every bag, then what the group needs just one of.
       const groups: [string, string, ListEntry[]][] = [
-        ["In every bag", "Mark each person Done as you pack their bag", items.filter((e) => e.slots.length > 0)],
+        [
+          "In every bag",
+          items.some((e) => e.slots.length > 0 && e.slots.length < bags)
+            ? "Mark Done as you pack each bag. Some are adults only"
+            : "Mark each person Done as you pack their bag",
+          items.filter((e) => e.slots.length > 0),
+        ],
         ["One for the group", "Just one of these. Decide whose bag it goes in", items.filter((e) => e.slots.length === 0)],
       ];
       for (const [name, desc, group] of groups) {
@@ -676,9 +691,12 @@ function writeSupplyRow(ws: Worksheet, row: number, e: ListEntry, input: ExportI
   const have = input.stateOf(e) === "have";
   const perBag = bags > 0 && e.slots.length > 0;
 
-  if (perBag) personStatus(cell("status"), row, idx.bag0, bags, ["Have", "Partly", "Need"], have);
+  // Adults-only items (N95s, power banks) have fewer slots than bags. Adults come first, so
+  // their slots line up with the first bag columns and the kids' columns stay empty.
+  const slots = Math.min(e.slots.length, bags);
+  if (perBag) personStatus(cell("status"), row, idx.bag0, slots, ["Have", "Partly", "Need"], have);
   else statusCell(cell("status"), have ? "Have" : "Need", STATUS.supplies);
-  if (bags) personCells(r, idx.bag0, bags, perBag ? (i) => input.slotDone(e, i) : null);
+  if (bags) personCells(r, idx.bag0, bags, perBag ? (i) => input.slotDone(e, i) : null, slots);
 
   const item = cell("item");
   item.value = e.item.name;

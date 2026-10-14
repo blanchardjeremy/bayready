@@ -230,7 +230,7 @@ describe("per-person tracking", () => {
     expect(find({ ...family, needs: ["meds"] }, "go:med-info").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "go:water-go").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
     expect(find(family, "go:docs-copies").slots).toEqual(["Me", "Adult 2", "Kid 1"]);
-    for (const key of ["go:cash-go", "go:powerbank"]) expect(find(family, key).slots).toHaveLength(3);
+    expect(find(family, "go:cash-go").slots).toHaveLength(3);
     expect(find({ ...family, needs: ["meds"] }, "go:rx").slots).toHaveLength(3);
     // Stay-at-home bin copies aren't tracked per person
     expect(find({ ...family, build: "stay" }, "stay:powerbank").slots).toEqual([]);
@@ -239,6 +239,20 @@ describe("per-person tracking", () => {
     expect(find(family, "go:gloves").qty?.text).toBe("1 pair");
     expect(find(family, "go:first-aid").slots).toEqual([]);
     expect(find(family, "home:contact").slots).toEqual([]);
+  });
+
+  it("doesn't give kids N95s, power banks, or charging cables", () => {
+    for (const key of ["go:n95", "go:powerbank", "go:cable"]) {
+      const e = find(family, key);
+      expect(e.slots, key).toEqual(["Me", "Adult 2"]);
+      expect(e.qty?.text, key).toMatch(/per adult or teen/);
+    }
+    expect(find(family, "go:n95").cost).toEqual([4, 6]); // 2 masks for each of 2 adults
+    expect(find({ ...family, build: "stay" }, "stay:n95").qty?.text).toBe("10 masks");
+    // One adult with a kid: just one, for the group
+    const solo = answers({ build: "both", household: { ...EMPTY_ANSWERS.household, adults: 1, kids: 2 } });
+    expect(find(solo, "go:powerbank").slots).toEqual([]);
+    expect(find(solo, "go:powerbank").qty?.text).toBe("1 per adult or teen");
   });
 
   it("doesn't split things for a one-person household", () => {

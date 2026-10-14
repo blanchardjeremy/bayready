@@ -1,13 +1,15 @@
 import type { Answers, Container, Context, Item, ItemState, ListEntry, Stage } from "./types";
 import { peopleNames } from "./answers";
 
-/** Who an entry is tracked for separately: each bag in the go bag, each adult for to-dos. */
+/**
+ * Who an entry is tracked for separately: each bag in the go bag (or only the
+ * adults' bags, for adults-only items), each adult for to-dos. Adults come
+ * first in the names, so an adults-only entry's slots line up with the first bags.
+ */
 export function slotsFor(item: Item, container: Container, ctx: Context): string[] {
   if (!item.perPerson) return [];
-  const names = peopleNames(ctx);
-  if (container === "go" && ctx.carriers > 1) return names.slice(0, ctx.carriers);
-  if (container === "home" && ctx.adults > 1) return names.slice(0, ctx.adults);
-  return [];
+  const n = container === "go" ? (item.perPerson === "adults" ? ctx.adults : ctx.carriers) : container === "home" ? ctx.adults : 0;
+  return n > 1 ? peopleNames(ctx).slice(0, n) : [];
 }
 
 export function buildList(ctx: Context, items: Item[]): ListEntry[] {

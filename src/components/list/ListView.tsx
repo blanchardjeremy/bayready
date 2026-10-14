@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import {
   ANSWERS_KEY,
   normalizeAnswers,
@@ -13,19 +13,34 @@ import {
   resolveBuild,
 } from "@/lib/answers";
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
-import { firstStepDate, type CalendarEvent } from "@/lib/ics";
+import { firstStepDate, twiceYearlyChecks } from "@/lib/ics";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
-import { useStored } from "@/lib/storage";
+import { clearAllStored, useStored } from "@/lib/storage";
 import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } from "@/lib/types";
 import { COUNTY_BY_ID } from "@/data/counties";
 import { HAZARD_BY_ID } from "@/data/hazards";
 import { ITEMS } from "@/data/items";
+import { isEssential } from "@/data/essentials";
 import { firstHourCard } from "@/data/firstHour";
 import { CATEGORY_META, CATEGORY_ORDER, CONTAINER_META, SHOP_META, SHOP_ORDER, STAGE_META } from "@/data/meta";
-import { Button, buttonClass } from "@/components/controls";
+import { Button, CheckBox, buttonClass } from "@/components/controls";
+import { useStandalone } from "@/components/useStandalone";
 import { ItemRow } from "./ItemRow";
+import { Essentials } from "./Essentials";
+import { SaveYourList } from "./SaveYourList";
+import { ShareDialog } from "./ShareDialog";
+import {
+  LIST_ANCHORS,
+  SAVE_PROMPT_KEY,
+  STORAGE_PREFIX,
+  hasPersonalInfo,
+  shareCodeFrom,
+  shouldOfferSave,
+  withoutPersonalInfo,
+} from "./sharing";
 import { BAY_READY_URL, CREDIT, sitePath, siteUrl } from "@/lib/urls";
 import { clearReturnToList, markReturnToList } from "@/lib/returnToList";
 import { NamesEditor } from "@/components/NamesEditor";
@@ -44,28 +59,67 @@ import { KnowYourHome, TaskFacts } from "./HomeFields";
 
 type States = Record<string, ItemState>;
 type RowProps = (e: ListEntry) => ComponentProps<typeof ItemRow>;
+type Shared = { answers: Answers; states: States };
 const EMPTY_STATES: States = {};
 type Export = "print" | "pdf" | "xlsx" | "refresh";
 type View = "kits" | "shop" | "plan";
+
+/** A list carried in the address bar's #, or null for no hash or a jump to a spot on the page. */
+function readSharedHash(): Shared | null {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash.slice(1);
+  if (!hash || LIST_ANCHORS.has(hash)) return null;
+  return decodeShare(hash);
+}
+
+/** Scrolls to a section and moves focus to its heading, without touching the # (which may hold a list). */
+function jumpTo(id: string) {
+  return (e: MouseEvent) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+    el.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
+  };
+}
 
 export function ListView() {
   const [storedAnswers, setStoredAnswers] = useStored<Answers>(ANSWERS_KEY, EMPTY_ANSWERS, normalizeAnswers);
   const [storedStates, setStoredStates] = useStored<States>(STATES_KEY, EMPTY_STATES);
   // A shared link carries its own answers in the URL fragment; read it once on the client.
-  const [shared, setShared] = useState(() =>
-    typeof window !== "undefined" && window.location.hash.length > 1 ? decodeShare(window.location.hash) : null,
-  );
+  const [shared, setShared] = useState<Shared | null>(readSharedHash);
   const [view, setView] = useState<View>("kits");
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<Export | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [sharing, setSharing] = useState<{ url: string; copied: boolean } | null>(null);
+  const [sharing, setSharing] = useState<{ url: string; privateUrl: string; copied: boolean; personal: boolean } | null>(null);
   const [editingNames, setEditingNames] = useState(false);
+  const [confirming, setConfirming] = useState<"replace" | "clear" | null>(null);
+  const [cleared, setCleared] = useState(false);
   const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
+  const [saveDismissed, setSaveDismissed] = useStored<boolean>(SAVE_PROMPT_KEY, false);
   // Counts clicks on a task's "Print these for your kit" link; the card flashes its print button.
   const [printPulse, setPrintPulse] = useState(0);
   // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
   useEffect(() => clearReturnToList(), []);
+
+  // Opening a link to the list already saved here (a calendar reminder, a bookmark) is just your own list.
+  const sameAsMine =
+    !!shared &&
+    !!storedAnswers &&
+    !!storedStates &&
+    storedAnswers.build !== null &&
+    encodeShare(storedAnswers, storedStates) === encodeShare(shared.answers, shared.states);
+  if (sameAsMine) setShared(null);
+
+  // Once a shared list is made yours, cleared, or turns out to be yours, take its code out of the
+  // address bar so a reload shows the list saved here.
+  useEffect(() => {
+    if (shared) return;
+    const hash = window.location.hash.slice(1);
+    if (hash && !LIST_ANCHORS.has(hash)) history.replaceState(null, "", sitePath("/list"));
+  }, [shared]);
 
   const answers = shared ? shared.answers : storedAnswers;
   const states = shared ? shared.states : storedStates;
@@ -73,17 +127,55 @@ export function ListView() {
   const ctx = useMemo(() => (answers ? deriveContext(answers) : null), [answers]);
   const entries = useMemo(() => (ctx ? buildList(ctx, ITEMS) : []), [ctx]);
 
+  // The page draws after saved data loads, too late for the browser's own jump to #first-hour.
+  const ready = !!(answers && states && ctx);
+  useEffect(() => {
+    if (!ready) return;
+    const hash = window.location.hash.slice(1);
+    if (LIST_ANCHORS.has(hash)) document.getElementById(hash)?.scrollIntoView();
+  }, [ready]);
+
   if (!answers || !states || !ctx) return <div className="min-h-[60vh]" aria-busy="true" />;
 
-  if (!shared && answers.build === null) return <EmptyState onStarter={() => setStoredAnswers(STARTER_ANSWERS)} />;
+  if (!shared && answers.build === null)
+    return (
+      <EmptyState
+        cleared={cleared}
+        onStarter={() => setStoredAnswers(STARTER_ANSWERS)}
+        onRestore={(list) => {
+          setShared(list);
+          setCleared(false);
+        }}
+      />
+    );
 
   const setStates = (patch: States) => {
-    if (shared) setShared({ ...shared, states: { ...shared.states, ...patch } });
+    if (shared) setShared((prev) => prev && { ...prev, states: { ...prev.states, ...patch } });
     else setStoredStates((prev) => ({ ...prev, ...patch }));
   };
+  /** Marking a whole entry marks each person's part the same way. Skipping leaves their parts alone. */
+  const patchFor = (e: ListEntry, s: ItemState): States => {
+    const patch: States = { [e.key]: s };
+    if (s !== "skip") e.slots.forEach((_, i) => (patch[slotKey(e, i)] = s));
+    return patch;
+  };
   const setLevel = (level: Answers["level"]) => {
-    if (shared) setShared({ ...shared, answers: { ...shared.answers, level } });
+    if (shared) setShared((prev) => prev && { ...prev, answers: { ...prev.answers, level } });
     else setStoredAnswers((prev) => ({ ...prev, level }));
+  };
+  const makeItMine = () => {
+    if (!shared) return;
+    setStoredAnswers(shared.answers);
+    setStoredStates(shared.states);
+    setShared(null);
+    setConfirming(null);
+  };
+  const clearDevice = () => {
+    clearAllStored(STORAGE_PREFIX);
+    clearReturnToList();
+    setShared(null);
+    setConfirming(null);
+    setCleared(true);
   };
 
   const st = (e: ListEntry) => stateOf(e, states, answers);
@@ -98,6 +190,12 @@ export function ListView() {
     entry: e,
     state: st(e),
     ctx,
+    essential: isEssential(e),
+    // "Bottled water" in the wizard's have step pre-checks water, which may not be the full amount.
+    note:
+      e.item.haveKey === "water" && states[e.key] === undefined && answers.have.includes("water") ? (
+        <span className="font-semibold">You said you have some. Check you have the full amount.</span>
+      ) : undefined,
     slotDone: (i) => slotDone(e, i, states, answers),
     onEditNames: shared ? undefined : () => setEditingNames(true),
     extra: shared ? undefined : (
@@ -108,11 +206,7 @@ export function ListView() {
       />
     ),
     onSlot: (i, done) => setStates({ [slotKey(e, i)]: done ? "have" : "need" }),
-    onChange: (s) => {
-      const patch: States = { [e.key]: s };
-      if (s !== "skip") e.slots.forEach((_, i) => (patch[slotKey(e, i)] = s));
-      setStates(patch);
-    },
+    onChange: (s) => setStates(patchFor(e, s)),
   });
   const advanced = answers.level === "advanced";
   const main = entries.filter((e) => advanced || e.level === "basics");
@@ -134,6 +228,7 @@ export function ListView() {
     }
   };
   const shareUrl = () => `${siteUrl("/list")}#${encodeShare(answers, states)}`;
+  const privateShareUrl = () => `${siteUrl("/list")}#${encodeShare(withoutPersonalInfo(answers), states)}`;
   const hasHomeInfo = !shared && anyHomeInfo(homeInfo);
   /** What the PDF, printout, and spreadsheet are made from. */
   const exportInput = () => ({
@@ -157,6 +252,9 @@ export function ListView() {
       setBusy(null);
     }
   };
+  const hasFirstHour = firstHourCard(ctx).length > 0;
+  const activeCount = main.filter((e) => st(e) !== "skip").length;
+  const levelUpCount = levelUp.filter((e) => st(e) !== "skip").length;
 
   return (
     // In print, a flex column lets Know your home move up under the header.
@@ -164,18 +262,13 @@ export function ListView() {
       {shared && (
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-ink bg-paper p-4">
           <p>
-            <span className="font-semibold">You&apos;re looking at a list someone shared.</span>{" "}
+            <span className="font-semibold">You&apos;re looking at a list from a link.</span>{" "}
             <span className="text-ink-soft">Changes here aren&apos;t saved until you make it yours.</span>
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              onClick={() => {
-                setStoredAnswers(shared.answers);
-                setStoredStates(shared.states);
-                history.replaceState(null, "", sitePath("/list"));
-                setShared(null);
-              }}
+              onClick={() => (storedAnswers?.build != null ? setConfirming("replace") : makeItMine())}
             >
               Make it my list
             </Button>
@@ -186,25 +279,33 @@ export function ListView() {
         </div>
       )}
 
-      <Header ctx={ctx} answers={answers} onLevel={setLevel} readOnly={!!shared} />
+      <Header ctx={ctx} answers={answers} readOnly={!!shared} hasFirstHour={hasFirstHour} />
 
-      <Progress kits={kits} main={main} st={st} />
+      <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
-      <div className="no-print mt-6 flex flex-wrap gap-2">
+      <Essentials entries={main.filter(isEssential)} st={st} row={row} budget={answers.budget} />
+
+      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states }) && (
+        <SaveYourList url={shareUrl()} onDismiss={() => setSaveDismissed(true)} />
+      )}
+
+      <div className="no-print mt-10 flex flex-wrap gap-2">
         <Button
           type="button"
           variant="secondary"
           onClick={() => {
-            // Only explain what's left out when there's something left out.
+            // Only explain what's in the link, or left out of it, when there's something to explain.
             const url = shareUrl();
+            const personal = hasPersonalInfo(answers);
+            const open = (ok: boolean) => setSharing({ url, privateUrl: privateShareUrl(), copied: ok, personal });
             navigator.clipboard.writeText(url).then(
               () => {
-                if (hasHomeInfo) return setSharing({ url, copied: true });
+                if (personal || hasHomeInfo) return open(true);
                 flash("Link copied. Anyone with it can see this list.");
                 setLinkCopied(true);
                 setTimeout(() => setLinkCopied(false), 2500);
               },
-              () => setSharing({ url, copied: false }),
+              () => open(false),
             );
           }}
         >
@@ -255,54 +356,79 @@ export function ListView() {
         </p>
       </div>
 
-      <StartHere firsts={firsts} st={st} row={row} answers={answers} />
-
       <Together />
 
-      <div className="no-print mt-12 flex flex-wrap gap-1 rounded-lg bg-paper p-1 sm:inline-flex" role="group" aria-label="How to show your list">
-        {(
-          [
-            ["kits", "By kit"],
-            ["shop", "Shopping list"],
-            ["plan", "Step by step"],
-          ] as [View, string][]
-        ).map(([v, label]) => (
-          <button
-            key={v}
-            type="button"
-            aria-pressed={view === v}
-            onClick={() => setView(v)}
-            className={`min-h-11 flex-1 rounded-md px-4 font-semibold sm:flex-none ${
-              view === v ? "bg-ink text-fog" : "text-ink-soft hover:text-ink"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <section id="full-list" className="mt-14 scroll-mt-4 border-t border-line pt-10" aria-labelledby="full-list-title">
+        <div className="no-print grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <h2 id="full-list-title" tabIndex={-1} className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Your full list <span className="font-semibold text-ink-soft">· {activeCount} things</span>
+            </h2>
+            <p className="mt-2 max-w-[64ch] text-ink-soft">
+              Everything for your household, with the essentials marked. There&apos;s no rush: work through it a bit
+              at a time, and skip anything that doesn&apos;t fit your life.
+              {levelUpCount > 0 && ` When you're ready, ${levelUpCount} more ideas wait at the end of each kit.`}
+            </p>
+          </div>
+          <LevelToggle answers={answers} onLevel={setLevel} />
+        </div>
 
-      <div className="mt-8">
-        {view === "kits" &&
-          kits.map((c) => (
-            <KitSection
-              key={c}
-              container={c}
-              entries={main.filter((e) => e.container === c && !firstKeys.has(e.key))}
-              shownAbove={main.filter((e) => e.container === c && firstKeys.has(e.key)).length}
-              levelUp={levelUp.filter((e) => e.container === c)}
-              st={st}
-              row={row}
-              ctx={ctx}
-              onLevelUp={() => setLevel("advanced")}
-            />
+        <Progress kits={kits} main={main} st={st} />
+
+        <div
+          className="no-print mt-8 flex flex-wrap gap-1 rounded-lg bg-paper p-1 sm:inline-flex"
+          role="group"
+          aria-label="How to show your list"
+        >
+          {(
+            [
+              ["kits", "By kit"],
+              ["shop", "Shopping list"],
+              ["plan", "Step by step"],
+            ] as [View, string][]
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={view === v}
+              onClick={() => setView(v)}
+              className={`min-h-11 flex-1 rounded-md px-4 font-semibold sm:flex-none ${
+                view === v ? "bg-ink text-fog" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {label}
+            </button>
           ))}
-        {view === "shop" && (
-          <ShoppingList entries={main} st={st} copy={(t) => copy(t, "Shopping list copied.")} />
-        )}
-        {view === "plan" && (
-          <Plan entries={[...main, ...levelUp]} firstKeys={firstKeys} st={st} row={row} answers={answers} />
-        )}
-      </div>
+        </div>
+
+        <div className="mt-8">
+          {view === "kits" &&
+            kits.map((c) => (
+              <KitSection
+                key={c}
+                container={c}
+                entries={main.filter((e) => e.container === c && !firstKeys.has(e.key))}
+                shownAbove={main.filter((e) => e.container === c && firstKeys.has(e.key)).length}
+                levelUp={levelUp.filter((e) => e.container === c)}
+                st={st}
+                row={row}
+                ctx={ctx}
+                onLevelUp={() => setLevel("advanced")}
+              />
+            ))}
+          {view === "shop" && (
+            <ShoppingList
+              entries={main}
+              st={st}
+              onGot={(list, got) => setStates(Object.assign({}, ...list.map((e) => patchFor(e, got ? "have" : "need"))))}
+              copy={(t) => copy(t, "Shopping list copied.")}
+            />
+          )}
+          {view === "plan" && (
+            <Plan entries={[...main, ...levelUp]} firstKeys={firstKeys} st={st} row={row} answers={answers} />
+          )}
+        </div>
+      </section>
 
       <FirstHour ctx={ctx} />
 
@@ -318,8 +444,22 @@ export function ListView() {
 
       <KeepFresh
         busy={busy === "refresh"}
+        listUrl={shareUrl()}
         onPrint={() => run("refresh", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput(), "refresh")), "")}
       />
+
+      {!shared && (
+        <p className="no-print mt-12 border-t border-line pt-6 text-[0.95rem] text-ink-soft">
+          On a shared phone or computer?{" "}
+          <button
+            type="button"
+            onClick={() => setConfirming("clear")}
+            className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-2"
+          >
+            Clear everything on this device
+          </button>
+        </p>
+      )}
 
       {/* The site footer doesn't print, so printed lists get their own credit. */}
       <p className="hidden pt-8 text-sm print:block">
@@ -335,20 +475,74 @@ export function ListView() {
           onClose={() => setEditingNames(false)}
         />
       )}
+
+      {confirming === "replace" && storedAnswers && storedStates && (
+        <ConfirmDialog
+          title="Replace your list?"
+          confirmLabel="Replace my list"
+          cancelLabel="Keep my list"
+          onConfirm={makeItMine}
+          onCancel={() => setConfirming(null)}
+        >
+          <p>
+            This device already has a list. Making this one yours replaces it, along with its checkmarks. Your Know
+            your home info stays.
+          </p>
+          <CopyLink
+            url={`${siteUrl("/list")}#${encodeShare(storedAnswers, storedStates)}`}
+            label="Copy the link to my current list first"
+          />
+        </ConfirmDialog>
+      )}
+
+      {confirming === "clear" && (
+        <ConfirmDialog
+          title="Clear everything on this device?"
+          confirmLabel="Clear everything"
+          onConfirm={clearDevice}
+          onCancel={() => setConfirming(null)}
+        >
+          <p>
+            This deletes your answers, checkmarks, and Know your home info from this browser. It can&apos;t be undone.
+          </p>
+          <p>To keep your list, copy its link first. Know your home info isn&apos;t in the link.</p>
+          <CopyLink url={shareUrl()} label="Copy my list link" />
+        </ConfirmDialog>
+      )}
     </div>
+  );
+}
+
+/** A quiet "copy this link" button that says when it worked. */
+function CopyLink({ url, label }: { url: string; label: string }) {
+  const [state, setState] = useState<"" | "copied" | "failed">("");
+  return (
+    <p>
+      <button
+        type="button"
+        onClick={() => navigator.clipboard.writeText(url).then(() => setState("copied"), () => setState("failed"))}
+        className="inline-flex min-h-11 items-center gap-2 font-semibold text-ink underline underline-offset-2"
+      >
+        {state === "copied" ? <CheckIcon /> : <LinkIcon />}
+        {state === "copied" ? "Link copied" : label}
+      </button>
+      <span role="status" className="ml-2">
+        {state === "failed" && "Your browser didn't let us copy it."}
+      </span>
+    </p>
   );
 }
 
 function Header({
   ctx,
   answers,
-  onLevel,
   readOnly,
+  hasFirstHour,
 }: {
   ctx: Context;
   answers: Answers;
-  onLevel: (l: Answers["level"]) => void;
   readOnly: boolean;
+  hasFirstHour: boolean;
 }) {
   const build = resolveBuild(answers);
   const h = answers.household;
@@ -368,95 +562,131 @@ function Header({
     return i === 0 ? short : short.toLowerCase();
   });
 
-  // One badge per answer, each jumping to the wizard step that sets it.
+  // One badge per answer, each jumping to the wizard step that sets it. The values read on
+  // their own, so the labels are only for screen readers.
   const groups: { label: string; step: string; value: string }[] = [
     { label: "Building", step: "", value: kitNames.join(" + ") },
     { label: "For", step: "household", value: people.join(", ") },
-    { label: "Ready for", step: "hazards", value: hazards.join(", ") },
+    { label: "Hazards", step: "hazards", value: hazards.join(", ") },
     ...(build !== "go"
-      ? [{ label: "At home", step: answers.level === "advanced" ? "days" : "level", value: `${ctx.stayDays} days` }]
+      ? [{ label: "Days", step: answers.level === "advanced" ? "days" : "level", value: `${ctx.stayDays} days at home` }]
       : []),
-    ...(county ? [{ label: "In", step: "county", value: `${county.name} County` }] : []),
+    ...(county ? [{ label: "County", step: "county", value: `${county.name} County` }] : []),
   ];
 
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end print:-order-2">
-      <div>
-        <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">Your emergency list</h1>
-        <dl className="mt-4 flex max-w-[60rem] flex-wrap items-center gap-x-4 gap-y-2">
+    <div className="print:-order-2">
+      <h1 className="text-[2.2rem] font-extrabold leading-[1.1] tracking-[-0.025em] sm:text-[2.8rem]">Your emergency list</h1>
+      <div className="mt-2 flex items-center gap-x-2 sm:flex-wrap">
+        <span className="shrink-0 text-[0.9rem] font-semibold text-ink-soft">Planning for</span>
+        {/* On phones the answers scroll sideways on one line instead of taking up the first screen. */}
+        <ul
+          aria-label="Your answers"
+          className="-my-1 flex min-w-0 items-center gap-1.5 overflow-x-auto px-1 py-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible print:flex-wrap"
+        >
           {groups.map((g) => (
-            <div key={g.label} className="flex items-center gap-1.5">
-              <dt className="text-[0.85rem] text-ink-soft">{g.label}</dt>
-              <dd>
-                <AnswerBadge value={g.value} href={readOnly ? undefined : `/build${g.step ? `/${g.step}` : ""}`} label={g.label} />
-              </dd>
-            </div>
+            <li key={g.label} className="shrink-0">
+              <AnswerBadge value={g.value} href={readOnly ? undefined : `/build${g.step ? `/${g.step}` : ""}`} label={g.label} />
+            </li>
           ))}
-        </dl>
-        {!readOnly && (
-          <Link
-            href="/build"
-            onClick={markReturnToList}
-            className="no-print mt-3 inline-block text-[0.95rem] font-semibold text-ink underline underline-offset-2"
-          >
-            Change answers
-          </Link>
-        )}
+          {!readOnly && (
+            <li className="no-print shrink-0">
+              <Link
+                href="/build"
+                onClick={markReturnToList}
+                className="inline-flex min-h-11 items-center px-1 text-[0.9rem] font-semibold text-ink underline underline-offset-2"
+              >
+                Change answers
+              </Link>
+            </li>
+          )}
+        </ul>
       </div>
-      <fieldset className="no-print">
-        <legend className="mb-1.5 text-[0.95rem] font-semibold text-ink-soft">Level</legend>
-        <div className="inline-flex rounded-lg border-2 border-ink p-0.5">
-          {(["basics", "advanced"] as const).map((l) => (
-            <label
-              key={l}
-              className={`cursor-pointer rounded-md px-4 py-2 font-semibold has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-focus ${
-                answers.level === l ? "bg-ink text-fog" : "text-ink-soft hover:text-ink"
-              }`}
-            >
-              <input type="radio" name="level" className="sr-only" checked={answers.level === l} onChange={() => onLevel(l)} />
-              {l === "basics" ? "Basics" : "Advanced"}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {hasFirstHour && (
+        <a
+          href="#first-hour"
+          onClick={jumpTo("first-hour")}
+          className="no-print inline-flex min-h-11 items-center gap-1.5 text-[0.95rem] font-semibold text-ink underline underline-offset-2"
+        >
+          Happening now? See what to do first
+          <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M8 3v10M4 9l4 4 4-4" />
+          </svg>
+        </a>
+      )}
     </div>
   );
 }
 
-/** One answer shown as a badge. Links to the wizard step that sets it; the faint pencil says it's editable. */
+/** One answer shown as a badge. Links to the wizard step that sets it; the pencil says it's editable. */
 function AnswerBadge({ value, href, label }: { value: string; href?: string; label: string }) {
-  const cls =
-    "inline-flex min-h-7 items-center gap-1.5 rounded-full border border-line bg-paper px-2.5 text-[0.85rem] font-semibold text-ink";
-  if (!href) return <span className={cls}>{value}</span>;
+  const pill =
+    "inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border bg-paper px-3 text-[0.85rem] font-semibold text-ink";
+  if (!href) return <span className={`${pill} border-line`}>{value}</span>;
   return (
     <Link
       href={href}
       onClick={markReturnToList}
       aria-label={`${label}: ${value}. Change`}
-      className={`group/badge ${cls} transition-colors hover:border-ink`}
+      className="group/badge inline-flex min-h-11 items-center"
     >
-      {value}
-      <svg
-        viewBox="0 0 16 16"
-        aria-hidden="true"
-        className="no-print size-3 text-ink-soft opacity-50 transition-opacity group-hover/badge:opacity-100 group-focus-visible/badge:opacity-100"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M11.5 2.5 13.5 4.5 5.5 12.5 2.5 13.5 3.5 10.5Z" />
-      </svg>
+      <span className={`${pill} border-field-line transition-colors group-hover/badge:border-ink group-hover/badge:bg-paper-2`}>
+        {value}
+        <svg
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          className="no-print size-3 text-ink-soft group-hover/badge:text-ink"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M11.5 2.5 13.5 4.5 5.5 12.5 2.5 13.5 3.5 10.5Z" />
+        </svg>
+      </span>
     </Link>
   );
 }
 
+/** Basics or Advanced, named by how much it covers. */
+function LevelToggle({ answers, onLevel }: { answers: Answers; onLevel: (l: Answers["level"]) => void }) {
+  const goOnly = resolveBuild(answers) === "go";
+  const size = {
+    basics: goOnly ? "The core" : "1 week",
+    advanced: goOnly ? "Plus extras" : `${answers.days === 7 ? "1 week" : "2 weeks"} + extras`,
+  };
+  return (
+    <fieldset className="no-print">
+      <legend className="mb-1.5 text-[0.95rem] font-semibold text-ink-soft">List size</legend>
+      <div className="inline-flex rounded-lg border-2 border-ink p-0.5">
+        {(["basics", "advanced"] as const).map((l) => (
+          <label
+            key={l}
+            className={`min-h-11 cursor-pointer rounded-md px-4 py-1.5 text-center leading-tight has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-focus ${
+              answers.level === l ? "bg-ink text-fog" : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            <input type="radio" name="level" className="sr-only" checked={answers.level === l} onChange={() => onLevel(l)} />
+            <span className="block font-semibold">{l === "basics" ? "Basics" : "Advanced"}</span>
+            <span className="block text-[0.85rem]">{size[l]}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+/**
+ * Progress per kit. Hidden until something is checked, so nobody's first look
+ * at their list is a row of empty bars.
+ */
 function Progress({ kits, main, st }: { kits: Container[]; main: ListEntry[]; st: (e: ListEntry) => ItemState }) {
   const active = main.filter((e) => st(e) !== "skip");
   const have = active.filter((e) => st(e) === "have").length;
+  if (have === 0) return null;
   return (
-    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="no-print mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {kits.map((c) => {
         const list = active.filter((e) => e.container === c);
         const done = list.filter((e) => st(e) === "have").length;
@@ -482,11 +712,9 @@ function Progress({ kits, main, st }: { kits: Container[]; main: ListEntry[]; st
           </div>
         );
       })}
-      {have > 0 && (
-        <p className="text-[0.95rem] text-ink-soft sm:col-span-2 lg:col-span-4">
-          You already have {have} of {active.length} things on this list.
-        </p>
-      )}
+      <p className="text-[0.95rem] text-ink-soft sm:col-span-2 lg:col-span-4">
+        You already have {have} of {active.length} things on this list.
+      </p>
     </div>
   );
 }
@@ -496,32 +724,33 @@ function StartHere({
   st,
   row,
   answers,
+  listUrl,
 }: {
   firsts: ListEntry[];
   st: (e: ListEntry) => ItemState;
   row: RowProps;
   answers: Answers;
+  listUrl: string;
 }) {
   if (firsts.length === 0) return null;
   const allDone = firsts.every((e) => st(e) === "have");
-  const when = answers.start === "weekend" || answers.start === null ? "this weekend" : "first";
+  const weekend = answers.start === "weekend" || answers.start === null;
 
   return (
-    <section className="mt-10 rounded-xl border-2 border-orange bg-paper p-5 sm:p-6" aria-labelledby="start-here">
+    <section className="mt-8 rounded-xl border-2 border-orange bg-paper p-5 sm:p-6" aria-labelledby="start-here">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="start-here" className="text-2xl font-extrabold tracking-tight">
-            {allDone ? "Free steps done. Nice work." : `Start here ${when}`}
+            {allDone ? "Free steps done. Nice work." : weekend ? "Start here this weekend" : "Start here"}
           </h2>
-          <p className="mt-1 text-ink-soft">These are free and take about an hour all together.</p>
+          <p className="mt-1 text-ink-soft">These are free. Most take 5 to 15 minutes each.</p>
         </div>
         <AddToCalendar
           className="no-print"
           event={{
             filename: "emergency-prep-first-step.ics",
             title: "Emergency prep: first steps",
-            description:
-              firsts.map((e) => `- ${e.item.name}`).join("\n") + `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
+            description: firsts.map((e) => `- ${e.item.name}`).join("\n") + `\n\nYour list: ${listUrl}\n\n${CREDIT}`,
             start: firstStepDate(answers.start),
           }}
         />
@@ -572,9 +801,9 @@ function KitSection({
 
   return (
     <section className="mb-16" aria-labelledby={`kit-${container}`}>
-      <h2 id={`kit-${container}`} className="tag text-xl sm:text-2xl">
+      <h3 id={`kit-${container}`} className="tag text-xl sm:text-2xl">
         {meta.name}
-      </h2>
+      </h3>
       <div className="mt-3 grid gap-1 text-ink-soft md:grid-cols-[1fr_auto] md:items-baseline md:gap-6">
         <p className="max-w-[64ch]">
           {meta.purpose} {meta.where}
@@ -624,7 +853,7 @@ function KitSection({
             if (list.length === 0) return null;
             return (
               <div key={heading}>
-                <h3 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{heading}</h3>
+                <h4 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{heading}</h4>
                 <p className="mt-2 text-[0.95rem] text-ink-soft">{desc}</p>
                 <ul className="divide-y divide-line">
                   {list.map((e) => (
@@ -639,7 +868,7 @@ function KitSection({
         <div className="mt-6 grid gap-x-12 lg:grid-cols-2">
           {groupByCategory(active).map(([cat, list]) => (
             <div key={cat} className="print-break-avoid mb-6">
-              <h3 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{CATEGORY_META[cat]}</h3>
+              <h4 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{CATEGORY_META[cat]}</h4>
               <ul className="divide-y divide-line">
                 {list.map((e) => (
                   <ItemRow key={e.key} {...row(e)} />
@@ -653,7 +882,7 @@ function KitSection({
       {levelUpActive.length > 0 && (
         <details className="no-print mt-2 rounded-lg bg-paper-2 px-5 py-4">
           <summary className="cursor-pointer font-semibold">
-            Level up: {levelUpActive.length} more for when you&apos;re ready
+            When you&apos;re ready: {levelUpActive.length} more
             <span className="font-normal text-ink-soft"> (roughly {formatCost(sumCost(levelUpActive))})</span>
           </summary>
           <p className="mt-2 max-w-[64ch] text-[0.95rem] text-ink-soft">
@@ -686,31 +915,47 @@ function KitSection({
   );
 }
 
+/**
+ * Everything still to buy, one line per item, grouped by store. Checking one off
+ * marks it "have" everywhere; it stays here, crossed out, until the view changes,
+ * so a mis-tap in the store is easy to undo.
+ */
 function ShoppingList({
   entries,
   st,
+  onGot,
   copy,
 }: {
   entries: ListEntry[];
   st: (e: ListEntry) => ItemState;
+  onGot: (list: ListEntry[], got: boolean) => void;
   copy: (text: string) => void;
 }) {
-  const need = entries.filter((e) => st(e) === "need" && e.container !== "home" && e.cost[1] > 0);
+  const [got, setGot] = useState<Set<string>>(() => new Set());
+  const buyable = entries.filter((e) => e.container !== "home" && e.cost[1] > 0);
+  const shown = buyable.filter((e) => st(e) === "need" || (st(e) === "have" && got.has(e.item.id)));
+  const need = shown.filter((e) => st(e) === "need");
   // One line per item, even when it goes in more than one kit.
   const byItem = new Map<string, ListEntry[]>();
-  for (const e of need) byItem.set(e.item.id, [...(byItem.get(e.item.id) ?? []), e]);
+  for (const e of shown) byItem.set(e.item.id, [...(byItem.get(e.item.id) ?? []), e]);
   const groups = SHOP_ORDER.map((shop) => [shop, [...byItem.values()].filter((l) => l[0].item.shop === shop)] as const).filter(
     ([, l]) => l.length > 0,
   );
-  const total = sumCost(need);
+  const toBuy = new Set(need.map((e) => e.item.id)).size;
 
   if (groups.length === 0)
     return <p className="text-lg">Nothing left to buy. Everything on your list is marked as have or skipped.</p>;
 
   const text = groups
-    .map(([shop, lists]) =>
-      [SHOP_META[shop], ...lists.map((l) => `[ ] ${l[0].item.name}${l.map((e) => (e.qty ? ` (${CONTAINER_META[e.container].name}: ${e.qty.text})` : "")).join("")}`)].join("\n"),
-    )
+    .map(([shop, lists]) => {
+      const open = lists.map((l) => l.filter((e) => st(e) === "need")).filter((l) => l.length > 0);
+      if (open.length === 0) return null;
+      return [
+        SHOP_META[shop],
+        ...open.map((l) => `[ ] ${l[0].item.name}${l.map((e) => (e.qty ? ` (${CONTAINER_META[e.container].name}: ${e.qty.text})` : "")).join("")}`),
+      ].join("\n");
+    })
+    .filter(Boolean)
     .join("\n\n")
     .concat(`\n\n${CREDIT}`);
 
@@ -718,42 +963,78 @@ function ShoppingList({
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-lg">
-          <span className="font-semibold">{byItem.size} things to buy,</span> roughly {formatCost(total)} in all.
+          {toBuy === 0 ? (
+            <span className="font-semibold">All bought. Nice work.</span>
+          ) : (
+            <>
+              <span className="font-semibold">{toBuy} things to buy,</span> roughly {formatCost(sumCost(need))} in all.
+            </>
+          )}
         </p>
         <Button type="button" variant="secondary" className="no-print" onClick={() => copy(text)}>
           Copy shopping list
         </Button>
       </div>
+      <p className="no-print mt-1 text-[0.95rem] text-ink-soft">Check things off as you shop. They&apos;re marked as have on your list.</p>
       <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-2">
         {groups.map(([shop, lists]) => (
           <section key={shop} className="print-break-avoid">
-            <h2 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
+            <h3 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
               {SHOP_META[shop]}
-              <span className="text-[0.95rem] font-semibold text-ink-soft">{formatCost(sumCost(lists.flat()))}</span>
-            </h2>
+              <span className="text-[0.95rem] font-semibold text-ink-soft">
+                {formatCost(sumCost(lists.flat().filter((e) => st(e) === "need")))}
+              </span>
+            </h3>
             <ul className="divide-y divide-line">
               {lists.map((l) => (
-                <li key={l[0].item.id} className="py-3">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-                    <span className="font-semibold">{l[0].item.name}</span>
-                    <span className="text-[0.95rem] text-ink-soft">{formatCost(sumCost(l))}</span>
-                  </div>
-                  <div className="mt-0.5 text-[0.9rem] text-ink-soft">
-                    {l.map((e) => (
-                      <span key={e.key} className="mr-4 inline-block">
-                        {CONTAINER_META[e.container].name}
-                        {e.qty ? `: ${e.qty.text}` : ""}
-                        {e.qty?.buy ? ` (${e.qty.buy})` : ""}
-                      </span>
-                    ))}
-                  </div>
-                </li>
+                <ShoppingRow
+                  key={l[0].item.id}
+                  list={l}
+                  have={l.every((e) => st(e) === "have")}
+                  onChange={(on) => {
+                    setGot((prev) => new Set(prev).add(l[0].item.id));
+                    onGot(l, on);
+                  }}
+                />
               ))}
             </ul>
           </section>
         ))}
       </div>
     </div>
+  );
+}
+
+function ShoppingRow({ list, have, onChange }: { list: ListEntry[]; have: boolean; onChange: (have: boolean) => void }) {
+  const id = `shop-${list[0].item.id}`;
+  return (
+    <li className="flex items-start gap-3 py-3">
+      <input id={id} type="checkbox" className="peer sr-only" checked={have} onChange={(e) => onChange(e.target.checked)} />
+      <label
+        htmlFor={id}
+        className="mt-0.5 cursor-pointer rounded peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus"
+      >
+        <CheckBox checked={have} tone="eucalyptus" />
+        <span className="sr-only">Got it</span>
+      </label>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+          <label htmlFor={id} className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"}`}>
+            {list[0].item.name}
+          </label>
+          <span className="text-[0.95rem] text-ink-soft">{formatCost(sumCost(list))}</span>
+        </div>
+        <div className="mt-0.5 text-[0.9rem] text-ink-soft">
+          {list.map((e) => (
+            <span key={e.key} className="mr-4 inline-block">
+              {CONTAINER_META[e.container].name}
+              {e.qty ? `: ${e.qty.text}` : ""}
+              {e.qty?.buy ? ` (${e.qty.buy})` : ""}
+            </span>
+          ))}
+        </div>
+      </div>
+    </li>
   );
 }
 
@@ -770,19 +1051,20 @@ function Plan({
   row: RowProps;
   answers: Answers;
 }) {
-  const stages: Stage[] = ["weekend", "month", "later"];
+  // Number only the stages that have something in them, so the steps don't skip.
+  const stages = (["weekend", "month", "later"] as Stage[])
+    .map((stage) => [stage, entries.filter((e) => planStage(e, firstKeys, answers) === stage && st(e) !== "skip")] as const)
+    .filter(([, list]) => list.length > 0);
 
   return (
     <ol className="grid gap-12">
-      {stages.map((stage, i) => {
-        const list = entries.filter((e) => planStage(e, firstKeys, answers) === stage && st(e) !== "skip");
-        if (list.length === 0) return null;
+      {stages.map(([stage, list], i) => {
         const need = list.filter((e) => st(e) === "need");
         return (
           <li key={stage} className="grid gap-4 md:grid-cols-[14rem_1fr] md:gap-10">
             <div>
               <p className="text-[0.95rem] font-semibold text-orange">Step {i + 1}</p>
-              <h2 className="text-2xl font-extrabold tracking-tight">{STAGE_META[stage].name}</h2>
+              <h3 className="text-2xl font-extrabold tracking-tight">{STAGE_META[stage].name}</h3>
               <p className="mt-1 text-ink-soft">{STAGE_META[stage].desc}</p>
               <p className="mt-2 text-[0.95rem] font-semibold">
                 {need.length === 0 ? "All done" : `${need.length} to go · ${formatCost(sumCost(need))}`}
@@ -792,10 +1074,10 @@ function Plan({
               {planGroups(list).map(([heading, group]) => (
                 <div key={heading ?? "all"}>
                   {heading && (
-                    <h3 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
+                    <h4 className="flex items-baseline justify-between border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">
                       {heading}
                       <span className="text-[0.95rem] font-semibold text-ink-soft">{group.length}</span>
-                    </h3>
+                    </h4>
                   )}
                   <ul className="divide-y divide-line">
                     {group.map((e) => (
@@ -846,10 +1128,14 @@ function FirstHour({ ctx }: { ctx: Context }) {
     window.print();
   };
   return (
-    <section id="first-hour" className="print-break-avoid mt-14 rounded-xl border-2 border-ink bg-paper p-5 sm:p-6" aria-labelledby="first-hour-title">
+    <section
+      id="first-hour"
+      className="print-break-avoid mt-14 scroll-mt-4 rounded-xl border-2 border-ink bg-paper p-5 sm:p-6"
+      aria-labelledby="first-hour-title"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="first-hour-title" className="text-2xl font-extrabold tracking-tight">
+          <h2 id="first-hour-title" tabIndex={-1} className="text-2xl font-extrabold tracking-tight">
             When it happens
           </h2>
           <p className="mt-1 text-ink-soft">Print this card and tape it inside the lid of your bin.</p>
@@ -874,29 +1160,13 @@ function FirstHour({ ctx }: { ctx: Context }) {
   );
 }
 
-/** A repeating check every 6 months, starting 6 months from now. */
-function sixMonthCheck(): CalendarEvent {
-  const start = new Date();
-  start.setMonth(start.getMonth() + 6);
-  start.setHours(10, 0, 0, 0);
-  return {
-    filename: "emergency-kit-check.ics",
-    title: "Emergency kit 6-month check",
-    description:
-      "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
-      `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
-    start,
-    minutes: 45,
-    repeatMonths: 6,
-  };
-}
-
 /**
  * Keeping food and batteries fresh happens over years, long after anyone has this
  * page open, so this section doesn't track anything. It shows what the printed
- * refresh log looks like once it's in use, and prints a blank one.
+ * refresh log looks like once it's in use, prints a blank one, and offers
+ * yearly calendar reminders that carry the list's link.
  */
-function KeepFresh({ busy, onPrint }: { busy: boolean; onPrint: () => void }) {
+function KeepFresh({ busy, listUrl, onPrint }: { busy: boolean; listUrl: string; onPrint: () => void }) {
   return (
     <section className="no-print mt-6 border-t border-line pt-10" aria-labelledby="keep-fresh">
       <h2 id="keep-fresh" className="text-2xl font-extrabold tracking-tight">
@@ -906,9 +1176,9 @@ function KeepFresh({ busy, onPrint }: { busy: boolean; onPrint: () => void }) {
         <div>
           <p className="max-w-[60ch] text-ink-soft">
             Food, water, medicine, and batteries all go bad eventually. Check your kits twice a year, when the clocks
-            change: look at dates, swap stored water, test flashlights and radios, refill prescriptions, and update
-            clothes for kids who&apos;ve grown. An easy habit is to eat the oldest food from your bin and replace it on
-            your next shop.
+            change in spring, and at ShakeOut in October: look at dates, swap stored water, test flashlights and
+            radios, refill prescriptions, and update clothes for kids who&apos;ve grown. An easy habit is to eat the
+            oldest food from your bin and replace it on your next shop.
           </p>
           <p className="mt-3 max-w-[60ch] text-ink-soft">
             Keep track on paper, in your bin. The refresh log lists what to check for your household. Each time, write
@@ -919,7 +1189,12 @@ function KeepFresh({ busy, onPrint }: { busy: boolean; onPrint: () => void }) {
               <PrinterIcon />
               {busy ? "Getting it ready…" : "Print the refresh log"}
             </Button>
-            <AddToCalendar label="Set a 6-month reminder" variant="quiet" event={sixMonthCheck()} />
+            <AddToCalendar
+              label="Add the twice-a-year reminders"
+              variant="quiet"
+              align="left"
+              events={twiceYearlyChecks(listUrl, CREDIT)}
+            />
           </div>
         </div>
         <RefreshLogExample />
@@ -933,10 +1208,10 @@ function RefreshLogExample() {
   const pen = "font-[Bradley_Hand,Segoe_Print,Comic_Sans_MS,cursive] text-[0.95rem] text-focus";
   const rows: { item: string; every: string; checks: [string, string][] }[] = [
     { item: "Canned beans", every: "Every 24 months", checks: [["Mar 8 '26", "Mar '28"]] },
-    { item: "Water from the tap", every: "Every 6 months", checks: [["Mar 8 '26", "Nov '26"], ["Nov 1 '26", "May '27"]] },
-    { item: "Flashlights and radio", every: "Every 6 months", checks: [["Mar 8 '26", "Nov '26"], ["Nov 1 '26", "May '27"]] },
+    { item: "Water from the tap", every: "Every 6 months", checks: [["Mar 8 '26", "Oct '26"], ["Oct 15 '26", "Mar '27"]] },
+    { item: "Flashlights and radio", every: "Every 6 months", checks: [["Mar 8 '26", "Oct '26"], ["Oct 15 '26", "Mar '27"]] },
     { item: "Everyday medicines", every: "By the date on it", checks: [["Mar 8 '26", "Jan '27"]] },
-    { item: "Granola bars", every: "", checks: [["Nov 1 '26", "Aug '27"]] },
+    { item: "Granola bars", every: "", checks: [["Oct 15 '26", "Aug '27"]] },
   ];
   return (
     <figure className="relative">
@@ -1026,84 +1301,95 @@ function NamesDialog({
   );
 }
 
-/**
- * Opens when the share link is copied and Know your home or notes are filled in, so
- * it's clear the link leaves them out. Also shows the link if copying failed.
- */
-function ShareDialog({
-  url,
-  copied,
-  leftOut,
-  onClose,
+function EmptyState({
+  cleared,
+  onStarter,
+  onRestore,
 }: {
-  url: string;
-  copied: boolean;
-  /** Whether there's Know your home info or notes the link leaves out. */
-  leftOut: boolean;
-  onClose: () => void;
+  cleared: boolean;
+  onStarter: () => void;
+  onRestore: (list: Shared) => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    ref.current?.showModal();
-  }, []);
-  return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      aria-labelledby="share-title"
-      className="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-xl bg-fog p-0 text-ink backdrop:bg-ink/40"
-    >
-      <form method="dialog" className="p-5 sm:p-6">
-        <h2 id="share-title" className="text-2xl font-extrabold tracking-tight">
-          {copied ? "Link copied" : "Copy this link"}
-        </h2>
-        <p className="mt-2 text-ink-soft">
-          {copied
-            ? "Anyone with the link can see this list and what's checked off."
-            : "Your browser didn't let us copy it, so copy it from here. Anyone with the link can see this list and what's checked off."}
-        </p>
-        <input
-          readOnly
-          value={url}
-          aria-label="Share link"
-          onFocus={(e) => e.currentTarget.select()}
-          className="mt-3 min-h-10 w-full rounded-md border border-line bg-paper px-3 text-[0.9rem] text-ink-soft"
-        />
-        {leftOut && (
-          <div className="mt-4 rounded-lg border-l-4 border-orange bg-paper px-4 py-3">
-            <p className="font-semibold">It only includes the list.</p>
-            <p className="mt-1 text-[0.95rem] text-ink-soft">
-              Your Know your home info and notes aren&apos;t in the link, so things like where the spare key is stay on
-              this device. To share those, print them, or download the PDF or spreadsheet.
-            </p>
-          </div>
-        )}
-        <div className="mt-6 flex justify-end">
-          <Button type="submit" autoFocus>
-            Done
-          </Button>
-        </div>
-      </form>
-    </dialog>
-  );
-}
+  const standalone = useStandalone();
+  const [link, setLink] = useState("");
+  const [error, setError] = useState(false);
+  const restore = () => {
+    const code = shareCodeFrom(link);
+    const list = code ? decodeShare(code) : null;
+    if (!code || !list) return setError(true);
+    // Keep the code in the address bar until it's made yours, same as opening the link.
+    history.replaceState(null, "", `${sitePath("/list")}#${code}`);
+    onRestore(list);
+  };
 
-function EmptyState({ onStarter }: { onStarter: () => void }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
-      <h1 className="text-[2.2rem] font-extrabold leading-tight tracking-tight">You haven&apos;t built a list yet</h1>
+      {cleared && (
+        <p role="status" className="mb-6 rounded-lg border-l-4 border-eucalyptus bg-paper px-4 py-3 font-semibold">
+          Everything on this device is cleared.
+        </p>
+      )}
+      <h1 className="text-[2.2rem] font-extrabold leading-tight tracking-tight">
+        {standalone ? "Bring your list here" : "You haven't built a list yet"}
+      </h1>
       <p className="mt-3 text-lg text-ink-soft">
-        Answer a few quick questions to get one sized for your household, or start from a simple one-person list and
-        change it later.
+        {standalone
+          ? "This Home Screen app starts empty. Paste the link to your list below, or build a new one."
+          : "Answer some short questions to get one sized for your household, or start from a simple one-person list and change it later."}
       </p>
+      {!standalone && (
+        <p className="mt-3 text-ink-soft">
+          Made a list before? Some browsers clear saved lists after a while. Open the link you saved to bring it back,
+          or paste it below.
+        </p>
+      )}
       <div className="mt-8 flex flex-wrap items-center gap-5">
         <Link href="/build" className={buttonClass.primary}>
           Start the questions
         </Link>
-        <button type="button" onClick={onStarter} className="text-ink-soft underline underline-offset-2 hover:text-ink">
+        <button
+          type="button"
+          onClick={onStarter}
+          className="inline-flex min-h-11 items-center text-ink-soft underline underline-offset-2 hover:text-ink"
+        >
           Show a starter list
         </button>
       </div>
+      <form
+        className="mt-10 max-w-xl"
+        onSubmit={(e) => {
+          e.preventDefault();
+          restore();
+        }}
+      >
+        <label htmlFor="restore-link" className="block font-semibold">
+          Paste your list link
+        </label>
+        <div className="mt-1.5 flex flex-wrap gap-2">
+          <input
+            id="restore-link"
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            value={link}
+            aria-invalid={error || undefined}
+            aria-describedby={error ? "restore-error" : undefined}
+            onChange={(e) => {
+              setLink(e.target.value);
+              setError(false);
+            }}
+            className="min-h-11 min-w-0 flex-1 rounded-md border border-field-line bg-paper px-3 text-[0.95rem] text-ink focus:border-ink"
+          />
+          <Button type="submit" variant="secondary">
+            Open it
+          </Button>
+        </div>
+        {error && (
+          <p id="restore-error" role="alert" className="mt-1.5 text-[0.95rem] font-semibold text-orange">
+            That doesn&apos;t look like a Bay Ready list link. It should end with a # and a long code.
+          </p>
+        )}
+      </form>
     </div>
   );
 }
@@ -1125,7 +1411,6 @@ function asText(kits: Container[], main: ListEntry[], st: (e: ListEntry) => Item
   lines.push(CREDIT);
   return lines.join("\n");
 }
-
 
 function joinList(xs: string[]) {
   if (xs.length <= 1) return xs.join("");

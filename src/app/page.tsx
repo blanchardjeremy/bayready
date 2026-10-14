@@ -9,11 +9,11 @@ export default function Home() {
             Build your Bay Area emergency kit list
           </h1>
           <p className="mt-5 max-w-[46ch] text-lg text-ink-soft">
-            Answer a few quick questions and get a list sized for your household, for a bin at home, a bag by the door,
-            or both. It starts with what you already have.
+            Answer some short questions and get a list sized for your household, for a bin at home, a bag by the door,
+            or both. It starts with the essentials and what you already have.
           </p>
           <StartActions />
-          <p className="mt-6 text-[0.95rem] text-ink-soft">About 3 minutes. No sign-up. Your answers stay on this device.</p>
+          <p className="mt-6 text-[0.95rem] text-ink-soft">About 10 short steps, each with a sensible default. No sign-up. Your answers stay on this device.</p>
         </div>
         <ExampleList />
       </section>
@@ -23,8 +23,8 @@ export default function Home() {
           Earthquakes, smoke, planned power shutoffs, heat, storms. Pick the ones that matter where you live.
         </Point>
         <Point title="Basics first">
-          Start with the essentials and a week of water and food, as Bay Area agencies recommend. Level up to two
-          weeks and extra gear when you&apos;re ready.
+          Start with the essentials and a week of water and food, as Bay Area agencies recommend. Go further, to two
+          weeks and extra gear, when you&apos;re ready.
         </Point>
         <Point title="Real amounts">
           Water, food, and pet supplies worked out for your household, with rough costs and free steps at the top.
@@ -43,26 +43,30 @@ function Point({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-/** A static peek at what the result looks like, for a household of 2 + 1 dog. */
+/**
+ * A static peek at what the result looks like: the essentials for 2 adults and a dog.
+ * Names and amounts match the real list for that household.
+ */
 function ExampleList() {
   const rows: [string, string, boolean][] = [
-    ["Water", "18 gallons", true],
-    ["Food you don't have to cook", "7 days for 2", false],
-    ["Flashlight or headlamp", "2 lights", true],
-    ["N95 masks", "10 masks", false],
-    ["Pet food and water", "7 days for 1 pet", false],
+    ["Drinking water", "18 gallons", true],
+    ["Canned protein: beans, tuna, chicken, or chili", "14 cans", false],
+    ["Manual can opener", "1 opener", true],
+    ["Flashlight or headlamp", "2 lights", false],
+    ["Bucket with a lid, for an emergency toilet", "1 bucket", false],
+    ["Pet food", "7 days for 1 pet", false],
   ];
   return (
     <figure aria-label="Example of a finished list" className="relative mx-auto w-full max-w-md lg:max-w-none">
       <div className="rotate-[-1.2deg] rounded-xl bg-paper p-6 shadow-[0_1px_0_var(--line),0_18px_40px_-24px_rgba(19,41,61,0.45)]">
-        <span className="tag text-lg">Stay-at-home bin</span>
-        <p className="mt-3 text-[0.95rem] text-ink-soft">2 adults, 1 dog. Earthquake, outage, smoke.</p>
+        <span className="tag text-lg">The essentials</span>
+        <p className="mt-3 text-[0.95rem] text-ink-soft">2 adults, 1 dog. What to get first for the stay-at-home bin.</p>
         <ul className="mt-4 divide-y divide-line">
           {rows.map(([name, qty, have]) => (
-            <li key={name} className="flex items-center gap-3 py-2.5">
+            <li key={name} className="flex items-start gap-3 py-2.5">
               <span
                 aria-hidden="true"
-                className={`grid size-5 shrink-0 place-items-center rounded border-2 ${
+                className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded border-2 ${
                   have ? "border-eucalyptus bg-eucalyptus" : "border-ink-soft"
                 }`}
               >
@@ -73,13 +77,18 @@ function ExampleList() {
                 )}
               </span>
               <span className={`flex-1 ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"}`}>{name}</span>
-              <span className="text-[0.95rem] tabular-nums text-ink-soft">{qty}</span>
+              <span className="whitespace-nowrap text-[0.95rem] tabular-nums text-ink-soft">{qty}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-[0.95rem] font-semibold text-eucalyptus">2 of 5 ready</p>
+        <p className="mt-3 text-[0.95rem] text-ink-soft">and 4 more essentials</p>
+        <p className="mt-3 text-[0.95rem] font-semibold text-eucalyptus">2 of 10 essentials so far</p>
+        <p className="mt-1 text-[0.95rem] text-ink-soft">Then your full list, a bit at a time.</p>
       </div>
-      <figcaption className="sr-only">An example list showing items, amounts, and what you already have.</figcaption>
+      <figcaption className="sr-only">
+        An example list: the essentials first, with amounts sized for the household and what you already have checked
+        off.
+      </figcaption>
     </figure>
   );
 }

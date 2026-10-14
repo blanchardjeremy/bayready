@@ -9,6 +9,8 @@
   --ink: #13293d;
   --ink-soft: #3e5c6e;
   --line: #c8d3d8;
+  /* Borders on things you type in or press: at least 3:1 against paper and fog. */
+  --field-line: #71858f;
   --orange: #b83a1e;
   --orange-ink: #ffffff;
   --orange-wash: #f7e3dc;
@@ -25,6 +27,7 @@
     --ink: #e6edf0;
     --ink-soft: #a6bac5;
     --line: #2d475a;
+    --field-line: #6a879b;
     --orange: #f0764a;
     --orange-ink: #1a0d08;
     --orange-wash: #3a2219;
@@ -41,6 +44,7 @@
   --ink: #e6edf0;
   --ink-soft: #a6bac5;
   --line: #2d475a;
+  --field-line: #6a879b;
   --orange: #f0764a;
   --orange-ink: #1a0d08;
   --orange-wash: #3a2219;
@@ -56,6 +60,7 @@
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
+  --color-field-line: var(--field-line);
   --color-orange: var(--orange);
   --color-orange-ink: var(--orange-ink);
   --color-orange-wash: var(--orange-wash);

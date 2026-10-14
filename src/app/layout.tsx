@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Atkinson_Hyperlegible_Next } from "next/font/google";
 import Link from "next/link";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible_Next({
@@ -13,7 +14,9 @@ const atkinson = Atkinson_Hyperlegible_Next({
 export const metadata: Metadata = {
   title: "Bay Ready: build your emergency kit list",
   description:
-    "Answer a few questions and get a Bay Area emergency supply list sized for your household: a go bag, a stay-at-home bin, or both.",
+    "Answer some short questions and get a Bay Area emergency supply list sized for your household: a go bag, a stay-at-home bin, or both.",
+  // Added to the Home Screen, it opens like an app, titled Bay Ready.
+  appleWebApp: { capable: true, title: "Bay Ready", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -60,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             answers stay in this browser.
           </div>
         </footer>
+        <ServiceWorker />
       </body>
     </html>
   );

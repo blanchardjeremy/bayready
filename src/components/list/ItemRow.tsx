@@ -18,6 +18,8 @@ export function ItemRow({
   onSlot,
   onEditNames,
   extra,
+  essential = false,
+  note,
 }: {
   entry: ListEntry;
   state: ItemState;
@@ -32,6 +34,10 @@ export function ItemRow({
   onEditNames?: () => void;
   /** Anything extra under the row, like the "Know your home" fields for this task. */
   extra?: ReactNode;
+  /** Shows a small "Essential" tag, for the full list. */
+  essential?: boolean;
+  /** A short line that shows even once it's checked, like "Check you have the full amount." */
+  note?: ReactNode;
 }) {
   const id = useId();
   const { item, qty, cost, hazardTags } = entry;
@@ -56,16 +62,24 @@ export function ItemRow({
       </label>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-          <label
-            htmlFor={id}
-            className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"} ${skipped ? "text-ink-soft" : ""}`}
-          >
-            {item.name}
-          </label>
+          <span>
+            <label
+              htmlFor={id}
+              className={`cursor-pointer ${have ? "text-ink-soft line-through decoration-1" : "font-semibold"} ${skipped ? "text-ink-soft" : ""}`}
+            >
+              {item.name}
+            </label>
+            {essential && !skipped && (
+              <span className="ml-2 inline-block rounded bg-orange-wash px-1.5 align-[0.1em] text-[0.75rem] font-semibold leading-5 text-orange">
+                Essential
+              </span>
+            )}
+          </span>
           {qty && (
             <span className={`text-[0.95rem] tabular-nums ${have ? "text-ink-soft" : ""}`}>{qty.text}</span>
           )}
         </div>
+        {note && !skipped && <p className="mt-1 max-w-[62ch] text-[0.88rem] text-ink">{note}</p>}
         {!have && (
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.88rem] text-ink-soft">
             {qty?.buy && <span>{qty.buy}</span>}
@@ -145,7 +159,7 @@ export function ItemRow({
         <button
           type="button"
           onClick={() => onChange(skipped ? "need" : "skip")}
-          className="no-print shrink-0 rounded px-2 py-1 text-[0.88rem] text-ink-soft underline-offset-2 hover:text-ink hover:underline"
+          className="no-print -my-2.5 min-h-11 shrink-0 rounded px-2 text-[0.88rem] text-ink-soft underline-offset-2 hover:text-ink hover:underline"
           aria-label={skipped ? `Bring back ${item.name}` : `Skip ${item.name}`}
         >
           {skipped ? "Bring back" : "Skip"}

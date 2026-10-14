@@ -56,3 +56,11 @@ describe("safety rules", () => {
     expect(solo).toMatch(/Warning: get ready/);
   });
 });
+
+describe("essentials", () => {
+  it("only names items that exist", async () => {
+    const { ESSENTIAL_KEYS } = await import("./essentials");
+    const known = new Set(ITEMS.flatMap((i) => i.containers.map((c) => `${c}:${i.id}`)));
+    expect([...ESSENTIAL_KEYS].filter((k) => !known.has(k))).toEqual([]);
+  });
+});

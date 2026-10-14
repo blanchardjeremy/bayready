@@ -202,7 +202,7 @@ describe("PDF export", () => {
     const text = pdfText(doc);
     expect(doc.output()).toContain("/Title (My emergency list: short version)");
     for (const s of ["Know your home", "When it happens", "Wallet cards", "Start here", "The essentials"]) expect(text).toContain(s);
-    expect(text).toContain("Make a household plan");
+    expect(text).toContain("Pick an out-of-area contact and two meeting spots");
     expect(text).toContain("Water");
     expect(text).toContain("Your full list has everything else");
     expect(text).not.toContain("Keep it fresh");

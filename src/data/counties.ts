@@ -60,7 +60,8 @@ export const COUNTIES: County[] = [
     name: "Napa",
     alert: { name: "Ready Napa County alerts", url: "https://www.readynapacounty.gov" },
     hazards: ["wildfire", "heat"],
-    tsunami: false,
+    // Tidal areas along the Napa River are in the state tsunami hazard maps.
+    tsunami: true,
     cert: { label: "Napa Valley CERT", url: "https://www.napacounty.gov/362/Community-Emergency-Response-Team-CERT" },
   },
   {

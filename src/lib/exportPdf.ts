@@ -439,16 +439,17 @@ function whenItHappens(p: Pages, input: ExportInput, newPage: boolean) {
   const where = places.length > 1 ? `${places.slice(0, -1).join(", ")}, and ${places[places.length - 1]}` : places[0];
   p.para("When it happens", 20, { bold: true, after: 2 });
   p.para(`Keep a copy ${where}.`, 10, { color: SOFT, after: 8 });
+  // Sized to fit on one page, so the whole card can go on the fridge.
   for (const s of sections) {
     p.room(50);
-    p.para(s.title, 12.5, { bold: true, after: 4 });
+    p.para(s.title, 12, { bold: true, after: 3 });
     s.lines.forEach((line, i) => {
-      p.font(10.5, true, ORANGE);
-      p.room(14);
-      p.doc.text(`${i + 1}.`, M, p.y + 8.5);
-      p.para(line, 10.5, { x: M + 18, after: 4 });
+      p.font(10, true, ORANGE);
+      p.room(13);
+      p.doc.text(`${i + 1}.`, M, p.y + 8);
+      p.para(line, 10, { x: M + 18, after: 3 });
     });
-    p.y += 10;
+    p.y += 8;
   }
 }
 
@@ -592,7 +593,10 @@ function shortChecklist(p: Pages, input: ExportInput) {
   const essentials = input.entries.filter((e) => isEssential(e) && input.stateOf(e) !== "skip");
   if (essentials.length) {
     p.room(120);
-    p.heading("The essentials", "Buy these first and put them away. Check them off as you go.");
+    p.heading(
+      "The essentials",
+      "Buy these first and put them away. Check them off as you go. Your full list has everything else, for when you're ready for more.",
+    );
     for (const c of CONTAINER_ORDER) {
       const kit = essentials.filter((e) => e.container === c);
       if (!ctx.kits.includes(c) || kit.length === 0) continue;
@@ -606,12 +610,6 @@ function shortChecklist(p: Pages, input: ExportInput) {
     }
   }
 
-  p.room(40);
-  p.y += 10;
-  p.para("That's the short version. Your full list has everything else, for when you're ready for more.", 10.5, {
-    bold: true,
-    color: SOFT,
-  });
 }
 
 // ---------------------------------------------------------------------------

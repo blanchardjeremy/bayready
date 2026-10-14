@@ -223,4 +223,6 @@ export const buttonClass = {
     "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-orange px-5 font-semibold text-orange-ink hover:brightness-110",
   secondary:
     "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-ink px-5 font-semibold text-ink hover:bg-paper",
+  quiet:
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 font-semibold text-ink-soft underline underline-offset-2 hover:text-ink",
 };

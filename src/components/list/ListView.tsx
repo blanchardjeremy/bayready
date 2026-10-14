@@ -13,7 +13,9 @@ import {
   resolveBuild,
 } from "@/lib/answers";
 import { CONTAINER_ORDER, buildList, firstSteps, formatCost, planStage, slotDone, slotKey, stateOf, sumCost } from "@/lib/buildList";
-import { downloadIcs, firstStepDate } from "@/lib/ics";
+import { firstStepDate, type CalendarEvent } from "@/lib/ics";
+import { AddToCalendar } from "@/components/AddToCalendar";
+import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
 import { useStored } from "@/lib/storage";
 import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } from "@/lib/types";
@@ -206,9 +208,11 @@ export function ListView() {
             );
           }}
         >
-          {linkCopied ? "Link copied ✓" : "Copy share link"}
+          {linkCopied ? <CheckIcon /> : <LinkIcon />}
+          {linkCopied ? "Link copied" : "Copy share link"}
         </Button>
         <Button type="button" variant="secondary" onClick={() => copy(asText(kits, main, st, ctx), "List copied as text.")}>
+          <CopyTextIcon />
           Copy as text
         </Button>
         <Button
@@ -217,6 +221,7 @@ export function ListView() {
           disabled={busy !== null}
           onClick={() => run("print", () => import("@/lib/exportPdf").then((m) => m.printPdf(exportInput())), "")}
         >
+          <PrinterIcon />
           {busy === "print" ? "Getting it ready…" : "Print"}
         </Button>
         <Button
@@ -227,11 +232,12 @@ export function ListView() {
             run("pdf", () => import("@/lib/exportPdf").then((m) => m.downloadPdf(exportInput())), "PDF downloaded.")
           }
         >
+          <PdfIcon />
           {busy === "pdf" ? "Making PDF…" : "Download PDF"}
         </Button>
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           disabled={busy !== null}
           onClick={() =>
             run(
@@ -241,6 +247,7 @@ export function ListView() {
             )
           }
         >
+          <SheetIcon />
           {busy === "xlsx" ? "Making spreadsheet…" : "Download spreadsheet"}
         </Button>
         <p role="status" className="self-center text-[0.95rem] text-eucalyptus">
@@ -508,21 +515,16 @@ function StartHere({
           </h2>
           <p className="mt-1 text-ink-soft">These are free and take about an hour all together.</p>
         </div>
-        <Button
-          type="button"
-          variant="secondary"
+        <AddToCalendar
           className="no-print"
-          onClick={() =>
-            downloadIcs(
-              "emergency-prep-first-step.ics",
-              "Emergency prep: first steps",
+          event={{
+            filename: "emergency-prep-first-step.ics",
+            title: "Emergency prep: first steps",
+            description:
               firsts.map((e) => `- ${e.item.name}`).join("\n") + `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
-              firstStepDate(answers.start),
-            )
-          }
-        >
-          Add to calendar
-        </Button>
+            start: firstStepDate(answers.start),
+          }}
+        />
       </div>
       <ul className="mt-3 divide-y divide-line">
         {firsts.map((e) => (
@@ -872,6 +874,23 @@ function FirstHour({ ctx }: { ctx: Context }) {
   );
 }
 
+/** A repeating check every 6 months, starting 6 months from now. */
+function sixMonthCheck(): CalendarEvent {
+  const start = new Date();
+  start.setMonth(start.getMonth() + 6);
+  start.setHours(10, 0, 0, 0);
+  return {
+    filename: "emergency-kit-check.ics",
+    title: "Emergency kit 6-month check",
+    description:
+      "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
+      `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
+    start,
+    minutes: 45,
+    repeatMonths: 6,
+  };
+}
+
 /**
  * Keeping food and batteries fresh happens over years, long after anyone has this
  * page open, so this section doesn't track anything. It shows what the printed
@@ -897,28 +916,10 @@ function KeepFresh({ busy, onPrint }: { busy: boolean; onPrint: () => void }) {
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button type="button" variant="secondary" disabled={busy} onClick={onPrint}>
+              <PrinterIcon />
               {busy ? "Getting it ready…" : "Print the refresh log"}
             </Button>
-            <Button
-              type="button"
-              variant="quiet"
-              onClick={() => {
-                const d = new Date();
-                d.setMonth(d.getMonth() + 6);
-                d.setHours(10, 0, 0, 0);
-                downloadIcs(
-                  "emergency-kit-check.ics",
-                  "Emergency kit 6-month check",
-                  "Check dates on food, water, and medicine. Test flashlights and radios. Swap batteries. Update clothes and documents." +
-                    `\n\nYour list: ${siteUrl("/list")}\n\n${CREDIT}`,
-                  d,
-                  45,
-                  6,
-                );
-              }}
-            >
-              Set a 6-month reminder
-            </Button>
+            <AddToCalendar label="Set a 6-month reminder" variant="quiet" event={sixMonthCheck()} />
           </div>
         </div>
         <RefreshLogExample />

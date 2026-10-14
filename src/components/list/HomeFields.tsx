@@ -4,6 +4,7 @@ import { useEffect, useId, useRef } from "react";
 import type { FactField, HomeInfo } from "@/data/homeFacts";
 import { BAY_READY_URL } from "@/lib/urls";
 import { Button } from "@/components/controls";
+import { PrinterIcon } from "@/components/icons";
 
 /** The card's id, so tasks can send people to it and print mode can single it out. */
 export const HOME_CARD_ID = "know-your-home";
@@ -61,18 +62,10 @@ export function TaskFacts({
         onClick={onShowPrint}
         className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-[0.88rem] text-ink-soft underline underline-offset-2 hover:text-ink"
       >
-        <PrinterIcon />
+        <PrinterIcon className="size-3.5" />
         Print these for your kit
       </button>
     </div>
-  );
-}
-
-function PrinterIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-      <path d="M4 6V2h8v4M4 12H2.5V7.5a1.5 1.5 0 0 1 1.5-1.5h8a1.5 1.5 0 0 1 1.5 1.5V12H12M4 9.5h8V14H4z" />
-    </svg>
   );
 }
 

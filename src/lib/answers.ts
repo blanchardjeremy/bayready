@@ -1,4 +1,6 @@
 import type { Answers, Container, Context, HazardId, Names, NeedId } from "./types";
+import { COUNTY_BY_ID } from "@/data/counties";
+import { lookupZip } from "@/data/zips";
 
 export const ANSWERS_KEY = "bayready:answers:v1";
 export const STATES_KEY = "bayready:items:v1";
@@ -9,6 +11,7 @@ export const BASE_HAZARDS: HazardId[] = ["earthquake", "outage", "smoke"];
 export const EMPTY_ANSWERS: Answers = {
   build: null,
   county: null,
+  zip: null,
   hazards: [],
   household: { adults: 1, kids: 0, babies: 0, dogs: 0, cats: 0, otherPets: 0 },
   names: { adults: [], kids: [] },
@@ -58,6 +61,16 @@ export function peopleNames(ctx: Pick<Context, "adults" | "kids"> & { names?: Na
   return names.slice(0, MAX_PEOPLE);
 }
 
+/**
+ * Hazards we pre-check: the base set, the county's usual ones, and tsunami when
+ * part of the ZIP code is in a mapped tsunami hazard area.
+ */
+export function defaultHazards(county: Answers["county"], zip: Answers["zip"] = null): HazardId[] {
+  const c = county ? COUNTY_BY_ID[county] : undefined;
+  const fromZip: HazardId[] = lookupZip(zip)?.tsunami ? ["tsunami"] : [];
+  return [...new Set([...BASE_HAZARDS, ...(c?.hazards ?? []), ...fromZip])];
+}
+
 export function resolveBuild(a: Answers): "stay" | "go" | "both" {
   if (a.build === "stay" || a.build === "go" || a.build === "both") return a.build;
   return suggestBuild(a);
@@ -83,6 +96,8 @@ export function deriveContext(a: Answers): Context {
   // Home oxygen runs on power too, so it gets everything a powered device does, plus its own fire and backup steps.
   if (needs.has("oxygen")) needs.add("power-device");
   const hazards = new Set<HazardId>(a.hazards.length ? a.hazards : BASE_HAZARDS);
+  // A known ZIP code says more about the water utility than the county does.
+  const zip = lookupZip(a.zip);
 
   return {
     answers: a,
@@ -101,7 +116,7 @@ export function deriveContext(a: Answers): Context {
     pets: h.dogs + h.cats + h.otherPets,
     needs,
     needsPrivate: a.needs === "private",
-    ebmud: a.county === "alameda" || a.county === "contra-costa",
+    ebmud: zip ? zip.ebmud : a.county === "alameda" || a.county === "contra-costa",
     stayDays: a.level === "advanced" ? (a.days ?? DEFAULT_ADVANCED_STAY_DAYS) : BASICS_STAY_DAYS,
     goDays: GO_DAYS,
     home: a.home,
@@ -134,6 +149,9 @@ export const MAX_COUNT = 20;
 /** Longest name, in characters. */
 export const MAX_NAME = 30;
 
+/** A US ZIP code: exactly five digits. */
+export const ZIP_PATTERN = /^\d{5}$/;
+
 /** Merge untrusted input over defaults, keeping only well-typed fields. */
 export function normalizeAnswers(input: unknown): Answers {
   const a: Answers = { ...EMPTY_ANSWERS, household: { ...EMPTY_ANSWERS.household }, names: { adults: [], kids: [] } };
@@ -146,6 +164,7 @@ export function normalizeAnswers(input: unknown): Answers {
 
   a.build = pick(i.build, BUILDS);
   a.county = pick(i.county, COUNTY_IDS);
+  a.zip = typeof i.zip === "string" && ZIP_PATTERN.test(i.zip) ? i.zip : null;
   a.hazards = pickArr(i.hazards, HAZARD_IDS);
   if (i.household && typeof i.household === "object") {
     const h = i.household as Record<string, unknown>;

@@ -56,6 +56,8 @@ export interface Names {
 export interface Answers {
   build: BuildChoice | null;
   county: CountyId | null;
+  /** Optional 5-digit ZIP code. Refines the water utility and tsunami default. Never sent anywhere but a share link. */
+  zip: string | null;
   hazards: HazardId[];
   household: Household;
   names: Names;
@@ -120,7 +122,7 @@ export interface Context {
   needs: Set<NeedId>;
   /** Picked "Prefer not to say" for health needs. Gets general health items instead of none. */
   needsPrivate: boolean;
-  /** Served by EBMUD, which asks for 2 gallons per person per day. */
+  /** Served by EBMUD, which asks for 2 gallons per person per day. From the ZIP code when we know it, else the county. */
   ebmud: boolean;
   /** days of supplies for the stay-at-home bin */
   stayDays: number;

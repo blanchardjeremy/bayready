@@ -91,6 +91,22 @@ describe("share links", () => {
     });
   });
 
+  it("reads links made before the ZIP code as having none", () => {
+    expect(decodeShare("#SIuyIIlgBmaK_L1F0ETMPMg")!.answers.zip).toBeNull();
+    expect(roundTrip(family)?.answers.zip).toBeNull();
+  });
+
+  it("round-trips a ZIP code, with marks and with leading zeros", () => {
+    const states: Record<string, ItemState> = { "home:shutoffs": "have", "stay:radio": "skip" };
+    const withZip = { ...family, zip: "94501" };
+    const decoded = roundTrip(withZip, states)!;
+    expect(decoded.answers).toEqual(withZip);
+    expect(decoded.states).toEqual(states);
+    expect(roundTrip({ ...family, zip: "02134" })?.answers.zip).toBe("02134");
+    // About three more characters than the same link without one.
+    expect(encodeShare(withZip).length - encodeShare(family).length).toBeLessThanOrEqual(3);
+  });
+
   it("gives every item a permanent number", () => {
     const missing = ITEMS.map((i) => i.id).filter((id) => !SHARE_IDS.includes(id));
     expect(missing, "Add these to the end of SHARE_IDS in src/data/shareIds.ts").toEqual([]);

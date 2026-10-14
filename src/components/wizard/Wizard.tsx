@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
-import { ANSWERS_KEY, BASE_HAZARDS, EMPTY_ANSWERS, deriveContext, normalizeAnswers, suggestBuild } from "@/lib/answers";
+import { ANSWERS_KEY, EMPTY_ANSWERS, deriveContext, defaultHazards, normalizeAnswers, suggestBuild } from "@/lib/answers";
 import { buildList, formatCost, sumCost } from "@/lib/buildList";
 import { useStored } from "@/lib/storage";
 import type { Answers, HazardId, NeedId } from "@/lib/types";
@@ -10,26 +10,29 @@ import { COUNTIES, COUNTY_BY_ID } from "@/data/counties";
 import { HAZARDS } from "@/data/hazards";
 import { HAVE_PICKS } from "@/data/havePicks";
 import { ITEMS } from "@/data/items";
-import { STEP_TITLES, type StepId } from "./steps";
-import { CheckList, GoodToKnow, RadioCards, Stepper, Button } from "@/components/controls";
+import { lookupZip } from "@/data/zips";
+import { ADVANCED_STEPS, LAST_STEP, MAIN_STEPS, STEP_TITLES, type StepId } from "./steps";
+import { ZipField } from "./ZipField";
+import { CheckList, ExternalLink, GoodToKnow, RadioCards, Stepper, Button } from "@/components/controls";
 import { NamesEditor } from "@/components/NamesEditor";
 import { useReturnToList } from "@/lib/returnToList";
 import Link from "next/link";
 
-const BASE_STEPS: StepId[] = ["build", "county", "hazards", "household", "home", "car", "needs", "have", "level"];
-const ADVANCED_STEPS: StepId[] = ["days", "power"];
-
 function stepsFor(a: Answers): StepId[] {
-  return [...BASE_STEPS, ...(a.level === "advanced" ? ADVANCED_STEPS : []), "start"];
-}
-
-export function defaultHazards(county: Answers["county"]): HazardId[] {
-  const c = county ? COUNTY_BY_ID[county] : undefined;
-  return [...new Set([...BASE_HAZARDS, ...(c?.hazards ?? [])])];
+  return [...MAIN_STEPS, ...(a.level === "advanced" ? ADVANCED_STEPS : []), LAST_STEP];
 }
 
 function sameSet<T>(a: T[], b: T[]) {
   return a.length === b.length && a.every((x) => b.includes(x));
+}
+
+/**
+ * A new county or ZIP code. Hazards follow the new suggestions unless the person
+ * already changed them from the old ones.
+ */
+function relocate(prev: Answers, next: Pick<Answers, "county" | "zip">): Partial<Answers> {
+  const customized = prev.hazards.length > 0 && !sameSet(prev.hazards, defaultHazards(prev.county, prev.zip));
+  return { ...next, ...(customized ? {} : { hazards: defaultHazards(next.county, next.zip) }) };
 }
 
 type Update = (patch: Partial<Answers> | ((prev: Answers) => Partial<Answers>)) => void;
@@ -40,19 +43,25 @@ interface StepView {
   optional?: boolean;
   body: ReactNode;
   tip?: ReactNode;
-  canContinue?: boolean;
+  /** Why the step can't be finished yet. Shown, tied to the field, when someone presses Continue. */
+  error?: string;
   continueLabel?: string;
 }
+
+const ERROR_ID = "step-error";
 
 export function Wizard() {
   const router = useRouter();
   const segment = useSelectedLayoutSegment();
   const [answers, setAnswers] = useStored<Answers>(ANSWERS_KEY, EMPTY_ANSWERS, normalizeAnswers);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   // Set when someone jumped here from their list to change one answer.
   const returnToList = useReturnToList();
   const pushes = useRef(0);
   const lastStep = useRef<StepId | null>(null);
+  // The step where someone pressed Continue before answering.
+  const [errorStep, setErrorStep] = useState<StepId | null>(null);
 
   const a = answers ?? EMPTY_ANSWERS;
   const steps = stepsFor(a);
@@ -78,8 +87,8 @@ export function Wizard() {
 
   const next = () => {
     // Fill in hazards once the county is known, unless the user already customized them.
-    if (step === "county" && a.hazards.length === 0) update({ hazards: defaultHazards(a.county) });
-    if (step === "start") return go("list");
+    if (step === "county" && a.hazards.length === 0) update({ hazards: defaultHazards(a.county, a.zip) });
+    if (step === LAST_STEP) return go("list");
     go(steps[index + 1]);
   };
 
@@ -96,16 +105,23 @@ export function Wizard() {
   if (!answers) return <div className="min-h-[60vh]" aria-busy="true" />;
 
   const view = renderStep(step, a, update);
+  const error = errorStep === step ? view.error : undefined;
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6">
-      <Progress index={index} total={steps.length} />
+      <Progress step={step} steps={steps} />
       <form
         key={step}
         className="step-enter mt-8"
         onSubmit={(e) => {
           e.preventDefault();
-          if (view.canContinue !== false) next();
+          if (view.error) {
+            // Say what's missing next to the question, and put the person on its first option.
+            setErrorStep(step);
+            bodyRef.current?.querySelector("input")?.focus();
+            return;
+          }
+          next();
         }}
       >
         <h1
@@ -117,7 +133,20 @@ export function Wizard() {
           {view.optional && <span className="ml-2 align-middle text-base font-normal text-ink-soft">(optional)</span>}
         </h1>
         {view.hint && <p className="mt-3 max-w-[60ch] text-ink-soft">{view.hint}</p>}
-        <div className="mt-6">{view.body}</div>
+        {error && (
+          <p id={ERROR_ID} className="mt-4 flex items-start gap-2 font-semibold text-orange">
+            <span
+              aria-hidden="true"
+              className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-orange text-[0.8rem] font-bold text-orange-ink"
+            >
+              !
+            </span>
+            {error}
+          </p>
+        )}
+        <div ref={bodyRef} className="mt-6">
+          {view.body}
+        </div>
         {view.why && (
           <details className="mt-5 text-[0.98rem]">
             <summary className="cursor-pointer font-semibold text-ink-soft hover:text-ink">Why we ask</summary>
@@ -131,19 +160,17 @@ export function Wizard() {
             Back
           </Button>
           <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
-            {returnToList && step !== "start" && (
+            {returnToList && step !== LAST_STEP && (
               <Link href="/list" className="font-semibold text-ink underline underline-offset-2">
                 Back to my list
               </Link>
             )}
-            {view.optional && view.canContinue !== false && (
+            {view.optional && !view.error && (
               <button type="button" onClick={next} className="text-ink-soft underline underline-offset-2 hover:text-ink">
                 Skip
               </button>
             )}
-            <Button type="submit" disabled={view.canContinue === false} className="disabled:opacity-40">
-              {view.continueLabel ?? "Continue"}
-            </Button>
+            <Button type="submit">{view.continueLabel ?? "Continue"}</Button>
           </div>
         </div>
       </form>
@@ -151,15 +178,25 @@ export function Wizard() {
   );
 }
 
-function Progress({ index, total }: { index: number; total: number }) {
+/**
+ * "Step 3 of 10". Advanced adds two questions after the level step. They're counted
+ * on their own ("Advanced question 1 of 2") so the total never jumps mid-way.
+ */
+function Progress({ step, steps }: { step: StepId; steps: StepId[] }) {
+  const main = steps.filter((s) => !ADVANCED_STEPS.includes(s));
+  const extra = ADVANCED_STEPS.indexOf(step);
+  // On an Advanced question, the bar stays at the level step until the last one.
+  const done = extra >= 0 ? main.indexOf("level") + 1 : main.indexOf(step) + 1;
   return (
     <div>
       <p className="text-[0.95rem] font-semibold text-ink-soft" aria-live="polite">
-        Step {index + 1} of {total}
+        {extra >= 0
+          ? `Advanced question ${extra + 1} of ${ADVANCED_STEPS.length}`
+          : `Step ${done} of ${main.length}`}
       </p>
       <div className="mt-2 flex gap-1" aria-hidden="true">
-        {Array.from({ length: total }, (_, i) => (
-          <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= index ? "bg-orange" : "bg-line"}`} />
+        {main.map((s, i) => (
+          <span key={s} className={`h-1.5 flex-1 rounded-full ${i < done ? "bg-orange" : "bg-line"}`} />
         ))}
       </div>
     </div>
@@ -168,63 +205,41 @@ function Progress({ index, total }: { index: number; total: number }) {
 
 function renderStep(step: StepId, a: Answers, update: Update): StepView {
   switch (step) {
-    case "build":
-      return {
-        hint: "You can do both, and you can change this later.",
-        canContinue: a.build !== null,
-        body: (
-          <RadioCards
-            name="build"
-            legend="What would you like to put together?"
-            value={a.build}
-            onChange={(build) => update({ build })}
-            options={[
-              { value: "stay", label: "Stay-at-home bin", desc: "Supplies to get through days at home without power or running water." },
-              { value: "go", label: "Go bag", desc: "A grab-and-go bag in case you need to leave fast." },
-              { value: "both", label: "Both", badge: "Recommended", desc: "We'll list each one separately so you can do them one at a time." },
-              { value: "unsure", label: "Not sure yet", desc: "We'll suggest one after a couple of questions." },
-            ]}
-          />
-        ),
-        tip: (
-          <GoodToKnow>
-            After a big earthquake, most Bay Area households will stay home. Wildfires and tsunami warnings are
-            when people need to leave quickly.
-          </GoodToKnow>
-        ),
-      };
-
     case "county": {
       const c = a.county ? COUNTY_BY_ID[a.county] : undefined;
       return {
         hint: "We use this to suggest likely hazards and your local alert system.",
         optional: true,
         body: (
-          <RadioCards
-            name="county"
-            legend="Which county do you live in?"
-            value={a.county}
-            onChange={(county) =>
-              update((prev) => {
-                // Re-default hazards only if they still match the previous county's defaults.
-                const keep = prev.hazards.length > 0 && !sameSet(prev.hazards, defaultHazards(prev.county));
-                return { county, ...(keep ? {} : { hazards: defaultHazards(county) }) };
-              })
-            }
-            options={[
-              ...COUNTIES.map((c) => ({ value: c.id, label: c.name })),
-              { value: "other" as const, label: "Somewhere else, or not sure" },
-              { value: "private" as const, label: "Prefer not to say" },
-            ]}
-          />
+          <div className="grid gap-6">
+            <ZipField
+              // Picking "Prefer not to say" clears the ZIP code, including anything half typed.
+              key={a.county === "private" ? "private" : "zip"}
+              zip={a.zip}
+              county={a.county}
+              onChange={(zip) =>
+                update((prev) => relocate(prev, { zip, county: lookupZip(zip)?.county ?? prev.county }))
+              }
+            />
+            <RadioCards
+              name="county"
+              legend="Which county do you live in?"
+              value={a.county}
+              onChange={(county) =>
+                update((prev) => relocate(prev, { county, zip: county === "private" ? null : prev.zip }))
+              }
+              options={[
+                ...COUNTIES.map((c) => ({ value: c.id, label: c.name })),
+                { value: "other" as const, label: "Somewhere else, or not sure" },
+                { value: "private" as const, label: "Prefer not to say" },
+              ]}
+            />
+          </div>
         ),
         tip: c?.alert ? (
           <GoodToKnow>
-            {c.name} sends free emergency texts and calls through{" "}
-            <a href={c.alert.url} target="_blank" rel="noopener noreferrer">
-              {c.alert.name}
-            </a>
-            . Signing up takes two minutes and is the single most useful free step. You can do it now or later
+            {c.name} sends free emergency texts and calls through <ExternalLink href={c.alert.url}>{c.alert.name}</ExternalLink>.
+            Signing up takes two minutes and is one of the most useful free steps. You can do it now or later
             from your list.
           </GoodToKnow>
         ) : (
@@ -236,88 +251,28 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
       };
     }
 
-    case "hazards": {
-      const defaults = defaultHazards(a.county);
-      const values = a.hazards.length ? a.hazards : defaults;
-      const county = a.county ? COUNTY_BY_ID[a.county] : undefined;
+    case "hazards":
       return {
-        hint: county
-          ? `We've picked the common ones for ${county.name} County. Change anything you like.`
-          : "We've picked the common ones for the Bay Area. Change anything you like.",
-        canContinue: values.length > 0,
-        body: (
-          <>
-            <CheckList
-              legend="Which of these do you want to be ready for?"
-              values={values}
-              onToggle={(h, checked) =>
-                update((prev) => {
-                  const set = new Set(prev.hazards.length ? prev.hazards : defaults);
-                  if (checked) set.add(h);
-                  else set.delete(h);
-                  return { hazards: [...set] };
-                })
-              }
-              options={HAZARDS.filter((h) => h.id !== "tsunami" || !county || county.tsunami).map((h) => ({
-                value: h.id,
-                label: h.name,
-                desc: h.blurb,
-              }))}
-            />
-            {!sameSet(values, defaults) && (
-              <button
-                type="button"
-                className="mt-3 text-ink-soft underline underline-offset-2 hover:text-ink"
-                onClick={() => update({ hazards: defaults })}
-              >
-                Not sure? Go back to our suggestions
-              </button>
-            )}
-          </>
-        ),
+        hint: hazardsHint(a),
+        body: <HazardsStep a={a} update={update} />,
         tip: (
           <GoodToKnow>
             One good kit covers most of these. Getting ready for an earthquake does most of the work for
-            everything else.
+            everything else. To check your exact address for flood, fire, tsunami, and quake risks, look it up
+            on <ExternalLink href="https://myhazards.caloes.ca.gov/">MyHazards</ExternalLink> from Cal OES.
           </GoodToKnow>
         ),
       };
-    }
 
     case "household": {
       const h = a.household;
       const set = (k: keyof Answers["household"]) => (n: number) =>
         update((prev) => ({ household: { ...prev.household, [k]: n } }));
-      const suggestion = a.build === "unsure" ? suggestBuild(a) : null;
       return {
         hint: "Count anyone you'd look after in an emergency: housemates, family, someone who often stays over.",
         why: "So we can work out how much water and food you need. We don't ask for ages, names are optional, and nothing leaves this device.",
         body: (
           <>
-            {suggestion && (
-              <div className="mb-6 rounded-lg border-2 border-orange bg-orange-wash p-4">
-                <p className="font-semibold">
-                  Our suggestion: {suggestion === "both" ? "a stay-at-home bin and a go bag" : "start with a stay-at-home bin"}
-                </p>
-                <p className="mt-1 text-[0.95rem] text-ink-soft">
-                  {suggestion === "both"
-                    ? "You picked a hazard where people may need to leave quickly, so a go bag is worth having too."
-                    : "For earthquakes and outages you'll most likely stay home. You can add a go bag later."}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" onClick={() => update({ build: suggestion })}>
-                    Sounds good
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => update({ build: suggestion === "both" ? "stay" : "both" })}
-                  >
-                    {suggestion === "both" ? "Just a stay-at-home bin" : "I want both"}
-                  </Button>
-                </div>
-              </div>
-            )}
             <div className="grid gap-2">
               <Stepper label="Adults and teens" value={h.adults} min={1} onChange={set("adults")} />
               <Stepper label="Kids" hint="Ages 2 to 12" value={h.kids} onChange={set("kids")} />
@@ -343,56 +298,22 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
       };
     }
 
-    case "needs": {
-      const values: (NeedId | "none" | "private")[] =
-        a.needs === null ? [] : a.needs === "private" ? ["private"] : a.needs.length === 0 ? ["none"] : a.needs;
+    case "needs":
       return {
         optional: true,
         hint: "Pick any that apply.",
         why: "So your list includes the right backups, like spare glasses or a battery for a CPAP. It's saved on this device, and only goes elsewhere if you share your list.",
-        body: (
-          <CheckList
-            legend="Does anyone rely on any of these?"
-            values={values}
-            onToggle={(v, checked) => {
-              if (v === "none") return update({ needs: checked ? [] : null });
-              if (v === "private") return update({ needs: checked ? "private" : null });
-              update((prev) => {
-                const cur = Array.isArray(prev.needs) ? prev.needs : [];
-                const next = checked ? [...new Set([...cur, v])] : cur.filter((x) => x !== v);
-                return { needs: next.length ? next : null };
-              });
-            }}
-            options={[
-              { value: "vision-hearing", label: "Glasses, contacts, or hearing aids" },
-              { value: "meds", label: "Daily prescription medicine" },
-              { value: "cold-meds", label: "Medicine that has to stay cold", desc: "Like insulin" },
-              { value: "power-device", label: "A medical device that needs power", desc: "CPAP, a power wheelchair, or a pump" },
-              { value: "oxygen", label: "Home oxygen", desc: "A concentrator or tanks" },
-              { value: "mobility", label: "A mobility aid, or trouble with stairs" },
-              { value: "communication", label: "Trouble hearing or seeing alerts, or speaking", desc: "Deaf, hard of hearing, blind, low vision, or a speech disability" },
-              { value: "cognitive", label: "Trouble understanding or remembering in a crisis", desc: "Like dementia, autism, or a brain injury" },
-              { value: "caregiver", label: "Someone who needs help with daily care", desc: "From family or a home health aide" },
-              { value: "dialysis", label: "Dialysis" },
-              { value: "pregnancy", label: "Pregnancy" },
-              { value: "service-animal", label: "A service animal" },
-              { value: "diet", label: "A special diet, food allergy, or baby formula" },
-              { value: "none", label: "None of these" },
-              { value: "private", label: "Prefer not to say" },
-            ]}
-          />
-        ),
+        body: <NeedsStep a={a} update={update} />,
         tip: a.needs !== null && a.needs !== "private" && (a.needs.includes("power-device") || a.needs.includes("oxygen")) ? (
           <GoodToKnow>
             If you rely on powered medical equipment, ask PG&amp;E about its{" "}
-            <a href="https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html" target="_blank" rel="noopener noreferrer">
+            <ExternalLink href="https://www.pge.com/en/account/billing-and-assistance/financial-assistance/medical-baseline-program.html">
               Medical Baseline program
-            </a>
+            </ExternalLink>
             . It can lower your bill and gets you extra notice before planned shutoffs.
           </GoodToKnow>
         ) : undefined,
       };
-    }
 
     case "have":
       return {
@@ -415,11 +336,60 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
           ) : undefined,
       };
 
-    case "level":
+    case "kit": {
+      const suggestion = a.build === "unsure" ? suggestBuild(a) : null;
       return {
-        hint: "You can switch any time without losing your progress.",
-        body: <LevelChoice a={a} update={update} />,
+        hint: "You can do both, and you can change this later.",
+        error: a.build === null ? "Pick one to continue. If you're not sure, pick “Not sure yet”." : undefined,
+        body: (
+          <>
+            <RadioCards
+              name="build"
+              legend="What would you like to put together?"
+              describedBy={a.build === null ? ERROR_ID : undefined}
+              value={a.build}
+              onChange={(build) => update({ build })}
+              options={[
+                { value: "stay", label: "Stay-at-home bin", desc: "Supplies to get through days at home without power or running water." },
+                { value: "go", label: "Go bag", desc: "A grab-and-go bag in case you need to leave fast." },
+                { value: "both", label: "Both", badge: "Recommended", desc: "We'll list each one separately so you can do them one at a time." },
+                { value: "unsure", label: "Not sure yet", desc: "We'll suggest one based on what you've told us." },
+              ]}
+            />
+            {suggestion && (
+              <div className="mt-6 rounded-lg border-2 border-orange bg-orange-wash p-4" role="status">
+                <p className="font-semibold">
+                  Our suggestion: {suggestion === "both" ? "a stay-at-home bin and a go bag" : "start with a stay-at-home bin"}
+                </p>
+                <p className="mt-1 text-[0.95rem] text-ink-soft">
+                  {suggestion === "both"
+                    ? "You picked a hazard where people may need to leave quickly, so a go bag is worth having too."
+                    : "For earthquakes and outages you'll most likely stay home. You can add a go bag later."}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" onClick={() => update({ build: suggestion })}>
+                    Sounds good
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => update({ build: suggestion === "both" ? "stay" : "both" })}
+                  >
+                    {suggestion === "both" ? "Just a stay-at-home bin" : "I want both"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        ),
+        tip: (
+          <GoodToKnow>
+            After a big earthquake, most Bay Area households will stay home. Wildfires and tsunami warnings are
+            when people need to leave quickly.
+          </GoodToKnow>
+        ),
       };
+    }
 
     case "home":
       return {
@@ -442,23 +412,6 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
         ),
       };
 
-    case "days":
-      return {
-        hint: "After a major Hayward Fault quake, the USGS estimates many East Bay homes could be without tap water for about 6 weeks.",
-        body: (
-          <RadioCards
-            name="days"
-            legend="How many days do you want to cover at home?"
-            value={a.days ?? 14}
-            onChange={(days) => update({ days })}
-            options={[
-              { value: 7, label: "7 days", desc: "What San Francisco, EBMUD, and Cal OES recommend at a minimum." },
-              { value: 14, label: "14 days", badge: "Recommended", desc: "What the CDC and Red Cross suggest for home. Worth it if you have the space." },
-            ]}
-          />
-        ),
-      };
-
     case "car":
       return {
         optional: true,
@@ -473,6 +426,33 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
               { value: "yes", label: "Yes" },
               { value: "sometimes", label: "Sometimes" },
               { value: "no", label: "No" },
+            ]}
+          />
+        ),
+      };
+
+    case "level":
+      return {
+        hint: "You can switch any time without losing your progress.",
+        body: <LevelChoice a={a} update={update} />,
+      };
+
+    case "days":
+      return {
+        hint: "After a major Hayward Fault quake, the USGS estimates many East Bay homes could be without tap water for about 6 weeks.",
+        body: (
+          <RadioCards
+            name="days"
+            legend="How many days do you want to cover at home?"
+            value={a.days ?? 14}
+            onChange={(days) => update({ days })}
+            options={[
+              {
+                value: 7,
+                label: "7 days",
+                desc: "What San Francisco and EBMUD recommend at a minimum. Cal OES says at least 3 days, and a week is better.",
+              },
+              { value: 14, label: "14 days", badge: "Recommended", desc: "What the CDC and Red Cross suggest for home. Worth it if you have the space." },
             ]}
           />
         ),
@@ -518,10 +498,12 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
               ]}
             />
             <div>
-              <h2 className="mb-3 text-xl font-extrabold tracking-tight">Roughly what do you want to spend to start?</h2>
+              <h2 id="budget-heading" className="mb-3 text-xl font-extrabold tracking-tight">
+                Roughly what do you want to spend to start?
+              </h2>
               <RadioCards
                 name="budget"
-                legend="Roughly what do you want to spend to start?"
+                labelledBy="budget-heading"
                 value={a.budget}
                 onChange={(budget) => update({ budget })}
                 options={[
@@ -537,6 +519,162 @@ function renderStep(step: StepId, a: Answers, update: Update): StepView {
         ),
       };
   }
+}
+
+/** Says where the picks came from, and stops claiming they're ours once the person changes them. */
+function hazardsHint(a: Answers): string {
+  const defaults = defaultHazards(a.county, a.zip);
+  const values = a.hazards.length ? a.hazards : defaults;
+  if (!sameSet(values, defaults)) return "These are your picks. Change anything you like.";
+  const county = a.county ? COUNTY_BY_ID[a.county] : undefined;
+  return county
+    ? `We've picked the common ones for ${county.name} County. Change anything you like.`
+    : "We've picked the common ones for the Bay Area. Change anything you like.";
+}
+
+function HazardsStep({ a, update }: { a: Answers; update: Update }) {
+  // Said out loud and shown when someone tries to uncheck the last one.
+  const [note, setNote] = useState("");
+  const defaults = defaultHazards(a.county, a.zip);
+  const values = a.hazards.length ? a.hazards : defaults;
+  const county = a.county ? COUNTY_BY_ID[a.county] : undefined;
+  const zipTsunami = lookupZip(a.zip)?.tsunami ?? false;
+  const showTsunami = !county || county.tsunami || zipTsunami || values.includes("tsunami");
+
+  const toggle = (h: HazardId, checked: boolean) => {
+    if (!checked && values.length === 1) {
+      setNote("Keep at least one picked. Earthquake is a good place to start.");
+      return;
+    }
+    setNote("");
+    update((prev) => {
+      const set = new Set(prev.hazards.length ? prev.hazards : defaults);
+      if (checked) set.add(h);
+      else set.delete(h);
+      return { hazards: [...set] };
+    });
+  };
+
+  return (
+    <>
+      <CheckList
+        legend="Which of these do you want to be ready for?"
+        values={values}
+        onToggle={toggle}
+        options={HAZARDS.filter((h) => h.id !== "tsunami" || showTsunami).map((h) => ({
+          value: h.id,
+          label: h.name,
+          desc:
+            h.id === "tsunami" && zipTsunami ? (
+              <>
+                {h.blurb}{" "}
+                <span className="font-semibold text-ink">Part of your ZIP code is in a mapped tsunami hazard area.</span>
+              </>
+            ) : (
+              h.blurb
+            ),
+        }))}
+      />
+      <p aria-live="polite" className="font-semibold text-orange [&:not(:empty)]:mt-3">
+        {note}
+      </p>
+      {!sameSet(values, defaults) && (
+        <button
+          type="button"
+          className="mt-3 text-ink-soft underline underline-offset-2 hover:text-ink"
+          onClick={() => {
+            setNote("");
+            update({ hazards: defaults });
+          }}
+        >
+          Not sure? Go back to our suggestions
+        </button>
+      )}
+    </>
+  );
+}
+
+const NEED_GROUPS: { group: string; options: { value: NeedId; label: string; desc?: string }[] }[] = [
+  {
+    group: "Health and medicine",
+    options: [
+      { value: "meds", label: "Daily prescription medicine" },
+      { value: "cold-meds", label: "Medicine that has to stay cold", desc: "Like insulin" },
+      { value: "power-device", label: "A medical device that needs power", desc: "CPAP, a power wheelchair, or a pump" },
+      { value: "oxygen", label: "Home oxygen", desc: "A concentrator or tanks" },
+      { value: "dialysis", label: "Dialysis" },
+      { value: "pregnancy", label: "Pregnancy" },
+      { value: "diet", label: "A special diet, food allergy, or baby formula" },
+    ],
+  },
+  {
+    group: "Getting around and communicating",
+    options: [
+      { value: "vision-hearing", label: "Glasses, contacts, or hearing aids" },
+      { value: "mobility", label: "A mobility aid, or trouble with stairs" },
+      { value: "communication", label: "Trouble hearing or seeing alerts, or speaking", desc: "Deaf, hard of hearing, blind, low vision, or a speech disability" },
+      { value: "cognitive", label: "Trouble understanding or remembering in a crisis", desc: "Like dementia, autism, or a brain injury" },
+    ],
+  },
+  {
+    group: "Other",
+    options: [
+      { value: "caregiver", label: "Someone who needs help with daily care", desc: "From family or a home health aide" },
+      { value: "service-animal", label: "A service animal" },
+    ],
+  },
+];
+
+const EXCLUSIVE_LABELS = { none: "None of these", private: "Prefer not to say" } as const;
+
+function NeedsStep({ a, update }: { a: Answers; update: Update }) {
+  // "None of these" and "Prefer not to say" clear the other picks. This says so, on screen and out loud.
+  const [note, setNote] = useState("");
+  const values: (NeedId | "none" | "private")[] =
+    a.needs === null ? [] : a.needs === "private" ? ["private"] : a.needs.length === 0 ? ["none"] : a.needs;
+
+  const toggle = (v: NeedId | "none" | "private", checked: boolean) => {
+    const cleared = checked ? values.filter((x) => x !== v) : [];
+    const exclusive = v === "none" || v === "private";
+    // Only the two exclusive answers clear others, and picking a need clears them.
+    const lost = exclusive ? cleared : cleared.filter((x) => x === "none" || x === "private");
+    setNote(
+      lost.length === 0
+        ? ""
+        : exclusive
+          ? `We unchecked your other ${lost.length === 1 ? "pick" : "picks"}, since you chose “${EXCLUSIVE_LABELS[v]}”.`
+          : `We unchecked “${EXCLUSIVE_LABELS[lost[0] as "none" | "private"]}”.`,
+    );
+    if (v === "none") return update({ needs: checked ? [] : null });
+    if (v === "private") return update({ needs: checked ? "private" : null });
+    update((prev) => {
+      const cur = Array.isArray(prev.needs) ? prev.needs : [];
+      const next = checked ? [...new Set([...cur, v])] : cur.filter((x) => x !== v);
+      return { needs: next.length ? next : null };
+    });
+  };
+
+  return (
+    <>
+      <CheckList
+        legend="Does anyone rely on any of these?"
+        values={values}
+        onToggle={toggle}
+        options={[
+          ...NEED_GROUPS.flatMap(({ group, options }) => options.map((o) => ({ ...o, group }))),
+          { value: "none", label: EXCLUSIVE_LABELS.none, desc: "Clears the picks above" },
+          {
+            value: "private",
+            label: EXCLUSIVE_LABELS.private,
+            desc: "Clears the picks above. Your list will include general health items.",
+          },
+        ]}
+      />
+      <p aria-live="polite" className="text-[0.95rem] font-semibold [&:not(:empty)]:mt-3">
+        {note}
+      </p>
+    </>
+  );
 }
 
 function LevelChoice({ a, update }: { a: Answers; update: Update }) {
@@ -569,10 +707,10 @@ function LevelChoice({ a, update }: { a: Answers; update: Update }) {
           desc: (
             <>
               The essentials that cover most situations, with a week of water and food at home, as Bay Area
-              agencies recommend. Usually one weekend and a shopping trip or two.
+              agencies recommend.
               <span className="mt-1 block font-semibold text-ink">{stats.basics.line}</span>
               <span className="mt-0.5 block">
-                Most people spread this over a few months. Your first steps are free.
+                Your first steps are free. The rest is a few shopping trips, spread out however suits you.
               </span>
             </>
           ),

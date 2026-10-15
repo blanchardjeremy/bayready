@@ -40,6 +40,7 @@ import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
 import { SaveYourList } from "./SaveYourList";
 import { ListContents, ListSidebar } from "./ListNav";
+import { jumpTo as jumpToHeading } from "./useActiveSection";
 import type { OutlineSection } from "./ListOutline";
 import { ShareDialog } from "./ShareDialog";
 import {
@@ -315,6 +316,7 @@ export function ListView() {
       : [{ id: "full-list-title", label: t.bar.nav.fullList, progress: progressOf(main) }]),
     { id: "first-hour-title", label: t.bar.nav.card },
     { id: `${HOME_CARD_ID}-title`, label: t.bar.nav.home },
+    { id: "keep-copy-title", label: t.bar.nav.copy },
     { id: "keep-fresh", label: t.bar.nav.fresh },
   ];
 
@@ -357,16 +359,6 @@ export function ListView() {
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
       <Essentials entries={main.filter(isEssential)} st={st} row={row} budget={answers.budget} />
-
-      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states, homeInfo: hasHomeInfo }) && (
-        <SaveYourList
-          url={shareUrl()}
-          onDismiss={() => setSaveDismissed(true)}
-          busy={busy !== null}
-          onPrint={() => run("print", () => printPdf(exportInput(), "list"), "")}
-          onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
-        />
-      )}
 
       <Together />
 
@@ -447,6 +439,15 @@ export function ListView() {
         />
       )}
 
+      {!shared && (
+        <SaveYourList
+          url={shareUrl()}
+          busy={busy !== null}
+          onPrint={() => run("print", () => printPdf(exportInput(), "list"), "")}
+          onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
+        />
+      )}
+
       <KeepFresh
         busy={busy === "refresh"}
         listUrl={shareUrl()}
@@ -510,7 +511,31 @@ export function ListView() {
       )}
 
       {/* Short messages like "Link copied", near the bottom of the screen for a moment. */}
-      <p role="status" className="no-print pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 lg:bottom-6">
+      {/* Once someone has put work in, a one-time reminder that the list only lives here. It floats, so nothing jumps. */}
+      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states, homeInfo: hasHomeInfo }) && (
+        <div className="no-print fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 pr-20 lg:pr-4">
+          <div className="flex max-w-xl flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-ink px-4 py-3 text-paper shadow-[0_12px_32px_-12px_rgba(19,41,61,0.6)]">
+            <p className="min-w-0 flex-1 text-[0.95rem]">{t.nudge.text}</p>
+            <div className="flex shrink-0 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSaveDismissed(true);
+                  jumpToHeading("keep-copy-title");
+                }}
+                className="min-h-10 rounded-lg bg-paper px-3 font-semibold text-ink"
+              >
+                {t.nudge.action}
+              </button>
+              <button type="button" onClick={() => setSaveDismissed(true)} className="min-h-10 px-1 underline underline-offset-2">
+                {t.nudge.dismiss}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <p role="status" className="no-print pointer-events-none fixed inset-x-0 bottom-28 z-50 flex justify-center px-4">
         {copied && <span className="rounded-md bg-eucalyptus px-4 py-2 font-semibold text-paper shadow-lg">{copied}</span>}
       </p>
       </div>

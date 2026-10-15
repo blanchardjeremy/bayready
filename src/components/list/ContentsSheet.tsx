@@ -27,7 +27,7 @@ export function ContentsSheet({
   sections: OutlineSection[];
   active: string | null;
   items: MenuItem[];
-  t: { contents: string; openContents: string; close: string; sections: string; saveShare: string };
+  t: { contents: string; openContents: string; close: string; sections: string; saveShare: string; keepNote: string; howSaving: string };
   countLabel: (done: number, total: number) => string;
 }) {
   const inline = useRef<HTMLButtonElement>(null);
@@ -106,6 +106,19 @@ export function ContentsSheet({
             />
           </div>
           <h2 className="mt-6 border-t border-line pt-5 text-lg font-extrabold tracking-tight">{t.saveShare}</h2>
+          <p className="mt-1 text-[0.9rem] text-ink-soft">
+            {t.keepNote}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                requestAnimationFrame(() => jumpTo("keep-copy-title"));
+              }}
+              className="font-semibold text-ink underline underline-offset-2"
+            >
+              {t.howSaving}
+            </button>
+          </p>
           <div className="mt-1">
             {items.map((it) =>
               it.heading ? (

@@ -17,6 +17,8 @@ interface NavProps {
     sections: string;
     saveShare: string;
     working: string;
+    keepNote: string;
+    howSaving: string;
     countLabel: (done: number, total: number) => string;
   };
 }
@@ -32,7 +34,8 @@ export function ListSidebar({ sections, items, busy, t }: NavProps) {
   const { active, shown } = useNav(sections);
   return (
     <aside className="no-print hidden lg:block">
-      <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto pb-6 pl-3 pr-1 pt-1">
+      {/* The button sits outside the scrolling part, so its menu can open over the page instead of being cut off. */}
+      <div className="sticky top-6 z-30 pl-3 pr-1 pt-1">
         <MenuButton
           label={busy ? t.working : t.saveShare}
           icon={<ShareIcon />}
@@ -42,8 +45,14 @@ export function ListSidebar({ sections, items, busy, t }: NavProps) {
           className="-ml-3"
           buttonClassName="w-full justify-start"
         />
+        <p className="mt-2 text-[0.82rem] leading-snug text-ink-soft">
+          {t.keepNote}{" "}
+          <button type="button" onClick={() => jumpTo("keep-copy-title")} className="font-semibold text-ink underline underline-offset-2">
+            {t.howSaving}
+          </button>
+        </p>
         <p className="mt-6 text-[0.75rem] font-semibold uppercase tracking-wider text-ink-soft">{t.contents}</p>
-        <div className="mt-1">
+        <div className="-ml-3 mt-1 max-h-[calc(100vh-16rem)] overflow-y-auto pb-4 pl-3">
           <ListOutline sections={shown} active={active} label={t.sections} countLabel={t.countLabel} onJump={jumpTo} />
         </div>
       </div>

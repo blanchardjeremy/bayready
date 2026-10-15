@@ -116,6 +116,8 @@ export const list: Translation<typeof en> = {
   bar: {
     saveShare: "Guardar / compartir",
     sections: "Secciones",
+    keepNote: "Su lista se guarda solo en este navegador. Imprímala o guarde el enlace.",
+    howSaving: "Cómo guardarla",
     contents: "Contenido",
     openContents: "Contenido y Guardar / compartir",
     close: "Cerrar",
@@ -126,6 +128,7 @@ export const list: Translation<typeof en> = {
       card: "Cuando ocurra",
       home: "Conozca su casa",
       fresh: "Manténgalo al día",
+      copy: "Guarde una copia",
     },
     countLabel: (done, total) => `${done} de ${total} hechos`,
     working: "Preparándolo…",
@@ -137,6 +140,12 @@ export const list: Translation<typeof en> = {
     pdfShort: "PDF, versión corta",
     pdfAll: "PDF, todo",
     xlsx: "Hoja de cálculo (Google Sheets, Excel)",
+  },
+
+  nudge: {
+    text: "Su lista solo vive en este navegador. Guarde una copia para no perderla.",
+    action: "Guardar una copia",
+    dismiss: "Ahora no",
   },
 
   flash: {

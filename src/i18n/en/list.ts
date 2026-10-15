@@ -120,6 +120,8 @@ export const list = {
   bar: {
     saveShare: "Save / share",
     sections: "Sections",
+    keepNote: "Your list is saved only in this browser. Print it or keep the link.",
+    howSaving: "How saving works",
     contents: "Contents",
     openContents: "Contents and Save / share",
     close: "Close",
@@ -130,6 +132,7 @@ export const list = {
       card: "When it happens",
       home: "Know your home",
       fresh: "Keep it fresh",
+      copy: "Keep a copy",
     },
     countLabel: (done: number, total: number) => `${done} of ${total} done`,
     working: "Getting it ready…",
@@ -141,6 +144,13 @@ export const list = {
     pdfShort: "PDF, short version",
     pdfAll: "PDF, everything",
     xlsx: "Spreadsheet (Google Sheets, Excel)",
+  },
+
+  /** A one-time reminder after the first checkmark, near the bottom of the screen. */
+  nudge: {
+    text: "Your list only lives in this browser. Save a copy so you don't lose it.",
+    action: "Save a copy",
+    dismiss: "Not now",
   },
 
   /** Short messages after a button does its thing. */

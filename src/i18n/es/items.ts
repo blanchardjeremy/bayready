@@ -5,7 +5,7 @@
  * are built in items.ts from ctx.lang. A test checks that every item has an entry here.
  */
 export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string; examples?: string[] }> = {
-  // ----- En la casa: planes y tareas de una vez --------------------------------
+  // ----- Planes y pendientes: planes y tareas de una vez --------------------------------
   alerts: {
     name: "Inscríbase en las alertas de emergencia de su condado",
     why: "Mensajes y llamadas gratis sobre evacuaciones, incendios y otras emergencias cerca de usted. Inscribirse toma un par de minutos, y así es como su condado le avisa sobre su propia dirección.",

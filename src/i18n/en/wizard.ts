@@ -189,7 +189,7 @@ export const wizard = {
     advancedDesc: (questions: number) =>
       `Two weeks of supplies, backups, and extra gear. Adds ${questions} short questions.`,
     stats: (things: number, tasks: number, cost: string) =>
-      `About ${things} things to gather or buy and ${tasks} to do around the house, roughly ${cost}`,
+      `About ${things} things to gather or buy and ${tasks} plans and to-dos, roughly ${cost}`,
   },
 
   days: {

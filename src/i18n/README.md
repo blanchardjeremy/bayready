@@ -36,7 +36,7 @@ viewer's language.
 | Stay-at-home bin | Caja para quedarse en casa |
 | Go bag | Mochila de emergencia |
 | Car kit | Kit para el carro |
-| Around the house (tasks) | En la casa |
+| Plans and to-dos (the tasks section) | Planes y pendientes |
 | Basics / Advanced | Lo básico / Avanzado |
 | The essentials | Lo esencial |
 | Start here | Empiece aquí |

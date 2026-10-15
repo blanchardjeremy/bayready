@@ -12,6 +12,8 @@ export interface MenuItem {
   onSelect?: () => void;
   /** A small group label, not something to pick. Arrow keys skip it. */
   heading?: boolean;
+  /** An icon before the label. */
+  icon?: ReactNode;
 }
 
 /**
@@ -73,7 +75,14 @@ export function MenuButton({
     }
   };
 
-  const itemClass = "block w-full px-4 py-2.5 text-left text-[0.95rem] text-ink hover:bg-fog focus:bg-fog focus:outline-none";
+  const itemClass =
+    "flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[0.95rem] text-ink hover:bg-fog focus:bg-fog focus:outline-none";
+  const content = (it: MenuItem) => (
+    <>
+      {it.icon && <span className="shrink-0 text-ink-soft">{it.icon}</span>}
+      <span>{it.label}</span>
+    </>
+  );
   return (
     <div ref={wrap} className={`relative ${className}`} onKeyDown={onKeyDown}>
       <button
@@ -124,7 +133,7 @@ export function MenuButton({
                 onClick={() => setOpen(false)}
                 className={itemClass}
               >
-                {it.label}
+                {content(it)}
                 <span className="sr-only"> {newTab}</span>
               </a>
             ) : (
@@ -142,7 +151,7 @@ export function MenuButton({
                 }}
                 className={itemClass}
               >
-                {it.label}
+                {content(it)}
               </button>
             );
           })}

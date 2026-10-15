@@ -614,7 +614,7 @@ describe("spreadsheet export in Spanish", () => {
     expect(ws.getCell(`D${r}`).numFmt).toBe("d mmm yyyy");
     expect(ws.getCell(`B${r}`).value).toBe("Caja para quedarse en casa");
     expect(ws.getCell(`B${r}`).dataValidation?.formulae).toEqual([
-      '"Caja para quedarse en casa,Mochila de emergencia,Kit para el carro,En la casa"',
+      '"Caja para quedarse en casa,Mochila de emergencia,Kit para el carro,Planes y pendientes"',
     ]);
     const row = cfs(ws).find((c) => c.ref.startsWith("A"))!;
     expect(row.rules.map((x) => x.formulae[0])).toEqual(['$G5="Vence ya"', '$G5="Vence pronto"']);

@@ -28,7 +28,7 @@ export const META_ES: {
         "Guárdelo en la cajuela, fuera de la vista. Mantenga el tanque al menos a la mitad, y no deje copias de sus identificaciones en el carro por si se lo roban.",
     },
     home: {
-      name: "En la casa",
+      name: "Planes y pendientes",
       purpose: "Tareas y planes que se hacen una vez. La mayoría son gratis y toman menos de una hora.",
       where: "",
     },

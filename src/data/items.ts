@@ -174,7 +174,7 @@ const shakeOutLabel = (d: Date, lang: Lang) =>
 // ---------------------------------------------------------------------------
 
 export const ITEMS: Item[] = [
-  // ----- Around the house: plans and one-time tasks ------------------------
+  // ----- Plans and to-dos: plans and one-time tasks ------------------------
   {
     id: "alerts",
     startRank: 1,

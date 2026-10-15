@@ -192,7 +192,7 @@ export const wizard: Translation<typeof en> = {
     advancedDesc: (questions) =>
       `Provisiones para dos semanas, repuestos y equipo extra. Agrega ${questions} preguntas cortas.`,
     stats: (things, tasks, cost) =>
-      `Unas ${things} cosas para juntar o comprar y ${tasks} tareas en la casa, más o menos ${cost}`,
+      `Unas ${things} cosas para juntar o comprar y ${tasks} planes y pendientes, más o menos ${cost}`,
   },
 
   days: {

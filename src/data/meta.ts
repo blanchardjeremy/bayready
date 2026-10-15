@@ -19,7 +19,7 @@ export const CONTAINER_META: Record<Container, { name: string; purpose: string; 
     where: "Keep it in the trunk, out of sight. Keep your gas tank at least half full, and don't leave copies of IDs in the car in case of a break-in.",
   },
   home: {
-    name: "Around the house",
+    name: "Plans and to-dos",
     purpose: "One-time tasks and plans. Most are free and take under an hour.",
     where: "",
   },

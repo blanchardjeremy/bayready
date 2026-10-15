@@ -164,7 +164,7 @@ describe("Spanish expiration dates", () => {
     expect(rows[0]).toMatchObject({ item: "[Ejemplo] Frijoles en lata", kit: "Caja para quedarse en casa", container: "stay", every: 24, example: true });
     expect(rows.slice(6, 11).every((r) => r.item === "[Ejemplo] Agregue aquí su comida" && r.placeholder)).toBe(true);
     expect(rows.some((r) => r.kit === "Kit para el carro")).toBe(true);
-    expect(rows.some((r) => r.kit === "En la casa")).toBe(true);
+    expect(rows.some((r) => r.kit === "Planes y pendientes")).toBe(true);
     // Every row's kit and flags match the English row.
     english.forEach((s, i) =>
       s.rows.forEach((r, j) => {

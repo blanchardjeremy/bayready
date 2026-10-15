@@ -292,15 +292,15 @@ export function ListView() {
   // Everything you can do with the list, in one menu in the bar at the top.
   const saveShareItems: MenuItem[] = [
     { key: "h-share", heading: true, label: t.bar.share },
-    { key: "link", label: t.exports.copyLink, onSelect: copyShareLink },
-    { key: "text", label: t.exports.copyText, onSelect: () => copy(asText(kits, main, st, ctx), t.flash.textCopied) },
+    { key: "link", icon: <LinkIcon />, label: t.exports.copyLink, onSelect: copyShareLink },
+    { key: "text", icon: <CopyTextIcon />, label: t.exports.copyText, onSelect: () => copy(asText(kits, main, st, ctx), t.flash.textCopied) },
     { key: "h-print", heading: true, label: t.bar.print },
-    { key: "print-short", label: t.bar.printShort, onSelect: () => run("print", () => printPdf(exportInput(), "short"), "") },
-    { key: "print-all", label: t.bar.printAll, onSelect: () => run("print", () => printPdf(exportInput(), "list"), "") },
+    { key: "print-short", icon: <PrinterIcon />, label: t.bar.printShort, onSelect: () => run("print", () => printPdf(exportInput(), "short"), "") },
+    { key: "print-all", icon: <PrinterIcon />, label: t.bar.printAll, onSelect: () => run("print", () => printPdf(exportInput(), "list"), "") },
     { key: "h-download", heading: true, label: t.bar.download },
-    { key: "pdf-short", label: t.bar.pdfShort, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "short"), t.flash.pdfDone) },
-    { key: "pdf-all", label: t.bar.pdfAll, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone) },
-    { key: "xlsx", label: t.bar.xlsx, onSelect: downloadSpreadsheet },
+    { key: "pdf-short", icon: <PdfIcon />, label: t.bar.pdfShort, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "short"), t.flash.pdfDone) },
+    { key: "pdf-all", icon: <PdfIcon />, label: t.bar.pdfAll, onSelect: () => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone) },
+    { key: "xlsx", icon: <SheetIcon />, label: t.bar.xlsx, onSelect: downloadSpreadsheet },
   ];
   const progressOf = (list: ListEntry[]) => {
     const active = list.filter((e) => st(e) !== "skip");

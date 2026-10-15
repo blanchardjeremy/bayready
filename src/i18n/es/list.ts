@@ -116,6 +116,9 @@ export const list: Translation<typeof en> = {
   bar: {
     saveShare: "Guardar / compartir",
     sections: "Secciones",
+    contents: "Contenido",
+    openContents: "Contenido y Guardar / compartir",
+    close: "Cerrar",
     nav: {
       start: "Empiece aquí",
       essentials: "Lo esencial",

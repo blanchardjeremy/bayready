@@ -120,6 +120,9 @@ export const list = {
   bar: {
     saveShare: "Save / share",
     sections: "Sections",
+    contents: "Contents",
+    openContents: "Contents and Save / share",
+    close: "Close",
     nav: {
       start: "Start here",
       essentials: "Essentials",

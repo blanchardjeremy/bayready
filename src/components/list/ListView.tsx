@@ -17,10 +17,10 @@ import { firstStepDate, firstStepsEvent, twiceYearlyChecks } from "@/lib/ics";
 import { AddToCalendar } from "@/components/AddToCalendar";
 import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { Reveal } from "./Reveal";
-import { MenuButton, type MenuItem } from "@/components/MenuButton";
+import type { MenuItem } from "@/components/MenuButton";
 import { downloadPdf, printPdf } from "@/lib/exportPdf";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, ShareIcon, SheetIcon } from "@/components/icons";
+import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
 import { clearAllStored, useStored } from "@/lib/storage";
 import type { Answers, Container, Context, ItemState, ListEntry, Names, Stage } from "@/lib/types";
@@ -39,7 +39,8 @@ import { useStandalone } from "@/components/useStandalone";
 import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
 import { SaveYourList } from "./SaveYourList";
-import { StickyBar, type BarSection } from "./StickyBar";
+import { ListContents, ListSidebar } from "./ListNav";
+import type { OutlineSection } from "./ListOutline";
 import { ShareDialog } from "./ShareDialog";
 import {
   LIST_ANCHORS,
@@ -305,7 +306,8 @@ export function ListView() {
   };
   // The page's map, in order. Kit tabs only exist in the by-kit view; the other views get one "Full list" tab.
   const kitNames = metaFor(lang).container;
-  const barSections: BarSection[] = [
+  const navT = t.bar;
+  const barSections: OutlineSection[] = [
     { id: "start-here", label: t.bar.nav.start, progress: progressOf(firsts) },
     { id: "essentials-title", label: t.bar.nav.essentials, progress: progressOf(main.filter(isEssential)) },
     ...(view === "kits"
@@ -318,25 +320,11 @@ export function ListView() {
 
 
   return (
-    // In print, a flex column lets Know your home move up under the header.
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-2 sm:px-6 print:flex print:flex-col">
-      <StickyBar
-        sections={barSections}
-        navLabel={t.bar.sections}
-        countLabel={t.bar.countLabel}
-        status={copied}
-        actions={
-          <MenuButton
-            // On phones the button is just its icon, to leave room for the section tabs.
-            label={<span className="sr-only sm:not-sr-only">{busy ? t.bar.working : t.bar.saveShare}</span>}
-            icon={<ShareIcon />}
-            align="right"
-            disabled={busy !== null}
-            items={saveShareItems}
-            buttonClassName="min-h-10 px-4"
-          />
-        }
-      />
+    // Wide screens: the outline in a column on the left, the list on the right.
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10 print:block">
+      <ListSidebar sections={barSections} items={saveShareItems} busy={busy !== null} t={navT} />
+      {/* In print, a flex column lets Know your home move up under the header. */}
+      <div id="list-body" className="min-w-0 print:flex print:flex-col">
       {shared && (
         <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-ink bg-paper p-4">
           <p>
@@ -363,6 +351,8 @@ export function ListView() {
         readOnly={!!shared}
         hasFirstHour={hasFirstHour}
       />
+
+      <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} t={navT} />
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
@@ -518,6 +508,12 @@ export function ListView() {
           <CopyLink url={shareUrl()} label={t.clear.copyLink} />
         </ConfirmDialog>
       )}
+
+      {/* Short messages like "Link copied", near the bottom of the screen for a moment. */}
+      <p role="status" className="no-print pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 lg:bottom-6">
+        {copied && <span className="rounded-md bg-eucalyptus px-4 py-2 font-semibold text-paper shadow-lg">{copied}</span>}
+      </p>
+      </div>
     </div>
   );
 }
@@ -873,7 +869,7 @@ function KitSection({
 
       {container === "go" && ctx.carriers > 1 ? (
         // Go bags for several people: what goes in every bag, and what the group needs just one of.
-        <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-2">
+        <div className="mt-6 grid gap-x-12 gap-y-8">
           {(
             [
               [t.everyBag, t.everyBagDesc(t.join(peopleNames(ctx).slice(0, ctx.carriers))), true],
@@ -896,7 +892,7 @@ function KitSection({
           })}
         </div>
       ) : (
-        <div className="mt-6 grid gap-x-12 lg:grid-cols-2">
+        <div className="mt-6 grid gap-x-12">
           {kitGroups(active, ctx.lang).map(([key, heading, list]) => (
             <div key={key} className="print-break-avoid mb-6">
               <h4 className="border-b-2 border-ink pb-1 text-lg font-extrabold tracking-tight">{heading}</h4>

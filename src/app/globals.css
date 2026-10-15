@@ -181,11 +181,11 @@ body {
     break-inside: avoid;
   }
   /* "Print this card" on the list prints only the When it happens card. */
-  body[data-print="card"] #main > div > :not(#first-hour) {
+  body[data-print="card"] #list-body > :not(#first-hour) {
     display: none !important;
   }
   /* "Print this info" prints only the Know your home sheet. */
-  body[data-print="home"] #main > div > :not(#know-your-home) {
+  body[data-print="home"] #list-body > :not(#know-your-home) {
     display: none !important;
   }
   body[data-print="home"] #know-your-home {

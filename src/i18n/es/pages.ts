@@ -45,7 +45,6 @@ export const pages: Translation<typeof en> = {
     actions: {
       openList: "Abrir mi lista",
       changeAnswers: "Cambiar mis respuestas",
-      happeningNow: "¿Está pasando ahora? Vea qué hacer primero",
       start: "Empezar",
       starter: "Saltar las preguntas y ver una lista básica",
     },

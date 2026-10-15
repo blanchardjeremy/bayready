@@ -21,7 +21,6 @@ export const list: Translation<typeof en> = {
     planningFor: "Plan para",
     yourAnswers: "Sus respuestas",
     changeAnswers: "Cambiar respuestas",
-    happeningNow: "¿Está pasando ahora? Vea qué hacer primero",
     badge: (label, value) => `${label}: ${value}. Cambiar`,
     labels: { building: "Kits", for: "Para", hazards: "Riesgos", days: "Días", county: "Condado" },
     adults: (n) => plural(n, "adulto", "adultos"),

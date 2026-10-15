@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import {
   ANSWERS_KEY,
   normalizeAnswers,
@@ -40,7 +40,7 @@ import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
 import { SaveYourList } from "./SaveYourList";
 import { ListContents, ListSidebar } from "./ListNav";
-import { jumpTo as jumpToHeading } from "./useActiveSection";
+import { jumpTo } from "./useActiveSection";
 import type { OutlineSection } from "./ListOutline";
 import { ShareDialog } from "./ShareDialog";
 import {
@@ -81,18 +81,6 @@ function readSharedHash(): Shared | null {
   const hash = window.location.hash.slice(1);
   if (!hash || LIST_ANCHORS.has(hash)) return null;
   return decodeShare(hash);
-}
-
-/** Scrolls to a section and moves focus to its heading, without touching the # (which may hold a list). */
-function jumpTo(id: string) {
-  return (e: MouseEvent) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    e.preventDefault();
-    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
-    el.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
-  };
 }
 
 export function ListView() {
@@ -267,7 +255,6 @@ export function ListView() {
       setBusy(null);
     }
   };
-  const hasFirstHour = firstHourCard(ctx).length > 0;
   const activeCount = main.filter((e) => st(e) !== "skip").length;
   const levelUpCount = levelUp.filter((e) => st(e) !== "skip").length;
 
@@ -351,7 +338,6 @@ export function ListView() {
         ctx={ctx}
         answers={answers}
         readOnly={!!shared}
-        hasFirstHour={hasFirstHour}
       />
 
       <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} t={navT} />
@@ -521,7 +507,7 @@ export function ListView() {
                 type="button"
                 onClick={() => {
                   setSaveDismissed(true);
-                  jumpToHeading("keep-copy-title");
+                  jumpTo("keep-copy-title");
                 }}
                 className="min-h-10 rounded-lg bg-paper px-3 font-semibold text-ink"
               >
@@ -568,13 +554,11 @@ function Header({
   ctx,
   answers,
   readOnly,
-  hasFirstHour,
   actions,
 }: {
   ctx: Context;
   answers: Answers;
   readOnly: boolean;
-  hasFirstHour: boolean;
   /** Buttons beside the title, like Print and Download PDF. */
   actions?: ReactNode;
 }) {
@@ -647,18 +631,6 @@ function Header({
           )}
         </ul>
       </div>
-      {hasFirstHour && (
-        <a
-          href="#first-hour"
-          onClick={jumpTo("first-hour")}
-          className="no-print inline-flex min-h-11 items-center gap-1.5 text-[0.95rem] font-semibold text-ink underline underline-offset-2"
-        >
-          {t.happeningNow}
-          <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M8 3v10M4 9l4 4 4-4" />
-          </svg>
-        </a>
-      )}
     </div>
   );
 }

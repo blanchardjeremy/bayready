@@ -48,7 +48,6 @@ export const pages = {
     actions: {
       openList: "Open my list",
       changeAnswers: "Change my answers",
-      happeningNow: "Happening now? See what to do first",
       start: "Start",
       starter: "Skip the questions and show a starter list",
     },

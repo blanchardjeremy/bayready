@@ -24,12 +24,6 @@ export function StartActions() {
           <Link href="/build" className={buttonClass.secondary}>
             {t.changeAnswers}
           </Link>
-          <Link
-            href="/list#first-hour"
-            className="inline-flex min-h-11 basis-full items-center text-[0.95rem] font-semibold text-ink underline underline-offset-2"
-          >
-            {t.happeningNow}
-          </Link>
         </>
       ) : (
         <>

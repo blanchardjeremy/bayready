@@ -22,7 +22,6 @@ export const list = {
     planningFor: "Planning for",
     yourAnswers: "Your answers",
     changeAnswers: "Change answers",
-    happeningNow: "Happening now? See what to do first",
     /** Screen-reader label for an answer badge that links to its wizard step. */
     badge: (label: string, value: string) => `${label}: ${value}. Change`,
     labels: { building: "Building", for: "For", hazards: "Hazards", days: "Days", county: "County" },

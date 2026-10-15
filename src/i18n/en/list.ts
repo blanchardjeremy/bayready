@@ -119,7 +119,16 @@ export const list = {
   /** The bar that stays at the top of the list page as you scroll. */
   bar: {
     saveShare: "Save / share",
-    whole: "Your whole list",
+    sections: "Sections",
+    nav: {
+      start: "Start here",
+      essentials: "Essentials",
+      fullList: "Full list",
+      card: "When it happens",
+      home: "Know your home",
+      fresh: "Keep it fresh",
+    },
+    countLabel: (done: number, total: number) => `${done} of ${total} done`,
     working: "Getting it ready…",
     share: "Share",
     print: "Print",
@@ -129,8 +138,6 @@ export const list = {
     pdfShort: "PDF, short version",
     pdfAll: "PDF, everything",
     xlsx: "Spreadsheet (Google Sheets, Excel)",
-    count: (done: number, total: number) => `${done} of ${total}`,
-    progress: (title: string) => `${title} progress`,
   },
 
   /** Short messages after a button does its thing. */

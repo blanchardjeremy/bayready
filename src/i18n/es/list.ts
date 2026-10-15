@@ -115,7 +115,16 @@ export const list: Translation<typeof en> = {
 
   bar: {
     saveShare: "Guardar / compartir",
-    whole: "Toda su lista",
+    sections: "Secciones",
+    nav: {
+      start: "Empiece aquí",
+      essentials: "Lo esencial",
+      fullList: "Lista completa",
+      card: "Cuando ocurra",
+      home: "Conozca su casa",
+      fresh: "Manténgalo al día",
+    },
+    countLabel: (done, total) => `${done} de ${total} hechos`,
     working: "Preparándolo…",
     share: "Compartir",
     print: "Imprimir",
@@ -125,8 +134,6 @@ export const list: Translation<typeof en> = {
     pdfShort: "PDF, versión corta",
     pdfAll: "PDF, todo",
     xlsx: "Hoja de cálculo (Google Sheets, Excel)",
-    count: (done, total) => `${done} de ${total}`,
-    progress: (title) => `Avance: ${title}`,
   },
 
   flash: {

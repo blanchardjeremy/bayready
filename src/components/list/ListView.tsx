@@ -18,7 +18,7 @@ import { AddToCalendar } from "@/components/AddToCalendar";
 import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { Reveal } from "./Reveal";
 import { MenuButton, type MenuItem } from "@/components/MenuButton";
-import { downloadPdf, printPdf, type PdfPart } from "@/lib/exportPdf";
+import { downloadPdf, printPdf } from "@/lib/exportPdf";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CheckIcon, CopyTextIcon, LinkIcon, PdfIcon, PrinterIcon, ShareIcon, SheetIcon } from "@/components/icons";
 import { decodeShare, encodeShare } from "@/lib/share";
@@ -31,7 +31,7 @@ import { essentialsFirst, isEssential } from "@/data/essentials";
 import { firstHourCard } from "@/data/firstHour";
 import { CATEGORY_ORDER, SHOP_ORDER, metaFor } from "@/data/meta";
 import { useLang, useT } from "@/i18n/useLang";
-import { messagesFor, type Messages } from "@/i18n/messages";
+import { messagesFor } from "@/i18n/messages";
 import type { Lang } from "@/i18n/lang";
 import { asText, groupByCategory, handDate, shoppingText } from "./listText";
 import { Button, CheckBox, buttonClass } from "@/components/controls";
@@ -103,7 +103,6 @@ export function ListView() {
   const [view, setView] = useState<View>("kits");
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<Export | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
   const [sharing, setSharing] = useState<{ url: string; privateUrl: string; copied: boolean; personal: boolean } | null>(null);
   const [editingNames, setEditingNames] = useState(false);
   const [confirming, setConfirming] = useState<"replace" | "clear" | null>(null);
@@ -280,8 +279,6 @@ export function ListView() {
       () => {
         if (personal || hasHomeInfo) return open(true);
         flash(t.flash.linkCopied);
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2500);
       },
       () => open(false),
     );
@@ -306,36 +303,32 @@ export function ListView() {
     const active = list.filter((e) => st(e) !== "skip");
     return { done: active.filter((e) => st(e) === "have").length, total: active.length };
   };
+  // The page's map, in order. Kit tabs only exist in the by-kit view; the other views get one "Full list" tab.
+  const kitNames = metaFor(lang).container;
   const barSections: BarSection[] = [
-    { id: "start-here", progress: progressOf(firsts) },
-    { id: "essentials-title", progress: progressOf(main.filter(isEssential)) },
-    { id: "full-list-title", progress: progressOf(main) },
-    ...kits.map((c) => ({ id: `kit-${c}`, progress: progressOf(main.filter((e) => e.container === c)) })),
-    { id: "first-hour-title" },
-    { id: `${HOME_CARD_ID}-title` },
-    { id: "keep-fresh" },
+    { id: "start-here", label: t.bar.nav.start, progress: progressOf(firsts) },
+    { id: "essentials-title", label: t.bar.nav.essentials, progress: progressOf(main.filter(isEssential)) },
+    ...(view === "kits"
+      ? kits.map((c) => ({ id: `kit-${c}`, label: kitNames[c].name, progress: progressOf(main.filter((e) => e.container === c)) }))
+      : [{ id: "full-list-title", label: t.bar.nav.fullList, progress: progressOf(main) }]),
+    { id: "first-hour-title", label: t.bar.nav.card },
+    { id: `${HOME_CARD_ID}-title`, label: t.bar.nav.home },
+    { id: "keep-fresh", label: t.bar.nav.fresh },
   ];
 
-  const shareButton = (
-    <Button type="button" variant="secondary" onClick={copyShareLink}>
-      {linkCopied ? <CheckIcon /> : <LinkIcon />}
-      {linkCopied ? t.exports.linkCopied : t.exports.copyLink}
-    </Button>
-  );
 
   return (
     // In print, a flex column lets Know your home move up under the header.
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-2 sm:px-6 print:flex print:flex-col">
       <StickyBar
-        title={t.bar.whole}
-        progress={progressOf(main)}
         sections={barSections}
-        countText={t.bar.count}
-        progressLabel={t.bar.progress}
+        navLabel={t.bar.sections}
+        countLabel={t.bar.countLabel}
         status={copied}
         actions={
           <MenuButton
-            label={busy ? t.bar.working : t.bar.saveShare}
+            // On phones the button is just its icon, to leave room for the section tabs.
+            label={<span className="sr-only sm:not-sr-only">{busy ? t.bar.working : t.bar.saveShare}</span>}
             icon={<ShareIcon />}
             align="right"
             disabled={busy !== null}
@@ -384,37 +377,6 @@ export function ListView() {
           onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
         />
       )}
-
-      <div className="no-print mt-10 flex flex-wrap gap-2">
-        {shareButton}
-        <Button type="button" variant="secondary" onClick={() => copy(asText(kits, main, st, ctx), t.flash.textCopied)}>
-          <CopyTextIcon />
-          {t.exports.copyText}
-        </Button>
-        {/* Print and the PDF are the same file, short or complete. They're imported up front, not on click,
-            because printing on Safari opens a tab, and that only works during the click itself. */}
-        <MenuButton
-          label={busy === "print" ? t.exports.preparing : t.exports.print}
-          icon={<PrinterIcon />}
-          align="left"
-          disabled={busy !== null}
-          items={pdfChoices(t, (part) => run("print", () => printPdf(exportInput(), part), ""))}
-        />
-        <MenuButton
-          label={busy === "pdf" ? t.exports.makingPdf : t.exports.pdf}
-          icon={<PdfIcon />}
-          align="left"
-          disabled={busy !== null}
-          items={pdfChoices(t, (part) => run("pdf", () => downloadPdf(exportInput(), part), t.flash.pdfDone))}
-        />
-        <Button type="button" variant="secondary" disabled={busy !== null} onClick={downloadSpreadsheet}>
-          <SheetIcon />
-          {busy === "xlsx" ? t.exports.makingXlsx : t.exports.xlsx}
-        </Button>
-        <p role="status" className="self-center text-[0.95rem] text-eucalyptus">
-          {copied}
-        </p>
-      </div>
 
       <Together />
 
@@ -1454,28 +1416,4 @@ function EmptyState({
       </form>
     </div>
   );
-}
-
-/** The two ways to print or save the PDF: just the essentials, or everything. */
-function pdfChoices(t: Messages["list"], choose: (part: PdfPart) => void): MenuItem[] {
-  return [
-    {
-      key: "short",
-      onSelect: () => choose("short"),
-      label: (
-        <>
-          {t.exports.short} <span className="text-ink-soft">{t.exports.shortDetail}</span>
-        </>
-      ),
-    },
-    {
-      key: "list",
-      onSelect: () => choose("list"),
-      label: (
-        <>
-          {t.exports.everything} <span className="text-ink-soft">{t.exports.everythingDetail}</span>
-        </>
-      ),
-    },
-  ];
 }

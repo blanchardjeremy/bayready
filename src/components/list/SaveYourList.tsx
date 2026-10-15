@@ -12,17 +12,20 @@ import { useT } from "@/i18n/useLang";
  * week without a visit), so this says plainly not to rely on the site, and
  * offers two ways to keep a copy: print or PDF, which keeps everything, and the
  * link, which brings back answers and checkmarks but not Know your home or notes.
- * The note under Save / share and a one-time reminder both point here.
+ * The save status near the top and by Save / share points here.
  */
 export function SaveYourList({
   url,
   onPrint,
   onDownload,
+  onSaved,
   busy,
 }: {
   url: string;
   onPrint: () => void;
   onDownload: () => void;
+  /** They copied or emailed the link. */
+  onSaved: () => void;
   busy: boolean;
 }) {
   const t = useT().list.save;
@@ -33,6 +36,7 @@ export function SaveYourList({
     try {
       await navigator.clipboard.writeText(url);
       setStatus("copied");
+      onSaved();
       setTimeout(() => setStatus(""), 2500);
     } catch {
       setStatus("failed");
@@ -71,7 +75,7 @@ export function SaveYourList({
               {status === "copied" ? <CheckIcon /> : <LinkIcon />}
               {status === "copied" ? t.copied : t.copy}
             </Button>
-            <a href={mail} className={buttonClass.secondary}>
+            <a href={mail} onClick={onSaved} className={buttonClass.secondary}>
               {t.email}
             </a>
           </div>

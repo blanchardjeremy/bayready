@@ -119,8 +119,6 @@ export const list = {
   bar: {
     saveShare: "Save / share",
     sections: "Sections",
-    keepNote: "Your list is saved only in this browser. Print it or keep the link.",
-    howSaving: "How saving works",
     contents: "Contents",
     openContents: "Contents and Save / share",
     close: "Close",
@@ -145,11 +143,14 @@ export const list = {
     xlsx: "Spreadsheet (Google Sheets, Excel)",
   },
 
-  /** A one-time reminder after the first checkmark, near the bottom of the screen. */
-  nudge: {
-    text: "Your list only lives in this browser. Save a copy so you don't lose it.",
+  /** Whether someone has kept a copy of their list, near the top and by Save / share. */
+  savedStatus: {
+    notYet: "Saved in this browser only.",
     action: "Save a copy",
-    dismiss: "Not now",
+    saved: (date: string) => `You saved a copy on ${date}.`,
+    changed: (n: number, date: string) => `${n} ${n === 1 ? "change" : "changes"} since your copy on ${date}.`,
+    again: "Save again",
+    ways: "See ways to save",
   },
 
   /** Short messages after a button does its thing. */

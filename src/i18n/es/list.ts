@@ -115,8 +115,6 @@ export const list: Translation<typeof en> = {
   bar: {
     saveShare: "Guardar / compartir",
     sections: "Secciones",
-    keepNote: "Su lista se guarda solo en este navegador. Imprímala o guarde el enlace.",
-    howSaving: "Cómo guardarla",
     contents: "Contenido",
     openContents: "Contenido y Guardar / compartir",
     close: "Cerrar",
@@ -141,10 +139,13 @@ export const list: Translation<typeof en> = {
     xlsx: "Hoja de cálculo (Google Sheets, Excel)",
   },
 
-  nudge: {
-    text: "Su lista solo vive en este navegador. Guarde una copia para no perderla.",
+  savedStatus: {
+    notYet: "Guardada solo en este navegador.",
     action: "Guardar una copia",
-    dismiss: "Ahora no",
+    saved: (date) => `Guardó una copia el ${date}.`,
+    changed: (n, date) => `${n} ${n === 1 ? "cambio" : "cambios"} desde su copia del ${date}.`,
+    again: "Guardar de nuevo",
+    ways: "Ver formas de guardarla",
   },
 
   flash: {

@@ -4,12 +4,15 @@ import { MenuButton, type MenuItem } from "@/components/MenuButton";
 import { ShareIcon } from "@/components/icons";
 import { ContentsSheet } from "./ContentsSheet";
 import { ListOutline, type OutlineSection } from "./ListOutline";
+import { SaveStatus, type SaveInfo } from "./SaveStatus";
 import { jumpTo, useActiveSection } from "./useActiveSection";
 
 interface NavProps {
   sections: OutlineSection[];
   items: MenuItem[];
   busy: boolean;
+  /** Whether they've kept a copy. Missing on someone else's list. */
+  saved?: SaveInfo;
   t: {
     contents: string;
     openContents: string;
@@ -17,8 +20,6 @@ interface NavProps {
     sections: string;
     saveShare: string;
     working: string;
-    keepNote: string;
-    howSaving: string;
     countLabel: (done: number, total: number) => string;
   };
 }
@@ -30,7 +31,7 @@ function useNav(sections: OutlineSection[]) {
 }
 
 /** Wide screens: Save / share and the outline, in a column that stays put while the list scrolls. */
-export function ListSidebar({ sections, items, busy, t }: NavProps) {
+export function ListSidebar({ sections, items, busy, saved, t }: NavProps) {
   const { active, shown } = useNav(sections);
   return (
     <aside className="no-print hidden lg:block">
@@ -45,12 +46,11 @@ export function ListSidebar({ sections, items, busy, t }: NavProps) {
           className="-ml-3"
           buttonClassName="w-full justify-start"
         />
-        <p className="mt-2 text-[0.82rem] leading-snug text-ink-soft">
-          {t.keepNote}{" "}
-          <button type="button" onClick={() => jumpTo("keep-copy-title")} className="font-semibold text-ink underline underline-offset-2">
-            {t.howSaving}
-          </button>
-        </p>
+        {saved && (
+          <div className="mt-2">
+            <SaveStatus saved={saved} compact onSave={() => jumpTo("keep-copy-title")} />
+          </div>
+        )}
         <p className="mt-6 text-[0.75rem] font-semibold uppercase tracking-wider text-ink-soft">{t.contents}</p>
         <div className="-ml-3 mt-1 max-h-[calc(100vh-16rem)] overflow-y-auto pb-4 pl-3">
           <ListOutline sections={shown} active={active} label={t.sections} countLabel={t.countLabel} onJump={jumpTo} />
@@ -61,7 +61,7 @@ export function ListSidebar({ sections, items, busy, t }: NavProps) {
 }
 
 /** Phones: the Contents button and sheet. */
-export function ListContents({ sections, items, t }: NavProps) {
+export function ListContents({ sections, items, saved, t }: NavProps) {
   const { active, shown } = useNav(sections);
-  return <ContentsSheet sections={shown} active={active} items={items} t={t} countLabel={t.countLabel} />;
+  return <ContentsSheet sections={shown} active={active} items={items} saved={saved} t={t} countLabel={t.countLabel} />;
 }

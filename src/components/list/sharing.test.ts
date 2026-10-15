@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { STARTER_ANSWERS } from "@/lib/answers";
 import { decodeShare, encodeShare } from "@/lib/share";
 import type { Answers } from "@/lib/types";
-import { hasPersonalInfo, shareCodeFrom, shouldOfferSave, withoutPersonalInfo } from "./sharing";
+import { hasPersonalInfo, shareCodeFrom, withoutPersonalInfo } from "./sharing";
 
 const personal: Answers = {
   ...STARTER_ANSWERS,
@@ -30,24 +30,6 @@ describe("personal info in share links", () => {
     expect(decoded!.answers.household.adults).toBe(2);
     expect(decoded!.states["stay:water"]).toBe("have");
     expect(hasPersonalInfo(decoded!.answers)).toBe(false);
-  });
-});
-
-describe("the Save your list card", () => {
-  it("waits for a checkmark someone made themselves", () => {
-    expect(shouldOfferSave({ shared: false, dismissed: false, states: {} })).toBe(false);
-    expect(shouldOfferSave({ shared: false, dismissed: false, states: { "stay:radio": "skip" } })).toBe(false);
-    // Know your home info isn't in the link, so typing some is reason enough to suggest a copy.
-    expect(shouldOfferSave({ shared: false, dismissed: false, states: {}, homeInfo: true })).toBe(true);
-    expect(shouldOfferSave({ shared: false, dismissed: true, states: {}, homeInfo: true })).toBe(false);
-    expect(shouldOfferSave({ shared: false, dismissed: false, states: { "stay:radio": "have" } })).toBe(true);
-    expect(shouldOfferSave({ shared: false, dismissed: false, states: { "home:alerts@1": "have" } })).toBe(true);
-  });
-
-  it("stays hidden once dismissed, and on someone else's list", () => {
-    const states = { "stay:radio": "have" as const };
-    expect(shouldOfferSave({ shared: false, dismissed: true, states })).toBe(false);
-    expect(shouldOfferSave({ shared: true, dismissed: false, states })).toBe(false);
   });
 });
 

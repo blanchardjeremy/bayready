@@ -207,6 +207,20 @@ export const ITEMS: Item[] = [
     shop: "free",
   },
   {
+    // Ticks itself when someone prints, downloads, or copies the link (see ListView).
+    id: "save-copy",
+    startRank: 4,
+    name: "Save a copy of your list",
+    category: "plan",
+    containers: ["home"],
+    level: "basics",
+    hazards: "all",
+    why: "This website keeps your list only in this browser, and it can disappear if you clear your history or switch phones. Print it, save the PDF, or keep the link somewhere safe.",
+    tip: "Printing or the PDF keeps everything, including Know your home. The link brings back your answers and checkmarks on any phone or computer.",
+    stage: "weekend",
+    shop: "free",
+  },
+  {
     id: "group-text",
     name: "Start a household group text and agree on a check-in message",
     category: "plan",

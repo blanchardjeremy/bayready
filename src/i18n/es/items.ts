@@ -6,6 +6,11 @@
  */
 export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string; examples?: string[] }> = {
   // ----- Planes y pendientes: planes y tareas de una vez --------------------------------
+  "save-copy": {
+    name: "Guarde una copia de su lista",
+    why: "Este sitio guarda su lista solo en este navegador, y puede borrarse si borra su historial o cambia de celular. Imprímala, guarde el PDF o guarde el enlace en un lugar seguro.",
+    tip: "Imprimirla o el PDF guarda todo, incluida la información de Conozca su casa. El enlace recupera sus respuestas y marcas en cualquier celular o computadora.",
+  },
   alerts: {
     name: "Inscríbase en las alertas de emergencia de su condado",
     why: "Mensajes y llamadas gratis sobre evacuaciones, incendios y otras emergencias cerca de usted. Inscribirse toma un par de minutos, y así es como su condado le avisa sobre su propia dirección.",

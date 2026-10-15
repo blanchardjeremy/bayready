@@ -38,6 +38,8 @@ import { Button, CheckBox, buttonClass } from "@/components/controls";
 import { useStandalone } from "@/components/useStandalone";
 import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
+import { SaveStatus, type SaveInfo } from "./SaveStatus";
+import { SAVED_KEY, SAVE_TASK_KEY, changesSince, normalizeSaved, type SavedCopy } from "./savedCopy";
 import { SaveYourList } from "./SaveYourList";
 import { ListContents, ListSidebar } from "./ListNav";
 import { jumpTo } from "./useActiveSection";
@@ -45,11 +47,9 @@ import type { OutlineSection } from "./ListOutline";
 import { ShareDialog } from "./ShareDialog";
 import {
   LIST_ANCHORS,
-  SAVE_PROMPT_KEY,
   STORAGE_PREFIX,
   hasPersonalInfo,
   shareCodeFrom,
-  shouldOfferSave,
   withoutPersonalInfo,
 } from "./sharing";
 import { sitePath, siteUrl } from "@/lib/urls";
@@ -98,7 +98,8 @@ export function ListView() {
   const [confirming, setConfirming] = useState<"replace" | "clear" | null>(null);
   const [cleared, setCleared] = useState(false);
   const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
-  const [saveDismissed, setSaveDismissed] = useStored<boolean>(SAVE_PROMPT_KEY, false);
+  // When they last printed, downloaded, or copied their list, to say how much has changed since.
+  const [savedCopy, setSavedCopy] = useStored<SavedCopy | null>(SAVED_KEY, null, normalizeSaved);
   // Counts clicks on a task's "Print these for your kit" link; the card flashes its print button.
   const [printPulse, setPrintPulse] = useState(0);
   // Back on the list, so the wizard's "Back to my list" shortcut is no longer needed.
@@ -201,7 +202,17 @@ export function ListView() {
       ) : undefined,
     slotDone: (i) => slotDone(e, i, states, answers),
     onEditNames: shared ? undefined : () => setEditingNames(true),
-    extra: shared ? undefined : (
+    extra: shared ? undefined : e.key === SAVE_TASK_KEY ? (
+      <p className="no-print">
+        <button
+          type="button"
+          onClick={() => jumpTo("keep-copy-title")}
+          className="inline-flex min-h-10 items-center text-[0.9rem] font-semibold underline underline-offset-2"
+        >
+          {t.savedStatus.ways}
+        </button>
+      </p>
+    ) : (
       <TaskFacts
         fields={factFields(facts.filter((f) => f.task === e.item.id), ctx, homeInfo)}
         onChange={onField}
@@ -225,6 +236,7 @@ export function ListView() {
   const copy = async (text: string, msg: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      markSaved();
       flash(msg);
     } catch {
       flash(t.flash.copyFailed);
@@ -233,6 +245,20 @@ export function ListView() {
   const shareUrl = () => `${siteUrl("/list")}#${encodeShare(answers, states)}`;
   const privateShareUrl = () => `${siteUrl("/list")}#${encodeShare(withoutPersonalInfo(answers), states)}`;
   const hasHomeInfo = !shared && anyHomeInfo(homeInfo);
+
+  // Keeping a copy: any print, PDF, spreadsheet, or copied link counts, and ticks the Start here task.
+  const markSaved = () => {
+    if (shared) return;
+    const next = { ...states, [SAVE_TASK_KEY]: "have" as const };
+    setStoredStates((prev) => ({ ...prev, [SAVE_TASK_KEY]: "have" }));
+    setSavedCopy({ at: new Date().toISOString(), states: next, home: JSON.stringify(homeInfo) });
+  };
+  const saveInfo: SaveInfo | undefined = shared
+    ? undefined
+    : {
+        savedAt: savedCopy?.at ?? null,
+        changes: savedCopy ? changesSince(savedCopy, states, JSON.stringify(homeInfo)) : 0,
+      };
   /** What the PDF, printout, and spreadsheet are made from. */
   const exportInput = () => ({
     answers,
@@ -248,6 +274,7 @@ export function ListView() {
     setBusy(kind);
     try {
       await task();
+      markSaved();
       if (done) flash(done);
     } catch {
       flash(t.flash.failed);
@@ -266,6 +293,7 @@ export function ListView() {
     const open = (ok: boolean) => setSharing({ url, privateUrl: privateShareUrl(), copied: ok, personal });
     navigator.clipboard.writeText(url).then(
       () => {
+        markSaved();
         if (personal || hasHomeInfo) return open(true);
         flash(t.flash.linkCopied);
       },
@@ -311,7 +339,7 @@ export function ListView() {
   return (
     // Wide screens: the outline in a column on the left, the list on the right.
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10 print:block">
-      <ListSidebar sections={barSections} items={saveShareItems} busy={busy !== null} t={navT} />
+      <ListSidebar sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} t={navT} />
       {/* In print, a flex column lets Know your home move up under the header. */}
       <div id="list-body" className="min-w-0 print:flex print:flex-col">
       {shared && (
@@ -338,9 +366,10 @@ export function ListView() {
         ctx={ctx}
         answers={answers}
         readOnly={!!shared}
+        status={saveInfo && <SaveStatus saved={saveInfo} onSave={() => jumpTo("keep-copy-title")} />}
       />
 
-      <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} t={navT} />
+      <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} t={navT} />
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
@@ -431,6 +460,7 @@ export function ListView() {
           busy={busy !== null}
           onPrint={() => run("print", () => printPdf(exportInput(), "list"), "")}
           onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
+          onSaved={markSaved}
         />
       )}
 
@@ -497,30 +527,6 @@ export function ListView() {
       )}
 
       {/* Short messages like "Link copied", near the bottom of the screen for a moment. */}
-      {/* Once someone has put work in, a one-time reminder that the list only lives here. It floats, so nothing jumps. */}
-      {shouldOfferSave({ shared: !!shared, dismissed: !!saveDismissed, states, homeInfo: hasHomeInfo }) && (
-        <div className="no-print fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 pr-20 lg:pr-4">
-          <div className="flex max-w-xl flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-ink px-4 py-3 text-paper shadow-[0_12px_32px_-12px_rgba(19,41,61,0.6)]">
-            <p className="min-w-0 flex-1 text-[0.95rem]">{t.nudge.text}</p>
-            <div className="flex shrink-0 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSaveDismissed(true);
-                  jumpTo("keep-copy-title");
-                }}
-                className="min-h-10 rounded-lg bg-paper px-3 font-semibold text-ink"
-              >
-                {t.nudge.action}
-              </button>
-              <button type="button" onClick={() => setSaveDismissed(true)} className="min-h-10 px-1 underline underline-offset-2">
-                {t.nudge.dismiss}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <p role="status" className="no-print pointer-events-none fixed inset-x-0 bottom-28 z-50 flex justify-center px-4">
         {copied && <span className="rounded-md bg-eucalyptus px-4 py-2 font-semibold text-paper shadow-lg">{copied}</span>}
       </p>
@@ -555,10 +561,13 @@ function Header({
   answers,
   readOnly,
   actions,
+  status,
 }: {
   ctx: Context;
   answers: Answers;
   readOnly: boolean;
+  /** Whether they've kept a copy, under the answers. */
+  status?: ReactNode;
   /** Buttons beside the title, like Print and Download PDF. */
   actions?: ReactNode;
 }) {
@@ -631,6 +640,7 @@ function Header({
           )}
         </ul>
       </div>
+      {status && <div className="mt-3">{status}</div>}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { MenuItem } from "@/components/MenuButton";
 import { ListOutline, type OutlineSection } from "./ListOutline";
+import { SaveStatus, type SaveInfo } from "./SaveStatus";
 import { jumpTo } from "./useActiveSection";
 
 const ListIcon = ({ className = "size-5" }: { className?: string }) => (
@@ -21,13 +22,15 @@ export function ContentsSheet({
   sections,
   active,
   items,
+  saved,
   t,
   countLabel,
 }: {
   sections: OutlineSection[];
   active: string | null;
   items: MenuItem[];
-  t: { contents: string; openContents: string; close: string; sections: string; saveShare: string; keepNote: string; howSaving: string };
+  saved?: SaveInfo;
+  t: { contents: string; openContents: string; close: string; sections: string; saveShare: string };
   countLabel: (done: number, total: number) => string;
 }) {
   const inline = useRef<HTMLButtonElement>(null);
@@ -106,19 +109,18 @@ export function ContentsSheet({
             />
           </div>
           <h2 className="mt-6 border-t border-line pt-5 text-lg font-extrabold tracking-tight">{t.saveShare}</h2>
-          <p className="mt-1 text-[0.9rem] text-ink-soft">
-            {t.keepNote}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                close();
-                requestAnimationFrame(() => jumpTo("keep-copy-title"));
-              }}
-              className="font-semibold text-ink underline underline-offset-2"
-            >
-              {t.howSaving}
-            </button>
-          </p>
+          {saved && (
+            <div className="mt-1">
+              <SaveStatus
+                saved={saved}
+                compact
+                onSave={() => {
+                  close();
+                  requestAnimationFrame(() => jumpTo("keep-copy-title"));
+                }}
+              />
+            </div>
+          )}
           <div className="mt-1">
             {items.map((it) =>
               it.heading ? (

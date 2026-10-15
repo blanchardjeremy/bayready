@@ -30,4 +30,5 @@ export const SHARE_IDS: readonly string[] = [
   "tetanus", "first-aid-class", "group-text", "wallet-cards", "practice-text", "practice-meet",
   "practice-leave", "practice-fire", "kids-ready", "health-general", "comm-access", "cognitive-plan",
   "caregiver-plan", "dialysis-plan", "pregnancy-plan", "service-animal",
+  "save-copy",
 ];

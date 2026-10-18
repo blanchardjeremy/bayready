@@ -90,9 +90,10 @@ describe("a Spanish household's list", () => {
     expect(find("home:training").item.link!(ctx)!.label).toBe("Clases de CERT (Bomberos del Condado de Alameda)");
     expect(find("home:block").item.link!(ctx)!.label).toBe("Kit de Listos California para una reunión de cuadra");
     expect(find("home:retrofit").item.link!(ctx)!.label).toBe("Earthquake Brace + Bolt");
-    expect(find("stay:radio").item.examples).toEqual([
-      { label: "Radio de manivela Midland ER210", url: "https://midlandusa.com/products/er210-portable-emergency-crank-weather-radio" },
-    ]);
+    expect(find("stay:radio").item.examples?.[0]).toEqual({
+      label: "Radio de manivela Midland ER210",
+      url: "https://midlandusa.com/products/er210-portable-emergency-crank-weather-radio",
+    });
   });
 
   it("keeps English links in English", () => {

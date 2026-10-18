@@ -86,6 +86,7 @@ export const pages: Translation<typeof en> = {
       cert: "Capacitación gratis para responder a emergencias en su comunidad, en todo el Área de la Bahía.",
       blockParty: "Un kit para conocer a sus vecinos y planear juntos.",
       klinenberg: "Los barrios donde la gente se conocía tuvieron muchas menos muertes.",
+      resilientPeeps: "Recomendaciones de equipo para mochilas, kits de casa y autos. Muchos de los productos de ejemplo de su lista vienen de aquí.",
       pgeAlerts: "Reciba avisos antes de los cortes de luz planeados. No necesita cuenta de PG&E.",
       medicalBaseline: "Para personas que dependen de aparatos médicos eléctricos.",
       ddar: "Baterías de respaldo y apoyo para personas con discapacidades durante los cortes de luz.",

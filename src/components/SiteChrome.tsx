@@ -82,7 +82,17 @@ export function SiteFooter() {
   const t = useT();
   return (
     <footer className="no-print border-t border-line">
-      <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-ink-soft sm:px-6">{t.common.footer}</div>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-6 text-sm text-ink-soft sm:px-6">
+        <p>{t.common.footer}</p>
+        <a
+          href="https://github.com/blanchardjeremy/bayready"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-ink underline underline-offset-2"
+        >
+          {t.common.github}
+        </a>
+      </div>
     </footer>
   );
 }

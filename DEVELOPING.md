@@ -108,10 +108,10 @@ saved data after about 7 days of use without a visit. The defenses, in order:
 - **The link is the backup.** Calendar events (Start here and the twice-yearly reminders) carry the
   full share link as "Your list". "Keep your own copy", near the end of the list, offers Print / PDF
   (keeps everything), Copy link, Email it to myself (`mailto:`, no server), and Add to Home Screen steps.
-- **The save status** under the title and by Save / share says "Saved in this browser only", "You
+- **The save status** under the title and by Save / share says "Not backed up", "You
   saved a copy on Oct 14", or "3 changes since your copy". Any print, PDF, spreadsheet, or copied
   link counts as a copy: it's recorded in `bayready:saved:v1` with a snapshot of the checkmarks and
-  Know your home (`src/components/list/savedCopy.ts`), and it ticks the "Save a copy of your list"
+  Know your home (`src/components/list/savedCopy.ts`), and it ticks the "Save a copy of this checklist outside this website"
   Start here task.
 - **Opening your own link** (one that matches what's saved on this device) just shows your list.
   Opening a different list shows the "list from a link" banner, and "Make it my list" asks before

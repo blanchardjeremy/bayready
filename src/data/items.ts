@@ -210,7 +210,7 @@ export const ITEMS: Item[] = [
     // Ticks itself when someone prints, downloads, or copies the link (see ListView).
     id: "save-copy",
     startRank: 4,
-    name: "Save a copy of your list",
+    name: "Save a copy of this checklist outside this website",
     category: "plan",
     containers: ["home"],
     level: "basics",
@@ -418,7 +418,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "comm-access",
-    name: "Set up alerts and 911 so they work for you",
+    name: "Set up alerts you will notice, and texting to 911",
     category: "access",
     containers: ["home"],
     level: "basics",
@@ -509,6 +509,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "shutoffs",
+    examples: [
+      { label: "Gas and water shutoff tool", url: "https://www.amazon.com/dp/B0F3CS7GS9" },
+    ],
     name: "Find your gas, water, and power shutoffs",
     category: "home-safety",
     containers: ["home"],
@@ -608,6 +611,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "secure-furniture",
+    examples: [
+      { label: "Museum gel, wax, and putty", url: "https://www.readyamerica.com/product/3-pack-museum-gel-wax-putty/" },
+    ],
     name: "Strap tall furniture and move heavy things down low",
     category: "home-safety",
     containers: ["home"],
@@ -621,6 +627,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "extinguisher",
+    examples: [
+      { label: "Home fire extinguisher", url: "https://www.amazon.com/dp/B0CB9GWDGF" },
+    ],
     name: "Fire extinguisher",
     category: "home-safety",
     containers: ["home"],
@@ -816,7 +825,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "fridge-thermo",
-    name: "Fridge and freezer thermometers",
+    name: "Fridge and freezer thermometers, to tell if food is still safe",
     category: "food",
     containers: ["home"],
     level: "advanced",
@@ -949,7 +958,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "training",
-    name: "Take a free CERT class",
+    name: "Take a free CERT class (community emergency training)",
     category: "community",
     containers: ["home"],
     level: "advanced",
@@ -965,7 +974,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "block",
-    name: "Meet three neighbors and agree who walks the block",
+    name: "Meet three neighbors and agree who checks on the block after a disaster",
     category: "community",
     containers: ["home"],
     level: "basics",
@@ -1045,7 +1054,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "bleach",
-    name: "Unscented bleach",
+    name: "Unscented bleach for treating water",
     category: "water",
     containers: ["stay"],
     level: "basics",
@@ -1063,6 +1072,8 @@ export const ITEMS: Item[] = [
       { label: "WaterBrick (stackable)", url: "https://www.waterbrick.org" },
       { label: "Reliance Jumbo-Tainer", url: "https://relianceoutdoors.com/products/jumbo-tainer-7g-26l" },
       { label: "Scepter water cans", url: "https://scepter.com/products/military-products/" },
+      { label: "Ready America 5-gallon container", url: "https://www.readyamerica.com/product/5-gallon-water-container/" },
+      { label: "Ready America 55-gallon barrel kit", url: "https://www.readyamerica.com/product/55-gallon-water-barrel-package/" },
     ],
     name: "Large water containers or a storage drum",
     category: "water",
@@ -1077,6 +1088,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "water-filter",
+    examples: [
+      { label: "Sawyer Mini filter", url: "https://www.amazon.com/dp/B00FA2RLX2" },
+      { label: "LifeStraw Peak filter straw", url: "https://www.amazon.com/dp/B09SBPWHS7" },
+    ],
     name: "Water filter",
     category: "water",
     containers: ["stay"],
@@ -1090,7 +1105,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "dropper",
-    name: "Medicine dropper",
+    name: "Medicine dropper for measuring bleach",
     category: "water",
     containers: ["stay"],
     level: "advanced",
@@ -1216,6 +1231,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "stove",
+    examples: [
+      { label: "Portable camp stove", url: "https://www.amazon.com/dp/B0GJCY5BXZ" },
+    ],
     name: "Camp stove",
     category: "food",
     containers: ["stay"],
@@ -1230,6 +1248,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "stove-fuel",
+    examples: [
+      { label: "Hose to run a camp stove off a BBQ tank", url: "https://www.amazon.com/dp/B0D5CZ5Z4F" },
+    ],
     name: "Camp stove fuel",
     category: "food",
     containers: ["stay"],
@@ -1243,6 +1264,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "lighter",
+    examples: [
+      { label: "Stormproof matches", url: "https://www.amazon.com/dp/B08XJZ9LRN" },
+    ],
     name: "Lighter or waterproof matches",
     category: "food",
     containers: ["stay"],
@@ -1257,7 +1281,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "cooler",
-    name: "Cooler",
+    name: "Cooler for fridge food in an outage",
     category: "food",
     containers: ["stay"],
     level: "advanced",
@@ -1326,6 +1350,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "flashlights",
+    examples: [
+      { label: "NEBO Mycro 550+ headlamp", url: "https://www.amazon.com/dp/B0F2GSJ7CS" },
+      { label: "Skyfire rechargeable flashlight", url: "https://www.amazon.com/dp/B0DFBYR6QC" },
+    ],
     coveredByGo: true,
     name: "Flashlight or headlamp",
     category: "light-power",
@@ -1372,7 +1400,10 @@ export const ITEMS: Item[] = [
   {
     id: "powerbank",
     perPerson: "adults",
-    examples: [{ label: "BLAVOR solar power bank", url: "https://www.amazon.com/dp/B07FDXDB3W" }],
+    examples: [
+      { label: "BLAVOR solar power bank", url: "https://www.amazon.com/dp/B07FDXDB3W" },
+      { label: "Anker 737 power bank", url: "https://www.amazon.com/dp/B09VPHVT2Z" },
+    ],
     coveredByGo: true,
     name: "Phone power bank",
     category: "light-power",
@@ -1403,7 +1434,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "power-station",
-    name: "Portable power station",
+    name: "Portable power station (a big rechargeable battery)",
     category: "light-power",
     containers: ["stay"],
     level: "advanced",
@@ -1430,7 +1461,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "radio",
-    examples: [{ label: "Midland ER210 crank radio", url: "https://midlandusa.com/products/er210-portable-emergency-crank-weather-radio" }],
+    examples: [
+      { label: "Midland ER210 crank radio", url: "https://midlandusa.com/products/er210-portable-emergency-crank-weather-radio" },
+      { label: "AM/FM/shortwave radio with NOAA alerts", url: "https://www.amazon.com/dp/B0DLNN7L28" },
+    ],
     name: "Battery or hand-crank radio",
     category: "comms",
     containers: ["stay"],
@@ -1461,6 +1495,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "first-aid",
+    examples: [
+      { label: "Adventure Medical Kits Ultralight/Watertight .9", url: "https://www.amazon.com/dp/B001DBNRQ4" },
+      { label: "Be Smart Get Prepared kit (250 pieces)", url: "https://www.amazon.com/dp/B00CYBXLA4" },
+    ],
     // No coveredByGo: the go bag's kit is small, so home keeps a full one too.
     name: "First aid kit",
     category: "first-aid",
@@ -1489,6 +1527,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "rx",
+    examples: [
+      { label: "Jase Medical (emergency prescriptions)", url: "https://jase.com/" },
+    ],
     perPerson: true,
     name: "Extra prescription medicine and medical supplies",
     category: "access",
@@ -1640,6 +1681,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "toilet",
+    examples: [
+      { label: "5-gallon buckets (3 pack)", url: "https://www.amazon.com/dp/B09RNBDRQ7" },
+      { label: "Toilet seat lid for a 5-gallon bucket", url: "https://www.amazon.com/dp/B07RZQBQNH" },
+    ],
     name: "Bucket with a lid, for an emergency toilet",
     category: "sanitation",
     containers: ["stay"],
@@ -1654,8 +1699,12 @@ export const ITEMS: Item[] = [
   },
   {
     id: "toilet-bags",
-    examples: [{ label: "Double Doodie waste bags with gel", url: "https://relianceoutdoors.com/products/double-doodie-br-with-bio-gel-waste-bags" }],
-    name: "Heavy-duty trash bags",
+    examples: [
+      { label: "Double Doodie waste bags with gel", url: "https://relianceoutdoors.com/products/double-doodie-br-with-bio-gel-waste-bags" },
+      { label: "42-gallon contractor bags", url: "https://www.amazon.com/dp/B000KKKPF0" },
+      { label: "Compostable bucket toilet bags", url: "https://www.amazon.com/dp/B0DP649FSG" },
+    ],
+    name: "Heavy-duty trash bags for the toilet bucket",
     category: "sanitation",
     containers: ["stay"],
     level: "basics",
@@ -1669,7 +1718,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "toilet-litter",
-    name: "Kitty litter or sawdust",
+    name: "Kitty litter or sawdust for the toilet bucket",
     category: "sanitation",
     containers: ["stay"],
     level: "basics",
@@ -1695,6 +1744,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "duct-tape",
+    examples: [
+      { label: "Heavy-duty duct tape", url: "https://www.amazon.com/dp/B078M5N8CH" },
+    ],
     name: "Duct tape",
     category: "tools",
     containers: ["stay"],
@@ -1707,7 +1759,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "tarp",
-    name: "Tarp or tent",
+    name: "Tarp or tent, in case it's not safe to sleep inside",
     category: "clothing-shelter",
     containers: ["stay"],
     level: "advanced",
@@ -1719,6 +1771,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "blankets",
+    examples: [
+      { label: "ECOOPRO sleeping bag", url: "https://www.amazon.com/dp/B0756TV6XG" },
+    ],
     name: "Blankets or sleeping bags",
     category: "clothing-shelter",
     containers: ["stay"],
@@ -1731,7 +1786,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "crowbar",
-    name: "Pry bar",
+    name: "Pry bar for jammed doors",
     category: "tools",
     containers: ["stay"],
     level: "advanced",
@@ -1743,6 +1798,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "n95",
+    examples: [
+      { label: "3M Aura N95s (individually wrapped)", url: "https://www.amazon.com/dp/B09FM2P1KF" },
+    ],
     perPerson: "adults",
     name: "N95 masks",
     category: "air",
@@ -1772,6 +1830,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "air-purifier",
+    examples: [
+      { label: "LEVOIT HEPA purifier", url: "https://www.amazon.com/dp/B083TMWFSZ" },
+    ],
     name: "HEPA air purifier",
     category: "air",
     containers: ["stay"],
@@ -1826,7 +1887,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "helmet",
-    name: "Helmet",
+    name: "Helmet for cleanup and aftershocks",
     category: "tools",
     containers: ["stay"],
     level: "advanced",
@@ -1838,7 +1899,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "plastic-sheeting",
-    name: "Plastic sheeting, cut to fit one room",
+    examples: [
+      { label: "Frost King 6 mil plastic sheeting", url: "https://www.amazon.com/dp/B0040ZC5AO" },
+    ],
+    name: "Plastic sheeting cut to fit one room, for sealing it against outside air",
     category: "tools",
     containers: ["stay"],
     level: "advanced",
@@ -1852,6 +1916,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "bleed-kit",
+    examples: [
+      { label: "North American Rescue bleeding control kit", url: "https://www.amazon.com/dp/B01MYQ6CPM" },
+    ],
     name: "Bleeding control kit",
     category: "first-aid",
     containers: ["go"],
@@ -1879,7 +1946,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "effak",
-    name: "Fill out FEMA's financial first aid kit",
+    name: "Fill out FEMA's financial first aid kit (a checklist for money and key papers)",
     category: "signup",
     containers: ["home"],
     level: "basics",
@@ -1969,7 +2036,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "splint",
-    name: "Splint",
+    name: "Splint for sprains and breaks",
     category: "first-aid",
     containers: ["go"],
     level: "advanced",
@@ -2206,6 +2273,7 @@ export const ITEMS: Item[] = [
     examples: [
       { label: "Geartrade (used outdoor gear)", url: "https://geartrade.com" },
       { label: "REI Re/Supply (used)", url: "https://www.rei.com/used" },
+      { label: "Hannibal Tactical 65L duffel (converts to a backpack)", url: "https://www.amazon.com/dp/B0D985Q41P" },
     ],
     name: "Backpack",
     category: "kit",
@@ -2222,6 +2290,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "water-go",
+    examples: [
+      { label: "Hydro Flask 32 oz", url: "https://www.amazon.com/dp/B07YXLXX7S" },
+    ],
     perPerson: true,
     name: "Water bottle",
     category: "water",
@@ -2241,6 +2312,7 @@ export const ITEMS: Item[] = [
     examples: [
       { label: "Aquatabs tablets", url: "https://www.amazon.com/dp/B09B2TVKGB" },
       { label: "LifeStraw personal filter", url: "https://www.amazon.com/dp/B087D7K48X" },
+      { label: "Aquamira treatment drops", url: "https://www.amazon.com/dp/B0078SA5SE" },
     ],
     name: "Water purification tablets",
     category: "water",
@@ -2256,7 +2328,9 @@ export const ITEMS: Item[] = [
   {
     id: "food-go",
     perPerson: true,
-    examples: [{ label: "SOS emergency ration bars", url: "https://www.amazon.com/s?srs=9467863011" }],
+    examples: [
+      { label: "SOS emergency ration bars", url: "https://www.amazon.com/s?srs=9467863011" },
+    ],
     name: "Ready-to-eat food",
     category: "food",
     containers: ["go"],
@@ -2272,6 +2346,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "headlamp-go",
+    examples: [
+      { label: "NEBO Mycro 550+ headlamp", url: "https://www.amazon.com/dp/B0F2GSJ7CS" },
+    ],
     perPerson: true,
     name: "Headlamp",
     category: "light-power",
@@ -2288,7 +2365,7 @@ export const ITEMS: Item[] = [
   {
     id: "whistle",
     perPerson: true,
-    name: "Whistle",
+    name: "Whistle to call for help",
     category: "comms",
     containers: ["go"],
     level: "basics",
@@ -2323,6 +2400,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "docs-copies",
+    examples: [
+      { label: "Andyer fireproof document bag", url: "https://www.amazon.com/dp/B08K34LMXP" },
+    ],
     perPerson: true,
     name: "Copies of IDs and insurance in a zip bag",
     category: "docs-money",
@@ -2379,7 +2459,10 @@ export const ITEMS: Item[] = [
   },
   {
     id: "multitool",
-    examples: [{ label: "14-in-1 multitool", url: "https://www.amazon.com/dp/B07VW96CVJ" }],
+    examples: [
+      { label: "14-in-1 multitool", url: "https://www.amazon.com/dp/B07VW96CVJ" },
+      { label: "Gerber Suspension NXT", url: "https://www.amazon.com/dp/B08KHX6H86" },
+    ],
     name: "Multi-tool",
     category: "tools",
     containers: ["go"],
@@ -2392,7 +2475,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "cord",
-    name: "Paracord",
+    name: "Paracord (thin, strong rope)",
     category: "tools",
     containers: ["go"],
     level: "advanced",
@@ -2404,7 +2487,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "zip-bags",
-    name: "Zip-top bags",
+    name: "Zip-top bags to keep things dry",
     category: "tools",
     containers: ["go"],
     level: "advanced",
@@ -2417,7 +2500,7 @@ export const ITEMS: Item[] = [
   {
     id: "goggles",
     perPerson: true,
-    name: "Goggles",
+    name: "Goggles for smoke, ash, and dust",
     category: "air",
     containers: ["go"],
     level: "advanced",
@@ -2512,6 +2595,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "car-charger",
+    examples: [
+      { label: "Anker USB-C car charger", url: "https://www.amazon.com/dp/B0CZ7BL16W" },
+    ],
     name: "Car phone charger",
     category: "light-power",
     containers: ["car"],
@@ -2547,6 +2633,9 @@ export const ITEMS: Item[] = [
   },
   {
     id: "car-jumper",
+    examples: [
+      { label: "Jump starter with air compressor", url: "https://www.amazon.com/dp/B0C2887FTM" },
+    ],
     name: "Jumper cables",
     category: "tools",
     containers: ["car"],
@@ -2559,7 +2648,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "road-flares",
-    name: "Reflective triangles",
+    name: "Reflective road triangles",
     category: "tools",
     containers: ["car"],
     level: "basics",

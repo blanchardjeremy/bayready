@@ -52,6 +52,7 @@ const SOURCES: { group: keyof About["groups"]; links: [keyof About["sources"], s
       ],
       ["blockParty", "Listos California block party", "https://www.listoscalifornia.org/blockparty/"],
       ["klinenberg", "Klinenberg on the 1995 Chicago heat wave", "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9255631/"],
+      ["resilientPeeps", "Resilient Peeps: Products I Recommend", "https://resilientpeeps.com/products-i-recommend"],
     ],
   },
   {

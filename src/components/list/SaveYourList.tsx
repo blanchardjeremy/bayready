@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonClass } from "@/components/controls";
 import { CheckIcon, LinkIcon, PdfIcon, PrinterIcon, SaveIcon } from "@/components/icons";
 import { useStandalone } from "@/components/useStandalone";
 import { useT } from "@/i18n/useLang";
+
+interface SaveProps {
+  url: string;
+  onPrint: () => void;
+  onDownload: () => void;
+  /** They copied or emailed the link. */
+  onSaved: () => void;
+  busy: boolean;
+}
 
 /**
  * Near the end of the list, with Know your home and Keep it fresh. The list
@@ -12,22 +21,58 @@ import { useT } from "@/i18n/useLang";
  * week without a visit), so this says plainly not to rely on the site, and
  * offers two ways to keep a copy: print or PDF, which keeps everything, and the
  * link, which brings back answers and checkmarks but not Know your home or notes.
- * The save status near the top and by Save / share points here.
  */
-export function SaveYourList({
-  url,
-  onPrint,
-  onDownload,
-  onSaved,
-  busy,
-}: {
-  url: string;
-  onPrint: () => void;
-  onDownload: () => void;
-  /** They copied or emailed the link. */
-  onSaved: () => void;
-  busy: boolean;
-}) {
+export function SaveYourList(props: SaveProps) {
+  const t = useT().list.save;
+  return (
+    <section className="no-print mt-6 scroll-mt-4 border-t border-line pt-10" aria-labelledby="keep-copy-title">
+      <h2 id="keep-copy-title" tabIndex={-1} className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+        <SaveIcon />
+        {t.title}
+      </h2>
+      <SaveOptions {...props} />
+    </section>
+  );
+}
+
+/** The same choices in a dialog, opened from "Save a copy" near the top and by Save / share. */
+export function SaveDialog({ onClose, ...props }: SaveProps & { onClose: () => void }) {
+  const t = useT().list.save;
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      onClose={onClose}
+      aria-labelledby="save-dialog-title"
+      className="no-print m-auto max-h-[calc(100dvh-2rem)] w-[min(44rem,calc(100vw-2rem))] overflow-y-auto rounded-xl bg-fog p-0 text-ink backdrop:bg-ink/40"
+      onClick={(e) => {
+        // A click on the dimmed area outside closes it.
+        if (e.target === ref.current) ref.current?.close();
+      }}
+    >
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <h2 id="save-dialog-title" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+            <SaveIcon />
+            {t.title}
+          </h2>
+          <form method="dialog">
+            <button type="submit" className="inline-flex min-h-11 items-center px-2 font-semibold underline underline-offset-2">
+              {t.close}
+            </button>
+          </form>
+        </div>
+        <SaveOptions {...props} />
+      </div>
+    </dialog>
+  );
+}
+
+/** What it says and the buttons: print or PDF, copy or email the link, and the Home Screen tip. */
+function SaveOptions({ url, onPrint, onDownload, onSaved, busy }: SaveProps) {
   const t = useT().list.save;
   const standalone = useStandalone();
   const [status, setStatus] = useState<"" | "copied" | "failed">("");
@@ -45,11 +90,7 @@ export function SaveYourList({
   const mail = `mailto:?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(t.mailBody(url))}`;
 
   return (
-    <section className="no-print mt-6 scroll-mt-4 border-t border-line pt-10" aria-labelledby="keep-copy-title">
-      <h2 id="keep-copy-title" tabIndex={-1} className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-        <SaveIcon />
-        {t.title}
-      </h2>
+    <>
       <p className="mt-2 max-w-[64ch] text-ink-soft">{t.body}</p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -92,6 +133,6 @@ export function SaveYourList({
           <p className="mt-1 text-[0.95rem] text-ink-soft">{t.iphoneBody}</p>
         </div>
       )}
-    </section>
+    </>
   );
 }

@@ -91,6 +91,7 @@ export const pages = {
       cert: "Free community emergency response training, offered across the Bay Area.",
       blockParty: "A kit for getting to know your neighbors and planning together.",
       klinenberg: "Neighborhoods where people knew each other had far fewer deaths.",
+      resilientPeeps: "Gear picks for go bags, home kits, and cars. Many of the example products on your list come from here.",
       pgeAlerts: "Get warnings before planned shutoffs. No PG&E account needed.",
       medicalBaseline: "For people who rely on powered medical devices.",
       ddar: "Backup batteries and support for people with disabilities during shutoffs.",

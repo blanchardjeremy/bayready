@@ -23,6 +23,7 @@ export function ContentsSheet({
   active,
   items,
   saved,
+  onSave,
   t,
   countLabel,
 }: {
@@ -30,6 +31,7 @@ export function ContentsSheet({
   active: string | null;
   items: MenuItem[];
   saved?: SaveInfo;
+  onSave: () => void;
   t: { contents: string; openContents: string; close: string; sections: string; saveShare: string };
   countLabel: (done: number, total: number) => string;
 }) {
@@ -96,7 +98,7 @@ export function ContentsSheet({
               {t.close}
             </button>
           </div>
-          <div className="mt-2 pl-3">
+          <div className="mt-2 -ml-4">
             <ListOutline
               sections={sections}
               active={active}
@@ -116,7 +118,7 @@ export function ContentsSheet({
                 compact
                 onSave={() => {
                   close();
-                  requestAnimationFrame(() => jumpTo("keep-copy-title"));
+                  onSave();
                 }}
               />
             </div>

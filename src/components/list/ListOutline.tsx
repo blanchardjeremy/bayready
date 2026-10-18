@@ -41,7 +41,10 @@ export function ListOutline({
                 type="button"
                 onClick={() => onJump(s.id)}
                 aria-current={isActive ? "location" : undefined}
-                className={`-ml-3 block w-[calc(100%+0.75rem)] rounded-r-md border-l-4 py-2 pl-3 pr-2 text-left hover:bg-paper ${
+                className={`block w-full rounded-r-md border-l-4 pl-3 pr-2.5 text-left text-[0.95rem] leading-snug hover:bg-paper ${
+                  // Rows with a progress bar get extra room under it, so the bar doesn't crowd the next row.
+                  p && p.total > 0 && !done ? "pb-3 pt-2" : "py-2"
+                } ${
                   isActive ? "border-ink bg-paper font-semibold text-ink" : "border-transparent text-ink-soft hover:text-ink"
                 }`}
               >
@@ -55,7 +58,7 @@ export function ListOutline({
                     {s.label}
                   </span>
                   {p && p.total > 0 && (
-                    <span className="shrink-0 text-[0.82rem] font-normal tabular-nums text-ink-soft">
+                    <span className="shrink-0 text-[0.8rem] font-normal tabular-nums text-ink-soft">
                       <span aria-hidden="true">
                         {p.done}/{p.total}
                       </span>

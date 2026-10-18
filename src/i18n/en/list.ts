@@ -145,7 +145,8 @@ export const list = {
 
   /** Whether someone has kept a copy of their list, near the top and by Save / share. */
   savedStatus: {
-    notYet: "Saved in this browser only.",
+    notYetLead: "Not backed up.",
+    notYet: "This checklist is stored only in this browser, so it can be erased.",
     action: "Save a copy",
     saved: (date: string) => `You saved a copy on ${date}.`,
     changed: (n: number, date: string) => `${n} ${n === 1 ? "change" : "changes"} since your copy on ${date}.`,
@@ -346,6 +347,7 @@ export const list = {
     email: "Email it to myself",
     failed: "Your browser didn't let us copy it. Try the email option.",
     iphoneTitle: "On iPhone: you can also add it to your Home Screen",
+    close: "Close",
     iphoneBody:
       "In Safari, tap the Share button, then Add to Home Screen. The Home Screen app keeps your list and works without a connection. It starts empty, so copy your link first, then paste it in when you open the app.",
     privacy: "The link has your answers and checkmarks, including any names and health needs, so keep it to yourself.",

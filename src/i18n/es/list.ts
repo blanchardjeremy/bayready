@@ -140,7 +140,8 @@ export const list: Translation<typeof en> = {
   },
 
   savedStatus: {
-    notYet: "Guardada solo en este navegador.",
+    notYetLead: "Sin copia de respaldo.",
+    notYet: "Esta lista se guarda solo en este navegador, así que puede borrarse.",
     action: "Guardar una copia",
     saved: (date) => `Guardó una copia el ${date}.`,
     changed: (n, date) => `${n} ${n === 1 ? "cambio" : "cambios"} desde su copia del ${date}.`,
@@ -339,6 +340,7 @@ export const list: Translation<typeof en> = {
     email: "Mandármelo por correo",
     failed: "Su navegador no nos dejó copiarlo. Pruebe la opción de correo.",
     iphoneTitle: "En iPhone: también puede agregarla a su pantalla de inicio",
+    close: "Cerrar",
     iphoneBody:
       "En Safari, toque el botón Compartir y luego Agregar a inicio. La app de la pantalla de inicio guarda su lista y funciona sin conexión. Empieza vacía, así que primero copie su enlace y péguelo cuando abra la app.",
     privacy:

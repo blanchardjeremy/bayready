@@ -7,7 +7,7 @@
 export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string; examples?: string[] }> = {
   // ----- Planes y pendientes: planes y tareas de una vez --------------------------------
   "save-copy": {
-    name: "Guarde una copia de su lista",
+    name: "Guarde una copia de esta lista fuera de este sitio web",
     why: "Este sitio guarda su lista solo en este navegador, y puede borrarse si borra su historial o cambia de celular. Imprímala, guarde el PDF o guarde el enlace en un lugar seguro.",
     tip: "Imprimirla o el PDF guarda todo, incluida la información de Conozca su casa. El enlace recupera sus respuestas y marcas en cualquier celular o computadora.",
   },
@@ -92,7 +92,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Pregunte en la farmacia o a su doctor cómo conseguir más con tiempo. Si nadie en su casa lo necesita, omita esto.",
   },
   "comm-access": {
-    name: "Configure las alertas y el 911 para que le funcionen a usted",
+    name: "Configure alertas que usted note, y mensajes de texto al 911",
     why: "Llame al 911 si puede, y si no, mande un mensaje de texto: el texto al 911 funciona en todo California. Active las alertas con luz y vibración en la configuración de accesibilidad de su celular, y busque una alarma de humo con luz intermitente o con vibrador para la cama.",
     tip: "Ponga papel y pluma o una tarjeta de comunicación en su mochila. Una lámpara de baterías ilumina el cuarto para que pueda leer los labios o usar señas en la oscuridad.",
   },
@@ -130,6 +130,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Encuentre las llaves de paso del gas, el agua y la luz",
     why: "Cierre el gas solo si huele a gas o escucha un silbido. Una vez cerrado, solo PG&E lo puede volver a abrir, y después de un terremoto fuerte eso puede tardar semanas.",
     tip: "En una casa, tenga una llave inglesa junto al medidor de gas, cuesta unos $15. En un apartamento, pregúntele al administrador del edificio dónde están y quién se encarga. Si se rompen las tuberías después de un terremoto, cierre la llave de paso principal del agua para que no entre agua sucia a la tubería.",
+    examples: ["Llave para cerrar el gas y el agua"],
   },
   "smoke-alarms": {
     name: "Pruebe las alarmas de humo y ponga una alarma de monóxido de carbono",
@@ -168,11 +169,13 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Asegure los muebles altos a la pared y ponga las cosas pesadas abajo",
     why: "Los libreros, televisiones y objetos pesados que caen sobre camas y sillones causan muchas heridas en casa durante los terremotos, sobre todo a los niños.",
     tip: "Ponga seguros en los gabinetes de la cocina y masilla para museos debajo de las cosas que se rompen. Los inquilinos casi siempre pueden usar correas con agujeritos de tornillo. Pregúntele primero al dueño.",
+    examples: ["Gel, cera y masilla para museos"],
   },
   extinguisher: {
     name: "Extintor de incendios",
     why: "Un fuego pequeño se puede apagar antes de que se extienda. Téngalo en la cocina y aprenda a usarlo: jale el seguro, apunte a la base del fuego, apriete la manija y mueva de lado a lado.",
     tip: "Compre uno clasificado ABC, de por lo menos 2-A:10-B:C, y revise el indicador una vez al año. Una manta contra incendios es un buen extra para la cocina.",
+    examples: ["Extintor para el hogar"],
   },
   "water-heater": {
     name: "Asegúrese de que su calentador de agua esté sujeto con correas",
@@ -243,7 +246,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Téngalo junto a la puerta de entrada con un poco de cinta, y dígales a los vecinos que conoce que se fijen en él. Ponga AYUDA aunque no pueda llegar a la puerta.",
   },
   "fridge-thermo": {
-    name: "Termómetros para el refrigerador y el congelador",
+    name: "Termómetros para el refrigerador y el congelador, para saber si la comida sigue siendo segura",
     why: "Mantenga las puertas cerradas: un refrigerador cerrado se mantiene frío unas 4 horas, y un congelador lleno unas 48. Tire la comida que haya estado a 40°F o más por más de 2 horas.",
   },
   "red-flag": {
@@ -290,12 +293,12 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Si alguien no puede usar las escaleras, hagan un plan con esa persona y algunos vecinos con tiempo.",
   },
   training: {
-    name: "Tome una clase gratis de CERT",
+    name: "Tome una clase gratis de CERT (capacitación comunitaria para emergencias)",
     why: "Aprenderá primeros auxilios, cómo apagar fuegos pequeños y cómo ayudar a los vecinos de forma segura hasta que lleguen los equipos de emergencia. Es gratis en casi toda el Área de la Bahía. En San Francisco se llama NERT, y en Oakland, CORE.",
     tip: "¿Tiene poco tiempo? Una clase de primeros auxilios y RCP, o una clase de Get Ready de 2 horas, es un gran comienzo. Basta con una persona en su casa. En el Condado de Alameda, Oakland, Berkeley, Fremont y Hayward tienen sus propias clases, así que pregunte en el departamento de bomberos de su ciudad.",
   },
   block: {
-    name: "Conozca a tres vecinos y acuerden quién recorre la cuadra",
+    name: "Conozca a tres vecinos y acuerden quién revisa la cuadra después de un desastre",
     why: "Conozca a tres vecinos de su piso o de su cuadra, y acuerden que uno de ustedes recorrerá la cuadra después de un terremoto para ver quién necesita ayuda.",
     tip: "Enséñeles el letrero de OK / AYUDA para que todos sepan buscarlo. Cuando esté listo, una reunión corta de la cuadra ayuda más: escojan un lugar para reunirse y apunten quién tiene habilidades o herramientas útiles, como primeros auxilios o una escalera. Que cada quien comparta solo lo que quiera. La hoja de cálculo tiene una pestaña de Vecinos para apuntes.",
   },
@@ -317,7 +320,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Los niños, las mamás que dan pecho, las embarazadas, los enfermos y cualquier persona en una ola de calor necesitan más. Guárdela en un lugar fresco y oscuro, lejos de químicos. Cambie el agua comprada para la fecha que dice, y el agua de la llave que usted embotelló cada 6 meses. El agua para las mascotas ya está contada.",
   },
   bleach: {
-    name: "Cloro sin olor",
+    name: "Cloro sin olor para desinfectar el agua",
     why: "Para hacer segura el agua que no sabe si se puede tomar. La dosis de EBMUD: 8 gotas de cloro al 6% (o 6 gotas al 8.25%) por galón de agua clara, y luego espere 30 minutos. Hervirla por 1 minuto también funciona.",
     tip: "Si el agua está turbia, déjela asentar y pásela por un trapo limpio primero, y luego use el doble de cloro. Use cloro normal, sin olor y que no sea \"splash-less\" (antisalpicaduras), y cámbielo cada año.",
   },
@@ -325,15 +328,16 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Recipientes grandes de agua o un tambo",
     why: "Recipientes aptos para alimentos que usted llena con agua de la llave. Es lo más barato por galón para apagones largos. El agua de la llave no necesita tratamiento si la cambia cada 6 meses.",
     tip: "Un tambo de 55 galones lleno pesa unas 460 libras. Póngalo en la planta baja y consiga una bomba de sifón.",
-    examples: ["WaterBrick (se pueden apilar)", "Reliance Jumbo-Tainer", "Bidones de agua Scepter"],
+    examples: ["WaterBrick (se pueden apilar)", "Reliance Jumbo-Tainer", "Bidones de agua Scepter", "Contenedor de 5 galones Ready America", "Barril de 55 galones Ready America"],
   },
   "water-filter": {
     name: "Filtro de agua",
     why: "Le permite tomar agua de un arroyo, un barril de lluvia u otra fuente afuera si se le acaba el agua guardada.",
     tip: "Busque uno clasificado para bacterias y protozoos. Los filtros no eliminan los virus, así que después de filtrar agregue cloro o una pastilla, o hierva el agua. Tampoco quitan los químicos, así que no tome agua de alberca ni de inundación aunque la filtre.",
+    examples: ["Filtro Sawyer Mini", "Popote filtro LifeStraw Peak"],
   },
   dropper: {
-    name: "Gotero",
+    name: "Gotero para medir el cloro",
     why: "Para medir las gotas de cloro en el agua. Póngale una etiqueta para que nadie lo use después para medicinas.",
   },
   food: {
@@ -383,18 +387,21 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Estufa de campamento",
     why: "Para comida caliente y para hervir agua durante apagones largos.",
     tip: "Úsela solo afuera. Nunca use una estufa de campamento, un asador o un generador adentro, ni siquiera en la cochera. Después de un terremoto, revise que no haya fugas de gas antes de prender cualquier cosa. Si alguien usa oxígeno, cocine bien lejos de esa persona y de los tanques.",
+    examples: ["Estufa portátil de campamento"],
   },
   "stove-fuel": {
     name: "Combustible para la estufa de campamento",
     why: "Suficiente para una comida caliente al día. Revise qué tipo de cartucho o combustible usa su estufa.",
+    examples: ["Manguera para usar la estufa con un tanque de asador"],
   },
   lighter: {
     name: "Encendedor o cerillos a prueba de agua",
     why: "Para prender la estufa de campamento o un asador afuera.",
     tip: "Si alguien en su casa usa oxígeno, mantenga los encendedores y cerillos lejos de esa persona y de los tanques.",
+    examples: ["Cerillos Stormproof"],
   },
   cooler: {
-    name: "Hielera",
+    name: "Hielera para la comida del refrigerador durante un apagón",
     why: "Salva la comida del refrigerador durante un apagón largo: pase a la hielera lo más importante. También sirve para medicinas que tienen que estar frías.",
     tip: "Mantenga el refrigerador cerrado. La comida en un refrigerador cerrado se mantiene segura unas 4 horas, y en un congelador lleno unas 48.",
   },
@@ -421,6 +428,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Linterna o linterna de cabeza",
     why: "Una por persona. Las linternas de cabeza le dejan las manos libres.",
     tip: "No use velas. Son una causa común de incendios después de los terremotos.",
+    examples: ["Linterna de cabeza NEBO Mycro 550+", "Linterna recargable Skyfire"],
   },
   lantern: {
     name: "Lámpara de baterías",
@@ -435,14 +443,14 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Batería portátil para el celular",
     why: "Su celular es su linterna, su radio y su forma de pedir ayuda. Una batería portátil cargada lo mantiene funcionando unos días.",
     tip: "Una de 10,000 mAh carga la mayoría de los celulares dos o tres veces. Recárguela cada pocos meses.",
-    examples: ["Batería portátil solar BLAVOR"],
+    examples: ["Batería portátil solar BLAVOR", "Batería portátil Anker 737"],
   },
   cable: {
     name: "Cable para cargar el celular",
     why: "Es fácil olvidarlo cuando sale con prisa, y no todos los celulares usan el mismo enchufe.",
   },
   "power-station": {
-    name: "Estación de energía portátil",
+    name: "Estación de energía portátil (una batería recargable grande)",
     why: "Una batería grande y recargable que puede hacer funcionar un CPAP, un ventilador o un refrigerador pequeño por horas. Es silenciosa y segura adentro, a diferencia de un generador. No hace funcionar por mucho tiempo un concentrador de oxígeno de casa.",
     tip: "Si es para un aparato médico, revise cuántos watts usa el aparato y pregúntele a su proveedor cuánto tiempo lo aguanta una batería. Con una regleta también puede cargar los celulares de los vecinos.",
   },
@@ -454,7 +462,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Radio de baterías o de manivela",
     why: "Si las redes de celular no funcionan, la radio local es como las autoridades dan las noticias. KCBS 740 AM y KQED 88.5 FM cubren el Área de la Bahía, y la radio del clima de NOAA está en 162.400 MHz.",
     tip: "Busque una con las bandas del clima de NOAA y un puerto USB para cargar el celular.",
-    examples: ["Radio de manivela Midland ER210"],
+    examples: ["Radio de manivela Midland ER210", "Radio AM/FM/onda corta con alertas NOAA"],
   },
   "contacts-paper": {
     name: "Números de teléfono importantes en papel",
@@ -465,6 +473,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Botiquín de primeros auxilios",
     why: "Las cortadas, raspones y torceduras son las heridas más comunes después de un terremoto. La ayuda puede tardar en llegar.",
     tip: "Asegúrese de que tenga curitas, gasa, cinta, guantes de nitrilo, pinzas y una botella para exprimir o una jeringa para lavar las heridas con agua limpia, que es el primer paso para cualquier cortada. Un botiquín pequeño está bien para la mochila de emergencia. Una guía impresa o la aplicación de Primeros Auxilios de la Cruz Roja funcionan sin internet.",
+    examples: ["Adventure Medical Kits Ultralight/Watertight .9", "Botiquín Be Smart Get Prepared (250 piezas)"],
   },
   otc: {
     name: "Medicinas de uso diario",
@@ -474,6 +483,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Medicinas recetadas y artículos médicos de más",
     why: "Las farmacias pueden estar cerradas o sin surtido. Los CDC recomiendan por lo menos una semana de medicinas en su mochila de emergencia y dos semanas en casa si puede.",
     tip: "Incluya artículos como tiras reactivas, agujas o bolsas de ostomía. Para conseguir más, pida en la farmacia un \"vacation override\" (permiso para surtir antes por viaje) o pídale a su doctor una receta para 90 días. Cuando se declara un desastre, los planes de medicinas de Medicare quitan el límite de \"demasiado pronto para surtir\", y los farmacéuticos de California pueden dar surtidos de emergencia. Para medicinas controladas, como la metadona o la buprenorfina, pregunte en su clínica por su plan de emergencia. Si usted no toma ninguna, marque su nombre.",
+    examples: ["Jase Medical (recetas para emergencias)"],
   },
   "med-info": {
     name: "Información médica por escrito",
@@ -526,14 +536,15 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Cubeta con tapa, para un baño de emergencia",
     why: "No le jale al escusado después de un terremoto fuerte hasta saber que el drenaje está bien. Sirve una cubeta de 5 galones forrada con bolsas gruesas, más arena para gatos o aserrín.",
     tip: "Los asientos de escusado para cubeta son baratos. Una segunda cubeta para separar la orina del excremento baja mucho el olor. Amarre las bolsas llenas y guárdelas en un bote de basura con tapa, lejos de donde vive la gente, hasta que las autoridades digan cómo deshacerse de ellas. Ponga al lado un lugar para lavarse las manos: un garrafón de agua, jabón y un tazón o cubeta para recibir el agua.",
+    examples: ["Cubetas de 5 galones (paquete de 3)", "Tapa con asiento para cubeta de 5 galones"],
   },
   "toilet-bags": {
-    name: "Bolsas de basura gruesas",
+    name: "Bolsas de basura gruesas para la cubeta del baño",
     why: "Para forrar la cubeta del baño: más o menos una al día por persona. Compre más para la basura, porque puede que dejen de recogerla.",
-    examples: ["Bolsas para desechos Double Doodie con gel"],
+    examples: ["Bolsas para desechos Double Doodie con gel", "Bolsas de construcción de 42 galones", "Bolsas compostables para la cubeta"],
   },
   "toilet-litter": {
-    name: "Arena para gatos o aserrín",
+    name: "Arena para gatos o aserrín para la cubeta del baño",
     why: "Una palada después de cada uso de la cubeta baja el olor.",
   },
   gloves: {
@@ -543,23 +554,26 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
   "duct-tape": {
     name: "Cinta adhesiva gruesa (duct tape)",
     why: "Para tapar ventanas rotas con plástico, arreglar cosas y sellar rendijas contra el humo.",
+    examples: ["Cinta adhesiva resistente"],
   },
   tarp: {
-    name: "Lona o tienda de campaña",
+    name: "Lona o tienda de campaña, por si no es seguro dormir adentro",
     why: "Si no es seguro dormir en su casa después de un terremoto, tal vez quiera acampar en el patio o cerca.",
   },
   blankets: {
     name: "Cobijas o bolsas de dormir",
     why: "Sin calefacción, las noches en el Área de la Bahía se ponen frías rápido.",
+    examples: ["Bolsa de dormir ECOOPRO"],
   },
   crowbar: {
-    name: "Barreta o pata de cabra",
+    name: "Barreta o pata de cabra para puertas atoradas",
     why: "Los terremotos atoran las puertas. Una barreta puede sacarlo a usted, o a un vecino.",
   },
   n95: {
     name: "Mascarillas N95",
     why: "Filtran las partículas finas del humo de los incendios, y el polvo después de un terremoto. Las mascarillas de tela y las quirúrgicas no.",
     tip: "Busque \"NIOSH approved\" (aprobada por NIOSH) en la caja. Tienen que quedar bien ajustadas, así que escoja una talla para cada adulto y adolescente. Las N95 no están hechas para niños, así que manténgalos adentro con aire limpio. Es fácil compartir las que sobren con los vecinos en días de humo.",
+    examples: ["Mascarillas N95 3M Aura (empacadas una por una)"],
   },
   "box-fan-filter": {
     name: "Ventilador de caja con un filtro pegado",
@@ -570,6 +584,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Purificador de aire HEPA",
     why: "Una opción más silenciosa y cerrada para las recámaras. Escójalo del tamaño del cuarto.",
     tip: "Evite los purificadores que producen ozono.",
+    examples: ["Purificador HEPA LEVOIT"],
   },
   cooling: {
     name: "Ventilador de baterías o USB",
@@ -586,18 +601,20 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Tenga billetes de uno y de cinco. Puede que las tiendas no tengan cambio.",
   },
   helmet: {
-    name: "Casco",
+    name: "Casco para la limpieza y las réplicas",
     why: "Le protege la cabeza de lo que se caiga durante las réplicas y la limpieza. Un casco de bicicleta sirve.",
   },
   "plastic-sheeting": {
-    name: "Plástico grueso, cortado a la medida de un cuarto",
+    name: "Plástico grueso cortado a la medida de un cuarto, para sellarlo del aire de afuera",
     why: "Sella ventanas y rejillas para que no entre el aire de afuera durante una fuga química. También sirve para tapar ventanas rotas después de un terremoto.",
     tip: "Corte con tiempo y marque las piezas para cada ventana y rejilla. Tenga toallas húmedas listas para las rendijas de las puertas.",
+    examples: ["Plástico de 6 milésimas Frost King"],
   },
   "bleed-kit": {
     name: "Kit para controlar sangrados",
     why: "Un sangrado grave por vidrios y escombros puede matar en minutos. Un torniquete y un vendaje de presión ayudan mientras llega la ayuda.",
     tip: "Una clase gratis de Stop the Bleed le enseña a usarlo.",
+    examples: ["Kit para controlar sangrados North American Rescue"],
   },
   "phone-setup": {
     name: "Prepare su celular para emergencias",
@@ -605,7 +622,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     tip: "Cada cosa toma un par de minutos. Los celulares Android ya traen alertas de terremoto, pero MyShake es un buen respaldo. Sin señal, los iPhone más nuevos y algunos Android pueden mandar texto al 911 por satélite, y los iPhone también a sus contactos. Solo funciona afuera, con vista despejada al cielo. Pruebe la demostración en Configuración.",
   },
   effak: {
-    name: "Llene el kit de primeros auxilios financieros de FEMA",
+    name: "Llene el kit de primeros auxilios financieros de FEMA (una lista para el dinero y los papeles importantes)",
     why: "Una lista para juntar desde ahora números de cuenta, pólizas y papeles importantes, para no andar buscándolos después de un desastre.",
     tip: "Guarde con ella copias de su contrato de renta o escritura y de sus pólizas de seguro, en una bolsa resistente al fuego si puede. Imprima también los códigos de respaldo de su correo y de su administrador de contraseñas. Si pierde el celular, puede quedarse sin acceso a todo.",
   },
@@ -635,7 +652,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     why: "Dos semanas sin internet es mucho tiempo. Las cosas para compartir también unen a los vecinos, y eso importa mucho después de un desastre.",
   },
   splint: {
-    name: "Férula",
+    name: "Férula para torceduras y fracturas",
     why: "Para una torcedura o fractura mientras consigue ayuda, que puede tardar después de un terremoto fuerte.",
     tip: "Aprenda a usarla antes de necesitarla.",
     examples: ["Férula SAM"],
@@ -714,18 +731,19 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Mochila",
     why: "Una por cada persona que pueda cargar una. Una mochila le deja las manos libres.",
     tip: "Una de unos 30 litros cabe todo y todavía se carga cómodo. Las tiendas de equipo de campismo usado son una opción barata. Si le cuesta cargar, también sirve una maleta chica con ruedas o una bolsa que se cuelga de la silla de ruedas o la andadera.",
-    examples: ["Geartrade (equipo de campismo usado)", "REI Re/Supply (usado)"],
+    examples: ["Geartrade (equipo de campismo usado)", "REI Re/Supply (usado)", "Bolsa Hannibal Tactical de 65 L (se convierte en mochila)"],
   },
   "water-go": {
     name: "Botella de agua",
     why: "Por lo menos un litro por persona. Tres días de agua pesan unas 25 libras por persona, así que cargue lo que pueda cómodamente y deje el resto en el carro si tiene.",
     tip: "Los sobres de electrolitos y de café instantáneo casi no pesan y ayudan mucho.",
+    examples: ["Hydro Flask de 32 oz"],
   },
   "purify-go": {
     name: "Pastillas para purificar el agua",
     why: "Son ligeras y hacen segura el agua que no sabe si se puede tomar cuando se le acaben las botellas. Espere el tiempo que dice el paquete antes de tomarla.",
     tip: "Una botella con filtro es un buen extra para el agua turbia, pero los filtros no eliminan los virus, así que use una pastilla después de filtrar.",
-    examples: ["Pastillas Aquatabs", "Filtro personal LifeStraw"],
+    examples: ["Pastillas Aquatabs", "Filtro personal LifeStraw", "Gotas purificadoras Aquamira"],
   },
   "food-go": {
     name: "Comida lista para comer",
@@ -736,9 +754,10 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
   "headlamp-go": {
     name: "Linterna de cabeza",
     why: "Luz con las manos libres para salir caminando de noche.",
+    examples: ["Linterna de cabeza NEBO Mycro 550+"],
   },
   whistle: {
-    name: "Silbato",
+    name: "Silbato para pedir ayuda",
     why: "Se oye mucho más lejos que su voz y cansa menos si necesita ayuda.",
   },
   "cash-go": {
@@ -750,6 +769,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
     name: "Copias de identificaciones y seguros en una bolsa con cierre",
     why: "Comprobar quién es y dónde vive le ayuda a regresar a zonas evacuadas y a recibir ayuda. Cada persona lleva las suyas.",
     tip: "Su identificación, la tarjeta del seguro médico, la póliza de la casa o de inquilino, llaves de repuesto de la casa y el carro, y una foto impresa de su familia y sus mascotas por si se separan. Niños: una copia de su acta de nacimiento. Mascotas: los números de microchip. ¿No tiene identificación? Aun así puede recibir ayuda: los refugios de la Cruz Roja no piden identificación ni estatus migratorio para quedarse.",
+    examples: ["Bolsa para documentos contra fuego Andyer"],
   },
   "clothes-go": {
     name: "Una muda de ropa y zapatos resistentes",
@@ -768,18 +788,18 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
   multitool: {
     name: "Multiherramienta",
     why: "Navaja, pinzas y desarmador en una sola.",
-    examples: ["Multiherramienta 14 en 1"],
+    examples: ["Multiherramienta 14 en 1", "Gerber Suspension NXT"],
   },
   cord: {
-    name: "Cuerda paracord",
+    name: "Cuerda paracord (delgada y resistente)",
     why: "Sirve para amarrar una lona, colgar una luz o cambiar una correa rota.",
   },
   "zip-bags": {
-    name: "Bolsas de plástico con cierre",
+    name: "Bolsas de plástico con cierre para mantener las cosas secas",
     why: "Mantienen secos los celulares, papeles y medicinas.",
   },
   goggles: {
-    name: "Lentes protectores (goggles)",
+    name: "Lentes protectores (goggles) para el humo, la ceniza y el polvo",
     why: "Evitan que le entre ceniza, humo y polvo a los ojos.",
   },
   "radio-go": {
@@ -814,6 +834,7 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
   "car-charger": {
     name: "Cargador de celular para el carro",
     why: "Mantiene los celulares cargados mientras sale manejando.",
+    examples: ["Cargador USB-C para auto Anker"],
   },
   "car-first-aid": {
     name: "Botiquín pequeño de primeros auxilios",
@@ -826,9 +847,10 @@ export const ITEMS_ES: Record<string, { name: string; why: string; tip?: string;
   "car-jumper": {
     name: "Cables para pasar corriente",
     why: "Para arrancar otra vez si se le descarga la batería mientras está atorado.",
+    examples: ["Arrancador portátil con compresor de aire"],
   },
   "road-flares": {
-    name: "Triángulos reflejantes",
+    name: "Triángulos reflejantes para la carretera",
     why: "Hacen que lo vean si está parado en la orilla del camino.",
     tip: "No use bengalas de carretera. Pueden prender el pasto seco.",
   },

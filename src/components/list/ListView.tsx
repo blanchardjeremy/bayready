@@ -40,9 +40,8 @@ import { ItemRow } from "./ItemRow";
 import { Essentials } from "./Essentials";
 import { SaveStatus, type SaveInfo } from "./SaveStatus";
 import { SAVED_KEY, SAVE_TASK_KEY, changesSince, normalizeSaved, type SavedCopy } from "./savedCopy";
-import { SaveYourList } from "./SaveYourList";
+import { SaveDialog, SaveYourList } from "./SaveYourList";
 import { ListContents, ListSidebar } from "./ListNav";
-import { jumpTo } from "./useActiveSection";
 import type { OutlineSection } from "./ListOutline";
 import { ShareDialog } from "./ShareDialog";
 import {
@@ -97,6 +96,7 @@ export function ListView() {
   const [editingNames, setEditingNames] = useState(false);
   const [confirming, setConfirming] = useState<"replace" | "clear" | null>(null);
   const [cleared, setCleared] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
   const [home, setHome] = useStored<HomeInfo>(HOME_KEY, EMPTY_HOME, normalizeHome);
   // When they last printed, downloaded, or copied their list, to say how much has changed since.
   const [savedCopy, setSavedCopy] = useStored<SavedCopy | null>(SAVED_KEY, null, normalizeSaved);
@@ -206,7 +206,7 @@ export function ListView() {
       <p className="no-print">
         <button
           type="button"
-          onClick={() => jumpTo("keep-copy-title")}
+          onClick={() => setSaveOpen(true)}
           className="inline-flex min-h-10 items-center text-[0.9rem] font-semibold underline underline-offset-2"
         >
           {t.savedStatus.ways}
@@ -300,6 +300,14 @@ export function ListView() {
       () => open(false),
     );
   };
+  /** Print, PDF, and link buttons for "Keep your own copy" and its dialog. */
+  const saveProps = {
+    url: shareUrl(),
+    busy: busy !== null,
+    onPrint: () => run("print", () => printPdf(exportInput(), "list"), ""),
+    onDownload: () => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone),
+    onSaved: markSaved,
+  };
   const downloadSpreadsheet = () =>
     run("xlsx", () => import("@/lib/exportXlsx").then((m) => m.downloadWorkbook(exportInput())), t.flash.xlsxDone);
 
@@ -339,7 +347,7 @@ export function ListView() {
   return (
     // Wide screens: the outline in a column on the left, the list on the right.
     <div className="mx-auto max-w-6xl px-4 pb-20 pt-4 sm:px-6 lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10 print:block">
-      <ListSidebar sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} t={navT} />
+      <ListSidebar sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} onSave={() => setSaveOpen(true)} t={navT} />
       {/* In print, a flex column lets Know your home move up under the header. */}
       <div id="list-body" className="min-w-0 print:flex print:flex-col">
       {shared && (
@@ -366,10 +374,10 @@ export function ListView() {
         ctx={ctx}
         answers={answers}
         readOnly={!!shared}
-        status={saveInfo && <SaveStatus saved={saveInfo} onSave={() => jumpTo("keep-copy-title")} />}
+        status={saveInfo && <SaveStatus saved={saveInfo} onSave={() => setSaveOpen(true)} />}
       />
 
-      <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} t={navT} />
+      <ListContents sections={barSections} items={saveShareItems} busy={busy !== null} saved={saveInfo} onSave={() => setSaveOpen(true)} t={navT} />
 
       <StartHere firsts={firsts} st={st} row={row} answers={answers} listUrl={shareUrl()} />
 
@@ -454,15 +462,7 @@ export function ListView() {
         />
       )}
 
-      {!shared && (
-        <SaveYourList
-          url={shareUrl()}
-          busy={busy !== null}
-          onPrint={() => run("print", () => printPdf(exportInput(), "list"), "")}
-          onDownload={() => run("pdf", () => downloadPdf(exportInput(), "list"), t.flash.pdfDone)}
-          onSaved={markSaved}
-        />
-      )}
+      {!shared && <SaveYourList {...saveProps} />}
 
       <KeepFresh
         busy={busy === "refresh"}
@@ -486,6 +486,7 @@ export function ListView() {
       {/* The site footer doesn't print, so printed lists get their own credit. */}
       <p className="hidden pt-8 text-sm print:block">{t.credit}</p>
 
+      {saveOpen && !shared && <SaveDialog {...saveProps} onClose={() => setSaveOpen(false)} />}
       {sharing && <ShareDialog {...sharing} leftOut={hasHomeInfo} onClose={() => setSharing(null)} />}
 
       {editingNames && (

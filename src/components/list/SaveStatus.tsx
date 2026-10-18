@@ -9,7 +9,7 @@ export interface SaveInfo {
 }
 
 /**
- * One line about keeping a copy: "Saved in this browser only", "You saved a
+ * One line about keeping a copy: "Not backed up", "You saved a
  * copy on Oct 14", or "3 changes since your copy on Oct 14", with a link to
  * save (again). Shown near the top of the list and by Save / share.
  */
@@ -35,7 +35,13 @@ export function SaveStatus({
 
   return (
     <p className={`no-print flex items-start gap-1.5 ${compact ? "text-[0.82rem] leading-snug" : "text-[0.92rem]"} text-ink-soft`}>
-      {fresh ? (
+      {!savedAt ? (
+        // Not saved anywhere else yet: a warning, in the accent color but not alarming.
+        <svg viewBox="0 0 16 16" className="mt-[0.1em] size-4 shrink-0 text-orange" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" aria-hidden="true">
+          <path d="M8 1.75 15 14.25H1z" />
+          <path d="M8 6.25v3.5M8 11.75v.5" strokeLinecap="round" />
+        </svg>
+      ) : fresh ? (
         <svg viewBox="0 0 16 16" className="mt-[0.1em] size-4 shrink-0 text-eucalyptus" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
           <path d="M3 8.5 6.5 12 13 4.5" />
         </svg>
@@ -46,6 +52,7 @@ export function SaveStatus({
         </svg>
       )}
       <span>
+        {!savedAt && <span className="font-bold text-ink">{t.notYetLead} </span>}
         {text}
         {action && (
           <>
